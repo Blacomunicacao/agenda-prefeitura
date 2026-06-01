@@ -29,6 +29,7 @@ function handleRequest(e) {
       case 'getSolicitacoes':     return responder(handleGetSolicitacoes(p), output);
       case 'atualizarSolicitacao':return responder(handleAtualizarSolicitacao(p), output);
       case 'setup':               return responder(criarAbas(), output);
+      case 'primeiroAdmin':       return responder(handlePrimeiroAdmin(p), output);
       default: return responder({ error: 'Ação não encontrada: ' + action }, output);
     }
   } catch (err) {
@@ -354,6 +355,24 @@ function handleAtualizarSolicitacao(data) {
 
   registrarLog(admin.email, 'atualizar_solicitacao', `ID ${data.id} → ${data.status}`);
   return { success: true };
+}
+
+// ── Primeiro Admin (só funciona se não existir nenhum admin ainda) ────────────
+
+function handlePrimeiroAdmin(data) {
+  const { login, senha, nome, email } = data;
+  if (!login || !senha) return { error: 'Login e senha são obrigatórios' };
+
+  const { rows, sheet } = lerAba('usuarios');
+  const jaTemAdmin = rows.some(r => r.tipo === 'admin');
+  if (jaTemAdmin) return { error: 'Já existe um administrador. Use o painel para criar novos usuários.' };
+
+  sheet.appendRow([
+    1, login, nome || login, email || (login + '@prefeitura.gov.br'),
+    senha, 'admin', '', 'FALSE', 'TRUE', new Date().toISOString()
+  ]);
+
+  return { success: true, message: 'Administrador "' + login + '" criado com sucesso!' };
 }
 
 // ── Setup inicial das abas ────────────────────────────────────────────────────
