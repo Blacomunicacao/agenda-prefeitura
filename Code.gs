@@ -1,4 +1,4 @@
-﻿// =====================================================
+// =====================================================
 // GOOGLE APPS SCRIPT - API AGENDA DA PREFEITURA
 // =====================================================
 
@@ -33,19 +33,24 @@ function handleRequest(e) {
       case 'atualizarSolicitacao':return responder(handleAtualizarSolicitacao(p), output);
       case 'setup':               return responder(criarAbas(), output);
       case 'primeiroAdmin':       return responder(handlePrimeiroAdmin(p), output);
-      default: return responder({ error: 'Ação não encontrada: ' + action }, output);
+      default: return responder({ error: 'Acao nao encontrada: ' + action }, output);
     }
   } catch (err) {
     return responder({ error: err.toString() }, output);
   }
 }
 
+// Escapa todos os caracteres nao-ASCII como \uXXXX para garantir JSON puro ASCII
 function jsonSafe(obj) {
-  var s = JSON.stringify(obj), out = '', i, code;
-  for (i = 0; i < s.length; i++) {
-    code = s.charCodeAt(i);
-    if (code > 127) { out += '\\u' + ('0000' + code.toString(16)).slice(-4); }
-    else { out += s[i]; }
+  var s = JSON.stringify(obj);
+  var out = '';
+  for (var i = 0; i < s.length; i++) {
+    var code = s.charCodeAt(i);
+    if (code > 127) {
+      out += '\\u' + ('0000' + code.toString(16)).slice(-4);
+    } else {
+      out += s[i];
+    }
   }
   return out;
 }
@@ -55,8 +60,7 @@ function responder(data, output) {
   return output;
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
+// Helpers
 function getSheet(nome) {
   return SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(nome);
 }
@@ -67,18 +71,18 @@ function lerAba(nome) {
   const vals = sheet.getDataRange().getValues();
   if (vals.length < 1) return { headers: [], rows: [] };
   const headers = vals[0].map(String);
-  const rows = vals.slice(1).map(row => {
+  const rows = vals.slice(1).map(function(row) {
     const obj = {};
-    headers.forEach((h, i) => { obj[h] = row[i]; });
+    headers.forEach(function(h, i) { obj[h] = row[i]; });
     return obj;
   });
-  return { headers, rows, sheet };
+  return { headers: headers, rows: rows, sheet: sheet };
 }
 
 function proximoId(nome) {
-  const { rows } = lerAba(nome);
-  if (!rows.length) return 1;
-  return Math.max(...rows.map(r => Number(r.id) || 0)) + 1;
+  const data = lerAba(nome);
+  if (!data.rows.length) return 1;
+  return Math.max.apply(null, data.rows.map(function(r) { return Number(r.id) || 0; })) + 1;
 }
 
 function registrarLog(usuario, acao, detalhes) {
@@ -89,8 +93,7 @@ function registrarLog(usuario, acao, detalhes) {
   } catch (e) {}
 }
 
-// ── Token ────────────────────────────────────────────────────────────────────
-
+// Token
 function gerarToken(user) {
   const payload = {
     id: user.id, login: user.login, nome: user.nome, email: user.email,
@@ -104,27 +107,33 @@ function gerarToken(user) {
 function verificarToken(token) {
   if (!token) return null;
   try {
-    const decoded = JSON.parse(Utilities.newBlob(Utilities.base64Decode(token)).getDataAsString('UTF-8'));
+    const bytes = Utilities.base64Decode(token);
+    const decoded = JSON.parse(Utilities.newBlob(bytes).getDataAsString('UTF-8'));
     if (decoded.exp < Date.now()) return null;
     return decoded;
   } catch (e) { return null; }
 }
 
-// ── Login ────────────────────────────────────────────────────────────────────
-
+// Login
 function handleLogin(data) {
-  const { usuario, senha } = data;
+  const usuario = data.usuario;
+  const senha = data.senha;
   if (!usuario || !senha) return { error: 'Usuário e senha são obrigatórios' };
 
-  const { rows } = lerAba('usuarios');
   const u = String(usuario).toLowerCase().trim();
-  const user = rows.find(r =>
-    (String(r.login).toLowerCase() === u || String(r.email).toLowerCase() === u) &&
-    r.senha === senha && String(r.ativo).toUpperCase() === 'TRUE'
-  );
+  const rows = lerAba('usuarios').rows;
+  var user = null;
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if ((String(r.login).toLowerCase() === u || String(r.email).toLowerCase() === u) &&
+        r.senha === senha && String(r.ativo).toUpperCase() === 'TRUE') {
+      user = r;
+      break;
+    }
+  }
 
   if (!user) {
-    registrarLog(usuario, 'login_falhou', 'Credenciais inválidas');
+    registrarLog(usuario, 'login_falhou', 'Credenciais invalidas');
     return { error: 'Usuário ou senha incorretos' };
   }
 
@@ -140,17 +149,16 @@ function handleLogin(data) {
   };
 }
 
-// ── Eventos ──────────────────────────────────────────────────────────────────
-
+// Eventos
 function handleGetEventos(params) {
   const usuario = verificarToken(params.token);
   if (!usuario) return { error: 'Não autorizado' };
 
-  const { rows } = lerAba('eventos');
-  return rows.filter(e => {
+  const rows = lerAba('eventos').rows;
+  return rows.filter(function(e) {
     if (!e.id) return false;
     if (usuario.tipo === 'admin' || usuario.tipo === 'prefeito') return true;
-    return String(e.orgao||'').trim() === String(usuario.orgao||'').trim();
+    return String(e.orgao || '').trim() === String(usuario.orgao || '').trim();
   });
 }
 
@@ -158,18 +166,22 @@ function handleCriarEvento(data) {
   const usuario = verificarToken(data.token);
   if (!usuario) return { error: 'Não autorizado' };
 
-  const { titulo, data_evento, local, responsavel, telefone, observacao } = data;
+  const titulo = data.titulo;
+  const data_evento = data.data_evento;
+  const local = data.local;
+  const responsavel = data.responsavel;
+  const telefone = data.telefone;
+  const observacao = data.observacao;
+
   if (!titulo || !data_evento || !observacao) return { error: 'Título, data e observação são obrigatórios' };
 
-  // Bloquear data/hora retroativa
   const dataEvt = new Date(data_evento);
   if (dataEvt < new Date()) return { error: 'Não é permitido criar eventos com data ou hora retroativa.' };
 
   const sheet = getSheet('eventos');
   if (!sheet) return { error: 'Aba eventos não encontrada' };
 
-  // Upload de anexo para o Google Drive
-  let anexo_url = '', anexo_nome = '';
+  var anexo_url = '', anexo_nome = '';
   if (data.arquivo_base64 && data.arquivo_nome) {
     try {
       const bytes = Utilities.base64Decode(data.arquivo_base64);
@@ -183,7 +195,7 @@ function handleCriarEvento(data) {
       anexo_url = 'https://drive.google.com/file/d/' + file.getId() + '/view';
       anexo_nome = data.arquivo_nome;
     } catch(driveErr) {
-      return { error: 'Erro ao salvar anexo. Autorize o acesso ao Google Drive: no editor do Apps Script, clique em Executar → autorizarDrive e aceite as permissões.' };
+      return { error: 'Erro ao salvar anexo. Execute autorizarDrive() no editor para liberar permissões.' };
     }
   }
 
@@ -200,27 +212,34 @@ function handleCriarEvento(data) {
   ]);
 
   registrarLog(usuario.email, 'criar_evento', titulo);
-  return { success: true, id, message: 'Evento criado com sucesso' };
+  return { success: true, id: id, message: 'Evento criado com sucesso' };
 }
 
 function handleAtualizarEvento(data) {
   const usuario = verificarToken(data.token);
   if (!usuario) return { error: 'Não autorizado' };
 
-  const { rows, headers, sheet } = lerAba('eventos');
-  const idx = rows.findIndex(r => String(r.id) === String(data.id));
+  const aba = lerAba('eventos');
+  const rows = aba.rows;
+  const headers = aba.headers;
+  const sheet = aba.sheet;
+  var idx = -1;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].id) === String(data.id)) { idx = i; break; }
+  }
   if (idx === -1) return { error: 'Evento não encontrado' };
 
-  const evento = rows[idx];
-  if (usuario.tipo !== 'admin' && evento.orgao !== usuario.orgao) return { error: 'Acesso negado' };
+  if (usuario.tipo !== 'admin' && rows[idx].orgao !== usuario.orgao) return { error: 'Acesso negado' };
 
   const rowNum = idx + 2;
-  ['titulo', 'data_evento', 'local', 'responsavel', 'telefone', 'observacao'].forEach(campo => {
+  const campos = ['titulo', 'data_evento', 'local', 'responsavel', 'telefone', 'observacao'];
+  for (var c = 0; c < campos.length; c++) {
+    var campo = campos[c];
     if (data[campo] !== undefined) {
       const col = headers.indexOf(campo) + 1;
       if (col > 0) sheet.getRange(rowNum, col).setValue(data[campo]);
     }
-  });
+  }
   const colAtu = headers.indexOf('data_atualizacao') + 1;
   if (colAtu > 0) sheet.getRange(rowNum, colAtu).setValue(new Date().toISOString());
 
@@ -232,8 +251,13 @@ function handleExcluirEvento(data) {
   const usuario = verificarToken(data.token);
   if (!usuario) return { error: 'Não autorizado' };
 
-  const { rows, sheet } = lerAba('eventos');
-  const idx = rows.findIndex(r => String(r.id) === String(data.id));
+  const aba = lerAba('eventos');
+  const rows = aba.rows;
+  const sheet = aba.sheet;
+  var idx = -1;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].id) === String(data.id)) { idx = i; break; }
+  }
   if (idx === -1) return { error: 'Evento não encontrado' };
 
   if (usuario.tipo !== 'admin' && rows[idx].orgao !== usuario.orgao) return { error: 'Acesso negado' };
@@ -243,39 +267,49 @@ function handleExcluirEvento(data) {
   return { success: true, message: 'Evento excluído' };
 }
 
-// ── Usuários ─────────────────────────────────────────────────────────────────
-
+// Usuarios
 function handleGetUsuarios(data) {
   const admin = verificarToken(data.token);
   if (!admin || admin.tipo !== 'admin') return { error: 'Acesso negado' };
 
-  const { rows } = lerAba('usuarios');
-  return rows.map(u => { const c = Object.assign({}, u); delete c.senha; return c; });
+  const rows = lerAba('usuarios').rows;
+  return rows.map(function(u) { const c = Object.assign({}, u); delete c.senha; return c; });
 }
 
 function handleCriarUsuario(data) {
   const admin = verificarToken(data.token);
   if (!admin || admin.tipo !== 'admin') return { error: 'Acesso negado' };
 
-  const { login, nome, email, senha, tipo, orgao } = data;
+  const login = data.login;
+  const nome = data.nome;
+  const email = data.email;
+  const senha = data.senha;
+  const tipo = data.tipo;
+  const orgao = data.orgao;
+
   if (!login || !nome || !email || !senha || !tipo) return { error: 'Todos os campos são obrigatórios' };
 
   const tiposValidos = ['admin', 'prefeito', 'orgao'];
-  if (!tiposValidos.includes(tipo)) return { error: 'Tipo de sessão inválido. Use: admin, prefeito ou orgao' };
+  if (tiposValidos.indexOf(tipo) === -1) return { error: 'Tipo inválido. Use: admin, prefeito ou orgao' };
   if (tipo === 'orgao' && !orgao) return { error: 'Órgão é obrigatório para sessão de órgão' };
 
-  const { rows, sheet } = lerAba('usuarios');
-  if (rows.find(r => r.login === login || r.email === email)) return { error: 'Login ou e-mail já existe' };
+  const aba = lerAba('usuarios');
+  const rows = aba.rows;
+  const sheet = aba.sheet;
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].login === login || rows[i].email === email) return { error: 'Login ou e-mail já existe' };
+  }
 
-  // Limite de 5 usuários por sessão
-  let count;
-  if (tipo === 'admin')    count = rows.filter(r => r.tipo === 'admin').length;
-  else if (tipo === 'prefeito') count = rows.filter(r => r.tipo === 'prefeito').length;
-  else count = rows.filter(r => r.tipo === 'orgao' && r.orgao === orgao).length;
+  var count = 0;
+  for (var j = 0; j < rows.length; j++) {
+    if (tipo === 'admin' && rows[j].tipo === 'admin') count++;
+    else if (tipo === 'prefeito' && rows[j].tipo === 'prefeito') count++;
+    else if (tipo === 'orgao' && rows[j].tipo === 'orgao' && rows[j].orgao === orgao) count++;
+  }
 
   if (count >= LIMITE_POR_SESSAO) {
-    const label = tipo === 'admin' ? 'Administrador' : tipo === 'prefeito' ? 'Prefeito' : `"${orgao}"`;
-    return { error: `Limite de ${LIMITE_POR_SESSAO} usuários atingido para a sessão ${label}` };
+    const label = tipo === 'admin' ? 'Administrador' : tipo === 'prefeito' ? 'Prefeito' : orgao;
+    return { error: 'Limite de ' + LIMITE_POR_SESSAO + ' usuários atingido para ' + label };
   }
 
   const orgaoFinal = tipo === 'prefeito' ? 'Gabinete do Prefeito' : (tipo === 'admin' ? '' : orgao);
@@ -295,8 +329,14 @@ function handleResetarSenha(data) {
   const admin = verificarToken(data.token);
   if (!admin || admin.tipo !== 'admin') return { error: 'Acesso negado' };
 
-  const { rows, headers, sheet } = lerAba('usuarios');
-  const idx = rows.findIndex(r => String(r.id) === String(data.usuarioId));
+  const aba = lerAba('usuarios');
+  const rows = aba.rows;
+  const headers = aba.headers;
+  const sheet = aba.sheet;
+  var idx = -1;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].id) === String(data.usuarioId)) { idx = i; break; }
+  }
   if (idx === -1) return { error: 'Usuário não encontrado' };
 
   const col = headers.indexOf('senha') + 1;
@@ -309,8 +349,13 @@ function handleExcluirUsuario(data) {
   const admin = verificarToken(data.token);
   if (!admin || admin.tipo !== 'admin') return { error: 'Acesso negado' };
 
-  const { rows, sheet } = lerAba('usuarios');
-  const idx = rows.findIndex(r => String(r.id) === String(data.id));
+  const aba = lerAba('usuarios');
+  const rows = aba.rows;
+  const sheet = aba.sheet;
+  var idx = -1;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].id) === String(data.id)) { idx = i; break; }
+  }
   if (idx === -1) return { error: 'Usuário não encontrado' };
 
   sheet.deleteRow(idx + 2);
@@ -318,18 +363,22 @@ function handleExcluirUsuario(data) {
   return { success: true, message: 'Usuário excluído' };
 }
 
-// ── Solicitar Acesso (público, sem autenticação) ──────────────────────────────
-
+// Solicitar Acesso (publico)
 function handleSolicitarAcesso(data) {
-  const { nome, email, login, telefone, orgao, justificativa } = data;
-  if (!nome || !email || !login || !orgao) return { error: 'Nome, e-mail, login e órgão são obrigatórios' };
+  const nome = data.nome;
+  const email = data.email;
+  const login = data.login;
+  const telefone = data.telefone;
+  const orgao = data.orgao;
+  const justificativa = data.justificativa;
+  if (!nome || !email || !login || !orgao) return { error: 'Nome, e-mail, login e orgao sao obrigatorios' };
 
-  const { rows } = lerAba('usuarios');
-  if (rows.find(r => r.login === login || r.email === email)) {
-    return { error: 'Login ou e-mail já está em uso' };
+  const rows = lerAba('usuarios').rows;
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].login === login || rows[i].email === email) return { error: 'Login ou e-mail já está em uso' };
   }
 
-  let sheet = getSheet('solicitacoes');
+  var sheet = getSheet('solicitacoes');
   if (!sheet) {
     sheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet('solicitacoes');
     sheet.appendRow(['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao']);
@@ -344,17 +393,19 @@ function handleSolicitarAcesso(data) {
   return { success: true, message: 'Solicitação registrada com sucesso' };
 }
 
-// ── Recuperar Senha (público, sem autenticação) ───────────────────────────────
-
+// Recuperar Senha (publico)
 function handleRecuperarSenha(data) {
-  const { login } = data;
+  const login = data.login;
   if (!login) return { error: 'Informe seu login ou e-mail' };
 
-  const { rows } = lerAba('usuarios');
-  const user = rows.find(r => r.login === login || r.email === login);
+  const rows = lerAba('usuarios').rows;
+  var user = null;
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].login === login || rows[i].email === login) { user = rows[i]; break; }
+  }
   if (!user) return { error: 'Usuário não encontrado. Verifique o login ou contate o administrador.' };
 
-  let sheet = getSheet('solicitacoes');
+  var sheet = getSheet('solicitacoes');
   if (!sheet) {
     sheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet('solicitacoes');
     sheet.appendRow(['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao']);
@@ -362,47 +413,57 @@ function handleRecuperarSenha(data) {
 
   sheet.appendRow([
     proximoId('solicitacoes'), user.nome, user.email, user.login,
-    '', user.orgao || '', 'Recuperação de senha solicitada pelo usuário',
+    '', user.orgao || '', 'Recuperacao de senha solicitada pelo usuario',
     'pendente', 'recuperacao', new Date().toISOString()
   ]);
 
   return { success: true, message: 'Solicitação registrada. O administrador entrará em contato.' };
 }
 
-// ── Gerenciar Solicitações (admin) ────────────────────────────────────────────
-
+// Gerenciar Solicitacoes (admin)
 function handleGetSolicitacoes(data) {
   const admin = verificarToken(data.token);
   if (!admin || admin.tipo !== 'admin') return { error: 'Acesso negado' };
 
-  const { rows } = lerAba('solicitacoes');
-  return rows.sort((a, b) => new Date(b.data_solicitacao) - new Date(a.data_solicitacao));
+  const rows = lerAba('solicitacoes').rows;
+  return rows.sort(function(a, b) { return new Date(b.data_solicitacao) - new Date(a.data_solicitacao); });
 }
 
 function handleAtualizarSolicitacao(data) {
   const admin = verificarToken(data.token);
   if (!admin || admin.tipo !== 'admin') return { error: 'Acesso negado' };
 
-  const { rows, headers, sheet } = lerAba('solicitacoes');
-  const idx = rows.findIndex(r => String(r.id) === String(data.id));
+  const aba = lerAba('solicitacoes');
+  const rows = aba.rows;
+  const headers = aba.headers;
+  const sheet = aba.sheet;
+  var idx = -1;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].id) === String(data.id)) { idx = i; break; }
+  }
   if (idx === -1) return { error: 'Solicitação não encontrada' };
 
   const col = headers.indexOf('status') + 1;
   if (col > 0) sheet.getRange(idx + 2, col).setValue(data.status);
 
-  registrarLog(admin.email, 'atualizar_solicitacao', `ID ${data.id} → ${data.status}`);
+  registrarLog(admin.email, 'atualizar_solicitacao', 'ID ' + data.id + ' -> ' + data.status);
   return { success: true };
 }
 
-// ── Primeiro Admin (só funciona se não existir nenhum admin ainda) ────────────
-
+// Primeiro Admin
 function handlePrimeiroAdmin(data) {
-  const { login, senha, nome, email } = data;
+  const login = data.login;
+  const senha = data.senha;
+  const nome = data.nome;
+  const email = data.email;
   if (!login || !senha) return { error: 'Login e senha são obrigatórios' };
 
-  const { rows, sheet } = lerAba('usuarios');
-  const jaTemAdmin = rows.some(r => r.tipo === 'admin');
-  if (jaTemAdmin) return { error: 'Já existe um administrador. Use o painel para criar novos usuários.' };
+  const aba = lerAba('usuarios');
+  const rows = aba.rows;
+  const sheet = aba.sheet;
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].tipo === 'admin') return { error: 'Já existe um administrador. Use o painel para criar novos usuários.' };
+  }
 
   sheet.appendRow([
     1, login, nome || login, email || (login + '@prefeitura.gov.br'),
@@ -412,8 +473,7 @@ function handlePrimeiroAdmin(data) {
   return { success: true, message: 'Administrador "' + login + '" criado com sucesso!' };
 }
 
-// ── Setup inicial das abas ────────────────────────────────────────────────────
-
+// Setup inicial das abas
 function criarAbas() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const config = {
@@ -423,7 +483,9 @@ function criarAbas() {
     solicitacoes: ['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao']
   };
   const resultado = [];
-  Object.keys(config).forEach(nome => {
+  const nomes = Object.keys(config);
+  for (var i = 0; i < nomes.length; i++) {
+    const nome = nomes[i];
     if (!ss.getSheetByName(nome)) {
       const s = ss.insertSheet(nome);
       s.appendRow(config[nome]);
@@ -431,31 +493,33 @@ function criarAbas() {
     } else {
       resultado.push('ja existe: ' + nome);
     }
-  });
+  }
   return { success: true, abas: resultado };
 }
 
-// ── Autorizar Drive (execute manualmente uma vez para liberar permissões) ────
+// Autorizar Drive (execute manualmente uma vez)
 function autorizarDrive() {
-  const pasta = DriveApp.getFoldersByName('Agenda Prefeitura Anexos').hasNext()
-    ? DriveApp.getFoldersByName('Agenda Prefeitura Anexos').next()
-    : DriveApp.createFolder('Agenda Prefeitura Anexos');
+  const pastaNome = 'Agenda Prefeitura Anexos';
+  const pastas = DriveApp.getFoldersByName(pastaNome);
+  const pasta = pastas.hasNext() ? pastas.next() : DriveApp.createFolder(pastaNome);
   Logger.log('Drive autorizado. Pasta: ' + pasta.getName() + ' | ID: ' + pasta.getId());
 }
 
-// ── Testes ────────────────────────────────────────────────────────────────────
-
+// Testes
 function testarConexao() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   Logger.log('Planilha: ' + ss.getName());
-  Logger.log('Abas: ' + ss.getSheets().map(s => s.getName()).join(', '));
+  const abas = ss.getSheets();
+  const nomes = [];
+  for (var i = 0; i < abas.length; i++) { nomes.push(abas[i].getName()); }
+  Logger.log('Abas: ' + nomes.join(', '));
 }
 
 function testarLogin() {
-  const { rows } = lerAba('usuarios');
-  Logger.log('Usuários: ' + rows.length);
-  rows.forEach((r, i) => Logger.log(`${i+1}: login="${r.login}" tipo="${r.tipo}" ativo="${r.ativo}"`));
+  const rows = lerAba('usuarios').rows;
+  Logger.log('Usuarios: ' + rows.length);
+  for (var i = 0; i < rows.length; i++) {
+    Logger.log((i+1) + ': login="' + rows[i].login + '" tipo="' + rows[i].tipo + '" ativo="' + rows[i].ativo + '"');
+  }
   Logger.log('Teste admin: ' + JSON.stringify(handleLogin({ usuario: 'admin', senha: 'admin123' })));
 }
-
-
