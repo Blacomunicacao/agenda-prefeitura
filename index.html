@@ -148,22 +148,10 @@ let calendar = null;
 // ════════════════════════════════════════════════════════════
 // API
 // ════════════════════════════════════════════════════════════
-async function api(action, data = {}, metodo = 'GET') {
+async function api(action, data = {}) {
   try {
-    let url, opts;
-    if (metodo === 'GET') {
-      const p = new URLSearchParams({ action, token: token || '', ...data });
-      url = `${API_URL}?${p}`;
-      opts = {};
-    } else {
-      url = API_URL;
-      opts = {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action, token: token || '', ...data })
-      };
-    }
-    const res = await fetch(url, opts);
+    const p = new URLSearchParams({ action, token: token || '', ...data });
+    const res = await fetch(`${API_URL}?${p}`);
     const json = await res.json();
     if (json && json.error) throw new Error(json.error);
     return json;

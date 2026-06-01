@@ -17,20 +17,19 @@ function handleRequest(e) {
   output.setMimeType(ContentService.MimeType.JSON);
 
   try {
-    const params = e.parameter || {};
-    const postData = e.postData ? JSON.parse(e.postData.contents || '{}') : {};
-    const action = params.action || postData.action || '';
+    const p = e.parameter || {};
+    const action = p.action || '';
 
     switch (action) {
-      case 'login':          return responder(handleLogin(postData), output);
-      case 'getEventos':     return responder(handleGetEventos(params), output);
-      case 'criarEvento':    return responder(handleCriarEvento(postData), output);
-      case 'atualizarEvento':return responder(handleAtualizarEvento(postData), output);
-      case 'excluirEvento':  return responder(handleExcluirEvento(postData), output);
-      case 'getUsuarios':    return responder(handleGetUsuarios(postData), output);
-      case 'criarUsuario':   return responder(handleCriarUsuario(postData), output);
-      case 'resetarSenha':   return responder(handleResetarSenha(postData), output);
-      case 'excluirUsuario': return responder(handleExcluirUsuario(postData), output);
+      case 'login':          return responder(handleLogin(p), output);
+      case 'getEventos':     return responder(handleGetEventos(p), output);
+      case 'criarEvento':    return responder(handleCriarEvento(p), output);
+      case 'atualizarEvento':return responder(handleAtualizarEvento(p), output);
+      case 'excluirEvento':  return responder(handleExcluirEvento(p), output);
+      case 'getUsuarios':    return responder(handleGetUsuarios(p), output);
+      case 'criarUsuario':   return responder(handleCriarUsuario(p), output);
+      case 'resetarSenha':   return responder(handleResetarSenha(p), output);
+      case 'excluirUsuario': return responder(handleExcluirUsuario(p), output);
       default:
         return responder({ error: 'Ação não encontrada: ' + action }, output);
     }
@@ -277,4 +276,14 @@ function testarConexao() {
   Logger.log('Planilha conectada: ' + ss.getName());
   const abas = ss.getSheets().map(s => s.getName());
   Logger.log('Abas encontradas: ' + abas.join(', '));
+}
+
+function testarLogin() {
+  const { rows } = lerAba('usuarios');
+  Logger.log('Total de usuários encontrados: ' + rows.length);
+  rows.forEach((r, i) => {
+    Logger.log(`Linha ${i+1}: login="${r.login}" | senha="${r.senha}" | ativo="${r.ativo}" (tipo: ${typeof r.ativo})`);
+  });
+  const resultado = handleLogin({ usuario: 'admin', senha: 'admin123' });
+  Logger.log('Resultado do login: ' + JSON.stringify(resultado));
 }
