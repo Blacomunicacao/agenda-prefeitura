@@ -119,24 +119,47 @@ tr.pref-row:hover td{background:#ffe8e8}
 .badge{background:#dc3545;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700;margin-left:4px}
 
 /* ── Mobile ── */
-.menu-toggle{display:none;position:fixed;top:10px;left:10px;z-index:200;background:#003366;color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.menu-toggle{display:none;position:fixed;top:10px;left:10px;z-index:200;background:#003366;color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
 .overlay.ativo{display:block}
 .alerta-retroativo{font-size:12px;color:#dc3545;margin-top:4px;display:none}
 .empty{text-align:center;padding:32px;color:#999;font-size:14px}
+.btn{min-height:40px}
+.form-group input,.form-group select,.form-group textarea{font-size:16px!important}
 
 @media(max-width:768px){
-  .sidebar{transform:translateX(-100%);width:260px}
+  .sidebar{transform:translateX(-100%);width:80vw;max-width:280px}
   .sidebar.aberta{transform:translateX(0)}
-  .main{margin-left:0;padding:12px;padding-top:58px}
+  .main{margin-left:0;padding:12px;padding-top:62px}
   .menu-toggle{display:flex;align-items:center;justify-content:center}
   .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
   .stat-card{padding:12px}
   .stat-icon{font-size:28px}
   .stat-info h3{font-size:20px}
-  .fc-view-harness{height:auto!important;min-height:380px}
+  .fc-view-harness{height:auto!important;min-height:360px}
+  .modal-box{border-radius:16px 16px 0 0;max-height:95vh;margin-top:auto}
+  .modal-bg{align-items:flex-end;padding:0}
+  .secao{padding:14px}
+  .secao-header{flex-direction:column;align-items:flex-start}
+  .secao-header .btns-row{width:100%}
+  .btn{padding:10px 14px;font-size:13px}
+  .btns-row{gap:8px}
+  table{min-width:600px}
+  .modal-footer{flex-direction:column}
+  .modal-footer .btn{width:100%;justify-content:center}
+  [style*="grid-template-columns:1fr 1fr"]{display:block!important}
+  [style*="grid-template-columns:1fr 1fr"]>.form-group{margin-bottom:12px}
 }
-@media(max-width:420px){.stats-grid{grid-template-columns:1fr}}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .login-card{padding:28px 18px}
+  .sidebar-header h3{font-size:14px}
+  .nav-item{font-size:13px;padding:10px 12px}
+  .evento-titulo{font-size:14px}
+  .evento-meta{font-size:12px}
+  .secao-header h2{font-size:16px}
+}
+@media(max-width:360px){.stats-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -190,19 +213,57 @@ const isPrefeito = e => e.orgao === 'Gabinete do Prefeito';
 const $ = id => document.getElementById(id);
 
 const SIGLAS = {
-  'Gabinete do Prefeito':'PREF','Secretaria de Educação':'EDUC','Secretaria de Saúde':'SAÚD',
-  'Secretaria de Obras':'OBRS','Secretaria de Finanças':'FIN','Secretaria de Cultura':'CULT',
-  'Secretaria de Esportes':'ESP','Secretaria de Assistência Social':'SAS',
-  'Secretaria de Meio Ambiente':'AMB','Secretaria de Transportes':'TRANS',
-  'Secretaria de Segurança':'SEG','Secretaria de Turismo':'TUR',
-  'Conselho Tutelar':'CT','Conselho da Criança':'CCRI','Conselho do Idoso':'CIDO',
-  'Conselho da Mulher':'CMUL'
+  'Gabinete do Prefeito':'PREF',
+  'Secretaria de Administração':'SECAD','Secretaria de Agricultura e Abastecimento':'SEAGRI',
+  'Secretaria de Assistência Social':'SAS','Secretaria de Assuntos Jurídicos e Legislativos':'SEAJUR',
+  'Secretaria de Comunicação':'SECOM','Secretaria de Cultura':'SECULT',
+  'Secretaria de Desenvolvimento Econômico':'SEDEPP','Secretaria de Educação':'SEDUC',
+  'Secretaria de Esporte':'SEMEPP','Secretaria de Finanças':'SEFIN',
+  'Secretaria de Meio Ambiente':'SEMEA',
+  'Secretaria de Mobilidade Urbana e Cooperação em Segurança Pública':'SEMOB',
+  'Secretaria de Obras e Serviços Públicos':'SOSP',
+  'Secretaria de Planejamento, Desenvolvimento Urbano e Habitação':'SEPLAN',
+  'Secretaria de Saúde':'SESAU','Secretaria de Tecnologia da Informação':'SETEC',
+  'Secretaria de Turismo':'SETUR'
 };
-const sigla = orgao => SIGLAS[orgao] || orgao.substring(0,4).toUpperCase();
+
+const ORGAOS_LIST = {
+  'Secretarias':[
+    'Gabinete do Prefeito','Secretaria de Administração','Secretaria de Agricultura e Abastecimento',
+    'Secretaria de Assistência Social','Secretaria de Assuntos Jurídicos e Legislativos',
+    'Secretaria de Comunicação','Secretaria de Cultura','Secretaria de Desenvolvimento Econômico',
+    'Secretaria de Educação','Secretaria de Esporte','Secretaria de Finanças',
+    'Secretaria de Meio Ambiente','Secretaria de Mobilidade Urbana e Cooperação em Segurança Pública',
+    'Secretaria de Obras e Serviços Públicos',
+    'Secretaria de Planejamento, Desenvolvimento Urbano e Habitação',
+    'Secretaria de Saúde','Secretaria de Tecnologia da Informação','Secretaria de Turismo'
+  ],
+  'Conselhos':[
+    'Conselho CACS-FUNDEB','Conselho CGOV','Conselho CDFSS','Conselho COMAD','Conselho CMAS',
+    'Conselho CMCF','Conselho CMHIS','Conselho COMIR','Conselho COMJUVE','Conselho COMDEF',
+    'Conselho CAE','Conselho CMCTI','Conselho CMDR','Conselho COMED','Conselho CMPHAAT',
+    'Conselho CMP','Conselho CMPC','Conselho CMS','Conselho COMSEA','Conselho COMTUR',
+    'Conselho CMI','Conselho CMMA','Conselho CMDCA','Conselho CTPP'
+  ],
+  'Outras Unidades':[
+    'CIPA','CGPCEU','Controladoria-Geral do Município','JUVENTUDE','CPD',
+    'COMPDEC','Instituto do Idoso de Presidente Prudente','NEF','SESMT'
+  ]
+};
+
+function orgaosSelectHtml(id, required=true) {
+  return `<select id="${id}" ${required?'required':''}>
+    <option value="">Selecione...</option>
+    ${Object.entries(ORGAOS_LIST).map(([grupo,lista])=>
+      `<optgroup label="${grupo}">${lista.map(o=>`<option>${o}</option>`).join('')}</optgroup>`
+    ).join('')}
+  </select>`;
+}
+
+const sigla = orgao => SIGLAS[orgao] || (orgao||'').substring(0,6).toUpperCase();
 
 function evtDoUsuario() {
-  if (usuario?.tipo === 'admin' || usuario?.tipo === 'prefeito') return eventos;
-  return eventos.filter(e => String(e.orgao||'').trim() === String(usuario?.orgao||'').trim());
+  return eventos; // backend already filters by orgao/tipo
 }
 function evtHoje() {
   const h = new Date(); h.setHours(0,0,0,0);
@@ -238,7 +299,7 @@ function htmlLogin() {
   <div class="login-page">
     <div class="login-card">
       <img src="Logo plataforma de Agenda.png" alt="Agenda" class="login-logo">
-      <h1>Agenda da Prefeitura</h1>
+      <h1>Plataforma de Agenda</h1>
       <p>Presidente Prudente · Secretarias e Conselhos</p>
       <div id="erroLogin" class="erro"></div>
       <div id="okLogin" class="sucesso"></div>
@@ -283,10 +344,6 @@ function configurarUrl() {
 
 // ════════════════ MODAL SOLICITAR ACESSO ════════════════
 function htmlModalSolicitacao() {
-  const orgaos = ['Gabinete do Prefeito','Secretaria de Educação','Secretaria de Saúde','Secretaria de Obras',
-    'Secretaria de Finanças','Secretaria de Cultura','Secretaria de Esportes','Secretaria de Assistência Social',
-    'Secretaria de Meio Ambiente','Secretaria de Transportes','Secretaria de Segurança','Secretaria de Turismo',
-    'Conselho Tutelar','Conselho da Criança','Conselho do Idoso','Conselho da Mulher'];
   return `
   <div id="modalSolicitacao" class="modal-bg" onclick="fecharModal('modalSolicitacao')">
     <div class="modal-box" onclick="event.stopPropagation()">
@@ -304,11 +361,7 @@ function htmlModalSolicitacao() {
             <div class="form-group"><label>Login desejado</label><input id="sLogin" type="text" required></div>
             <div class="form-group"><label>Telefone</label><input id="sTel" type="tel" placeholder="(18) 99999-9999"></div>
           </div>
-          <div class="form-group"><label>Órgão / Secretaria</label>
-            <select id="sOrgao" required><option value="">Selecione...</option>
-              ${orgaos.map(o=>`<option>${o}</option>`).join('')}
-            </select>
-          </div>
+          <div class="form-group"><label>Órgão / Unidade</label>${orgaosSelectHtml('sOrgao')}</div>
           <div class="form-group"><label>Justificativa</label>
             <textarea id="sJust" placeholder="Por que precisa de acesso?"></textarea></div>
           <div class="btns-row">
@@ -695,10 +748,6 @@ function htmlModalForm() {
 }
 
 function htmlModalUsuario() {
-  const orgaos=['Secretaria de Educação','Secretaria de Saúde','Secretaria de Obras','Secretaria de Finanças',
-    'Secretaria de Cultura','Secretaria de Esportes','Secretaria de Assistência Social','Secretaria de Meio Ambiente',
-    'Secretaria de Transportes','Secretaria de Segurança','Secretaria de Turismo',
-    'Conselho Tutelar','Conselho da Criança','Conselho do Idoso','Conselho da Mulher'];
   return `
   <div id="modalUsuario" class="modal-bg" onclick="fecharModal('modalUsuario')">
     <div class="modal-box" onclick="event.stopPropagation()">
@@ -721,13 +770,11 @@ function htmlModalUsuario() {
               <option value="">Selecione o tipo...</option>
               <option value="admin">Administrador</option>
               <option value="prefeito">Prefeito (Gabinete)</option>
-              <option value="orgao">Órgão / Secretaria</option>
+              <option value="orgao">Órgão / Unidade</option>
             </select>
           </div>
-          <div class="form-group" id="campoOrgao" style="display:none"><label>Órgão / Secretaria</label>
-            <select id="uOrgao"><option value="">Selecione...</option>
-              ${orgaos.map(o=>`<option>${o}</option>`).join('')}
-            </select>
+          <div class="form-group" id="campoOrgao" style="display:none"><label>Órgão / Unidade</label>
+            ${orgaosSelectHtml('uOrgao', false)}
           </div>
           <input type="hidden" id="uId">
           <div class="btns-row">
@@ -814,6 +861,7 @@ function verEvento(id) {
   const pref=isPrefeito(e);
   $('modalEventoHead').className='modal-head'+(pref?' prefeito-head':'');
   $('modalEventoTitulo').textContent=e.titulo;
+  const meuEvento = String(e.orgao||'').trim() === String(usuario?.orgao||'').trim();
   $('modalEventoBody').innerHTML=`
     ${pref?'<div style="text-align:center;margin-bottom:16px"><span class="tag-prefeito" style="font-size:13px">🏛️ Evento do Gabinete do Prefeito</span></div>':''}
     <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtDH(e.data_evento)}</div></div>
@@ -822,13 +870,14 @@ function verEvento(id) {
     <div class="info-linha"><div class="info-label">👤 Responsável</div><div class="info-valor">${e.responsavel||'—'}</div></div>
     <div class="info-linha"><div class="info-label">📞 Telefone</div><div class="info-valor">${e.telefone||'—'}</div></div>
     <div class="info-linha"><div class="info-label">📝 Descrição</div><div class="info-valor">${e.observacao||'—'}</div></div>
-    <div class="info-linha"><div class="info-label">✍️ Publicado</div><div class="info-valor">${e.publicado_por||'—'} · ${fmtDH(e.data_publicacao)}</div></div>
-    ${e.anexo_nome?`<div class="info-linha"><div class="info-label">📎 Anexo</div><div class="info-valor"><a href="${e.anexo_url}" target="_blank">${e.anexo_nome}</a></div></div>`:''}`;
-  const podEditar = usuario?.tipo==='admin' || String(e.orgao||'').trim()===String(usuario?.orgao||'').trim();
-  const podExcluir = String(e.orgao||'').trim()===String(usuario?.orgao||'').trim();
+    <div class="info-linha"><div class="info-label">✍️ Publicado por</div><div class="info-valor">${e.publicado_por||'—'} · ${fmtDH(e.data_publicacao)}</div></div>
+    ${e.anexo_url?`<div class="info-linha"><div class="info-label">📎 Anexo</div><div class="info-valor">
+      <a href="${e.anexo_url}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#004d99;color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;text-decoration:none">
+        📥 Baixar / Visualizar ${e.anexo_nome?'('+e.anexo_nome+')':''}
+      </a></div></div>`:''}`;
   $('modalEventoFooter').innerHTML=`
-    ${podEditar?`<button class="btn btn-amarelo" onclick="abrirEdicao('${e.id}')">✏️ Editar</button>`:''}
-    ${podExcluir?`<button class="btn btn-vermelho" onclick="confirmarExcluir('${e.id}')">🗑️ Excluir</button>`:''}
+    ${meuEvento?`<button class="btn btn-amarelo" onclick="abrirEdicao('${e.id}')">✏️ Editar</button>`:''}
+    ${meuEvento?`<button class="btn btn-vermelho" onclick="confirmarExcluir('${e.id}')">🗑️ Excluir</button>`:''}
     <button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>`;
   abrirModal('modalEvento');
 }
