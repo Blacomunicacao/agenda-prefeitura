@@ -16,7 +16,8 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 /* ── Login ── */
 .login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#004d99,#003366);padding:16px}
 .login-card{background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:440px;box-shadow:0 20px 40px rgba(0,0,0,.2);text-align:center}
-.brasao{font-size:60px;margin-bottom:12px}
+.login-logo{max-width:200px;height:auto;margin-bottom:16px}
+.sidebar-logo{max-width:130px;height:auto;margin-bottom:8px}
 .login-card h1{font-size:22px;color:#003366;margin-bottom:4px}
 .login-card p{color:#666;font-size:14px;margin-bottom:24px}
 .form-group{margin-bottom:16px;text-align:left}
@@ -27,13 +28,19 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .btn-primary{width:100%;padding:13px;background:#004d99;color:#fff;border:none;border-radius:40px;font-size:15px;font-weight:600;cursor:pointer;transition:background .2s}
 .btn-primary:hover{background:#003366}
 .erro{background:#f8d7da;color:#721c24;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+.sucesso{background:#d4edda;color:#155724;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+.login-links{margin-top:18px;display:flex;justify-content:center;gap:24px;font-size:13px}
+.login-links a{color:#004d99;text-decoration:none;font-weight:500}
+.login-links a:hover{text-decoration:underline}
 
 /* ── Layout ── */
 .app{display:flex;min-height:100vh}
 .sidebar{width:270px;background:#003366;color:#fff;position:fixed;height:100vh;overflow-y:auto;z-index:100;transition:transform .3s}
+.sidebar.pref-sidebar{background:#7b0000}
 .sidebar-header{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,.15);text-align:center}
-.sidebar-header h3{font-size:17px;margin-bottom:6px}
+.sidebar-header h3{font-size:16px;margin-bottom:6px}
 .orgao-badge{display:inline-block;background:#ff9900;color:#003366;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.orgao-badge.pref-badge{background:#ff4444;color:#fff}
 .sidebar-nav{padding:12px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;color:rgba(255,255,255,.8);cursor:pointer;margin-bottom:4px;font-size:14px;transition:all .2s}
 .nav-item:hover,.nav-item.active{background:rgba(255,255,255,.15);color:#fff}
@@ -108,6 +115,9 @@ tr:hover td{background:#f8f9fa}
 tr.pref-row td{background:#fff5f5}
 tr.pref-row:hover td{background:#ffe8e8}
 
+/* ── Badge notificação ── */
+.badge{background:#dc3545;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700;margin-left:4px}
+
 /* ── Mobile ── */
 .menu-toggle{display:none;position:fixed;top:10px;left:10px;z-index:200;background:#003366;color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
@@ -133,21 +143,15 @@ tr.pref-row:hover td{background:#ffe8e8}
 <div id="root"></div>
 
 <script>
-// ════════════════════════════════════════════════════════════
-// CONFIGURAÇÃO — substitua pela URL do seu Google Apps Script
-// ════════════════════════════════════════════════════════════
 const API_URL = localStorage.getItem('apiUrl') ||
   'https://script.google.com/macros/s/AKfycbwm6gJaz-flybEnYnaxcH7DXAPdXzBw9MFODagv3PppJFDPRghZqIgYK7WoXaYr5bTk/exec';
 
-// ── Estado global ────────────────────────────────────────────
 let token    = localStorage.getItem('token');
 let usuario  = JSON.parse(localStorage.getItem('usuario') || 'null');
 let eventos  = [];
 let calendar = null;
+let solicitacoesList = [];
 
-// ════════════════════════════════════════════════════════════
-// API
-// ════════════════════════════════════════════════════════════
 async function api(action, data = {}) {
   try {
     const p = new URLSearchParams({ action, token: token || '', ...data });
@@ -161,9 +165,6 @@ async function api(action, data = {}) {
   }
 }
 
-// ════════════════════════════════════════════════════════════
-// Utilitários
-// ════════════════════════════════════════════════════════════
 const fmtData = s => s ? new Date(s).toLocaleDateString('pt-BR') : '-';
 const fmtHora = s => s ? new Date(s).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
 const fmtDH   = s => s ? new Date(s).toLocaleString('pt-BR') : '-';
@@ -183,7 +184,7 @@ const SIGLAS = {
 const sigla = orgao => SIGLAS[orgao] || orgao.substring(0,4).toUpperCase();
 
 function evtDoUsuario() {
-  if (usuario?.tipo === 'admin') return eventos;
+  if (usuario?.tipo === 'admin' || usuario?.tipo === 'prefeito') return eventos;
   return eventos.filter(e => e.orgao === usuario?.orgao);
 }
 function evtHoje() {
@@ -194,20 +195,16 @@ function evtHoje() {
   }).sort((a,b) => new Date(a.data_evento)-new Date(b.data_evento));
 }
 
-// ════════════════════════════════════════════════════════════
-// RENDER PRINCIPAL
-// ════════════════════════════════════════════════════════════
 async function render() {
-  if (!token || !usuario) {
-    $('root').innerHTML = htmlLogin();
-    return;
-  }
+  if (!token || !usuario) { $('root').innerHTML = htmlLogin(); return; }
   try {
     eventos = await api('getEventos');
     if (!Array.isArray(eventos)) eventos = [];
   } catch(e) { eventos = []; }
 
-  $('root').innerHTML = usuario.tipo === 'admin' ? htmlAdmin() : htmlSecretaria();
+  if      (usuario.tipo === 'admin')    $('root').innerHTML = htmlAdmin();
+  else if (usuario.tipo === 'prefeito') $('root').innerHTML = htmlPrefeito();
+  else                                  $('root').innerHTML = htmlSecretaria();
   inicializarApp();
 }
 
@@ -217,17 +214,16 @@ function logout() {
   render();
 }
 
-// ════════════════════════════════════════════════════════════
-// LOGIN
-// ════════════════════════════════════════════════════════════
+// ════════════════ LOGIN ════════════════
 function htmlLogin() {
   return `
   <div class="login-page">
     <div class="login-card">
-      <div class="brasao">🏛️</div>
+      <img src="Logo plataforma de Agenda.png" alt="Agenda" class="login-logo">
       <h1>Agenda da Prefeitura</h1>
       <p>Presidente Prudente · Secretarias e Conselhos</p>
       <div id="erroLogin" class="erro"></div>
+      <div id="okLogin" class="sucesso"></div>
       <form onsubmit="fazerLogin(event)">
         <div class="form-group">
           <label>Usuário, Nome ou E-mail</label>
@@ -239,53 +235,146 @@ function htmlLogin() {
         </div>
         <button type="submit" class="btn-primary">🔓 Entrar</button>
       </form>
-      <div style="margin-top:16px;font-size:12px;color:#aaa">
-        <a href="#" onclick="configurarUrl()">⚙️ Configurar URL da API</a>
+      <div class="login-links">
+        <a href="#" onclick="abrirSolicitacao();return false">👤 Criar Conta</a>
+        <a href="#" onclick="abrirRecuperarSenha();return false">🔑 Recuperar Senha</a>
+        <a href="#" onclick="configurarUrl();return false" style="color:#ccc;font-size:11px">⚙️</a>
+      </div>
+    </div>
+  </div>
+  ${htmlModalSolicitacao()}
+  ${htmlModalRecuperarSenha()}`;
+}
+
+async function fazerLogin(e) {
+  e.preventDefault();
+  const err = $('erroLogin'); err.style.display='none';
+  try {
+    const res = await api('login', { usuario: $('lUser').value.trim(), senha: $('lSenha').value });
+    token = res.token; usuario = res.usuario;
+    localStorage.setItem('token', token);
+    localStorage.setItem('usuario', JSON.stringify(usuario));
+    render();
+  } catch(ex) { err.textContent='❌ '+ex.message; err.style.display='block'; }
+}
+
+function configurarUrl() {
+  const url = prompt('Cole a URL do Google Apps Script:', localStorage.getItem('apiUrl')||'');
+  if (url) { localStorage.setItem('apiUrl', url); location.reload(); }
+}
+
+// ════════════════ MODAL SOLICITAR ACESSO ════════════════
+function htmlModalSolicitacao() {
+  const orgaos = ['Gabinete do Prefeito','Secretaria de Educação','Secretaria de Saúde','Secretaria de Obras',
+    'Secretaria de Finanças','Secretaria de Cultura','Secretaria de Esportes','Secretaria de Assistência Social',
+    'Secretaria de Meio Ambiente','Secretaria de Transportes','Secretaria de Segurança','Secretaria de Turismo',
+    'Conselho Tutelar','Conselho da Criança','Conselho do Idoso','Conselho da Mulher'];
+  return `
+  <div id="modalSolicitacao" class="modal-bg" onclick="fecharModal('modalSolicitacao')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-head"><h3>👤 Solicitar Acesso</h3>
+        <button class="modal-close" onclick="fecharModal('modalSolicitacao')">×</button></div>
+      <div class="modal-body">
+        <p style="color:#666;font-size:13px;margin-bottom:16px">Preencha os dados. Sua solicitação será analisada pelo administrador.</p>
+        <div id="erroSolic" class="erro"></div><div id="okSolic" class="sucesso"></div>
+        <form id="formSolic" onsubmit="enviarSolicitacao(event)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group"><label>Nome Completo</label><input id="sNome" type="text" required></div>
+            <div class="form-group"><label>E-mail</label><input id="sEmail" type="email" required></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group"><label>Login desejado</label><input id="sLogin" type="text" required></div>
+            <div class="form-group"><label>Telefone</label><input id="sTel" type="tel" placeholder="(18) 99999-9999"></div>
+          </div>
+          <div class="form-group"><label>Órgão / Secretaria</label>
+            <select id="sOrgao" required><option value="">Selecione...</option>
+              ${orgaos.map(o=>`<option>${o}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Justificativa</label>
+            <textarea id="sJust" placeholder="Por que precisa de acesso?"></textarea></div>
+          <div class="btns-row">
+            <button type="submit" class="btn btn-azul">📨 Enviar Solicitação</button>
+            <button type="button" class="btn btn-cinza" onclick="fecharModal('modalSolicitacao')">Cancelar</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>`;
 }
 
-async function fazerLogin(e) {
-  e.preventDefault();
-  const err = $('erroLogin');
-  err.style.display = 'none';
+function abrirSolicitacao() { abrirModal('modalSolicitacao'); }
+
+async function enviarSolicitacao(ev) {
+  ev.preventDefault();
+  const err=$('erroSolic'),ok=$('okSolic');
+  err.style.display='none'; ok.style.display='none';
   try {
-    const res = await api('login', { usuario: $('lUser').value.trim(), senha: $('lSenha').value }, 'POST');
-    token = res.token; usuario = res.usuario;
-    localStorage.setItem('token', token);
-    localStorage.setItem('usuario', JSON.stringify(usuario));
-    render();
-  } catch(ex) {
-    err.textContent = '❌ ' + ex.message;
-    err.style.display = 'block';
-  }
+    await api('solicitarAcesso',{
+      nome:$('sNome').value, email:$('sEmail').value,
+      login:$('sLogin').value, telefone:$('sTel').value,
+      orgao:$('sOrgao').value, justificativa:$('sJust').value
+    });
+    ok.textContent='✅ Solicitação enviada! O administrador entrará em contato.';
+    ok.style.display='block';
+    $('formSolic').reset();
+    setTimeout(()=>fecharModal('modalSolicitacao'),3000);
+  } catch(e){ err.textContent='❌ '+e.message; err.style.display='block'; }
 }
 
-function configurarUrl() {
-  const url = prompt('Cole a URL do Google Apps Script:', localStorage.getItem('apiUrl') || '');
-  if (url) { localStorage.setItem('apiUrl', url); location.reload(); }
+// ════════════════ MODAL RECUPERAR SENHA ════════════════
+function htmlModalRecuperarSenha() {
+  return `
+  <div id="modalRecuperar" class="modal-bg" onclick="fecharModal('modalRecuperar')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-head"><h3>🔑 Recuperar Senha</h3>
+        <button class="modal-close" onclick="fecharModal('modalRecuperar')">×</button></div>
+      <div class="modal-body">
+        <p style="color:#666;font-size:13px;margin-bottom:16px">Informe seu login ou e-mail. O administrador será notificado e redefinirá sua senha.</p>
+        <div id="erroRecup" class="erro"></div><div id="okRecup" class="sucesso"></div>
+        <form id="formRecup" onsubmit="enviarRecuperar(event)">
+          <div class="form-group"><label>Login ou E-mail</label>
+            <input id="rLogin" type="text" required placeholder="seu.login ou email@..."></div>
+          <div class="btns-row">
+            <button type="submit" class="btn btn-azul">🔑 Solicitar Recuperação</button>
+            <button type="button" class="btn btn-cinza" onclick="fecharModal('modalRecuperar')">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>`;
 }
 
-// ════════════════════════════════════════════════════════════
-// ADMIN HTML
-// ════════════════════════════════════════════════════════════
+function abrirRecuperarSenha() { abrirModal('modalRecuperar'); }
+
+async function enviarRecuperar(ev) {
+  ev.preventDefault();
+  const err=$('erroRecup'),ok=$('okRecup');
+  err.style.display='none'; ok.style.display='none';
+  try {
+    await api('recuperarSenha',{ login:$('rLogin').value.trim() });
+    ok.textContent='✅ Solicitação registrada! O administrador entrará em contato para redefinir sua senha.';
+    ok.style.display='block';
+    $('formRecup').reset();
+    setTimeout(()=>fecharModal('modalRecuperar'),3500);
+  } catch(e){ err.textContent='❌ '+e.message; err.style.display='block'; }
+}
+
+// ════════════════ ADMIN HTML ════════════════
 function htmlAdmin() {
-  const hoje = evtHoje();
-  const total = eventos.length;
-  const orgaos = [...new Set(eventos.map(e => e.orgao))].length;
-  const semana = (() => {
-    const d = new Date(); const ini = new Date(d); ini.setDate(d.getDate()-d.getDay());
-    const fim = new Date(ini); fim.setDate(ini.getDate()+6);
-    return eventos.filter(e => { const x=new Date(e.data_evento); return x>=ini && x<=fim; }).length;
+  const hoje=evtHoje(), total=eventos.length;
+  const orgaos=[...new Set(eventos.map(e=>e.orgao))].length;
+  const semana=(()=>{
+    const d=new Date(),ini=new Date(d); ini.setDate(d.getDate()-d.getDay());
+    const fim=new Date(ini); fim.setDate(ini.getDate()+6);
+    return eventos.filter(e=>{const x=new Date(e.data_evento);return x>=ini&&x<=fim;}).length;
   })();
-
   return `
   <button class="menu-toggle" onclick="toggleMenu()">☰</button>
   <div class="overlay" onclick="toggleMenu()"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div style="font-size:36px">🏛️</div>
+      <img src="Logo plataforma de Agenda.png" alt="Agenda" class="sidebar-logo">
       <h3>Agenda Prefeitura</h3>
       <span class="orgao-badge">Administrador</span>
     </div>
@@ -294,108 +383,160 @@ function htmlAdmin() {
       <div class="nav-item" onclick="mostrarView('calendario')">📅 Calendário</div>
       <div class="nav-item" onclick="mostrarView('listaEventos')">📋 Todos os Eventos</div>
       <div class="nav-item" onclick="mostrarView('usuarios')">👥 Usuários</div>
+      <div class="nav-item" onclick="mostrarView('solicitacoes')">📬 Solicitações <span id="badgeSolic" class="badge" style="display:none">0</span></div>
     </nav>
     <div class="sidebar-footer">
-      <div>${usuario.nome}</div>
-      <div>${usuario.email}</div>
+      <div>${usuario.nome}</div><div>${usuario.email}</div>
       <button class="btn-logout" onclick="logout()">Sair →</button>
     </div>
   </aside>
-
   <main class="main">
-
-    <!-- DASHBOARD -->
     <div id="dashboard" class="view active">
       <div class="secao-header"><h2>📊 Dashboard Geral</h2>
-        <div class="btns-row">
-          <button class="btn btn-verde" onclick="exportarExcel()">📊 Excel</button>
-        </div>
+        <div class="btns-row"><button class="btn btn-verde" onclick="exportarExcel()">📊 Excel</button></div>
       </div>
       <div class="stats-grid">
         <div class="stat-card" onclick="mostrarView('listaEventos')">
-          <div class="stat-icon">📅</div>
-          <div class="stat-info"><h3>${total}</h3><p>Total de Eventos</p></div>
+          <div class="stat-icon">📅</div><div class="stat-info"><h3>${total}</h3><p>Total de Eventos</p></div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">📆</div>
-          <div class="stat-info"><h3>${semana}</h3><p>Esta Semana</p></div>
+          <div class="stat-icon">📆</div><div class="stat-info"><h3>${semana}</h3><p>Esta Semana</p></div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">🔴</div>
-          <div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div>
+          <div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div>
         </div>
         <div class="stat-card" onclick="mostrarView('usuarios')">
-          <div class="stat-icon">🏢</div>
-          <div class="stat-info"><h3>${orgaos}</h3><p>Órgãos Ativos</p></div>
+          <div class="stat-icon">🏢</div><div class="stat-info"><h3>${orgaos}</h3><p>Órgãos Ativos</p></div>
         </div>
       </div>
-
       <div class="secao">
         <div class="secao-header"><h2>📌 Eventos de Hoje</h2></div>
-        ${hoje.length === 0 ? '<div class="empty">Nenhum evento hoje</div>' :
-          hoje.map(e => cardEvento(e, true)).join('')}
+        ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e,true)).join('')}
       </div>
     </div>
-
-    <!-- CALENDÁRIO -->
-    <div id="calendario" class="view">
-      <div class="secao">
-        <div id="cal"></div>
-      </div>
-    </div>
-
-    <!-- LISTA EVENTOS -->
+    <div id="calendario" class="view"><div class="secao"><div id="cal"></div></div></div>
     <div id="listaEventos" class="view">
       <div class="secao">
-        <div class="secao-header">
-          <h2>📋 Todos os Eventos</h2>
-          <div class="btns-row">
-            <input id="buscaEvt" type="text" placeholder="Buscar..." style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px" oninput="filtrarEventos()">
-          </div>
+        <div class="secao-header"><h2>📋 Todos os Eventos</h2>
+          <input id="buscaEvt" type="text" placeholder="Buscar..." style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px" oninput="filtrarEventos()">
         </div>
         <div id="listaEvtConteudo">${renderListaEventos(eventos)}</div>
       </div>
     </div>
-
-    <!-- USUÁRIOS -->
     <div id="usuarios" class="view">
       <div class="secao">
-        <div class="secao-header">
-          <h2>👥 Gerenciar Usuários</h2>
+        <div class="secao-header"><h2>👥 Gerenciar Usuários</h2>
           <button class="btn btn-azul" onclick="abrirModalNovoUsuario()">+ Novo Usuário</button>
         </div>
         <div id="listaUsuarios">Carregando...</div>
       </div>
     </div>
-
+    <div id="solicitacoes" class="view">
+      <div class="secao">
+        <div class="secao-header"><h2>📬 Solicitações Pendentes</h2>
+          <button class="btn btn-cinza" onclick="carregarSolicitacoes()">↻ Atualizar</button>
+        </div>
+        <div id="listaSolicitacoes">Carregando...</div>
+      </div>
+    </div>
   </main>
-
-  ${htmlModalEvento()}
-  ${htmlModalForm()}
-  ${htmlModalUsuario()}
-  `;
+  ${htmlModalEvento()}${htmlModalForm()}${htmlModalUsuario()}`;
 }
 
-// ════════════════════════════════════════════════════════════
-// SECRETARIA HTML
-// ════════════════════════════════════════════════════════════
-function htmlSecretaria() {
-  const meus = evtDoUsuario();
-  const hoje = evtHoje();
-  const mes = (() => {
-    const agora = new Date();
-    return meus.filter(e => {
-      const d = new Date(e.data_evento);
-      return d.getMonth()===agora.getMonth() && d.getFullYear()===agora.getFullYear();
-    }).length;
+// ════════════════ PREFEITO HTML ════════════════
+function htmlPrefeito() {
+  const hoje=evtHoje(), total=eventos.length;
+  const gabinete=eventos.filter(e=>isPrefeito(e)).length;
+  const semana=(()=>{
+    const d=new Date(),ini=new Date(d); ini.setDate(d.getDate()-d.getDay());
+    const fim=new Date(ini); fim.setDate(ini.getDate()+6);
+    return eventos.filter(e=>{const x=new Date(e.data_evento);return x>=ini&&x<=fim;}).length;
   })();
+  return `
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+  <div class="overlay" onclick="toggleMenu()"></div>
+  <aside class="sidebar pref-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="Logo plataforma de Agenda.png" alt="Agenda" class="sidebar-logo">
+      <h3>Gabinete do Prefeito</h3>
+      <span class="orgao-badge pref-badge">PREFEITO</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="mostrarView('inicio')">🏠 Início</div>
+      <div class="nav-item" onclick="mostrarView('calendario')">📅 Calendário Geral</div>
+      <div class="nav-item" onclick="mostrarView('agendaPref')">🏛️ Agenda do Prefeito</div>
+      <div class="nav-item" onclick="mostrarView('novoEvento')">➕ Novo Evento</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div>${usuario.nome}</div><div>${usuario.email}</div>
+      <button class="btn-logout" onclick="logout()">Sair →</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div id="inicio" class="view active">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-info"><h3>${total}</h3><p>Total na Agenda</p></div></div>
+        <div class="stat-card"><div class="stat-icon">📆</div><div class="stat-info"><h3>${semana}</h3><p>Esta Semana</p></div></div>
+        <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div></div>
+        <div class="stat-card"><div class="stat-icon">🏛️</div><div class="stat-info"><h3>${gabinete}</h3><p>Eventos do Gabinete</p></div></div>
+      </div>
+      <div class="secao">
+        <div class="secao-header"><h2>📌 Eventos de Hoje</h2>
+          <button class="btn btn-vermelho" onclick="mostrarView('novoEvento')">+ Novo Evento</button>
+        </div>
+        ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e,true)).join('')}
+      </div>
+    </div>
+    <div id="calendario" class="view"><div class="secao"><div id="cal"></div></div></div>
+    <div id="agendaPref" class="view">
+      <div class="secao">
+        <div class="secao-header"><h2>🏛️ Agenda do Gabinete do Prefeito</h2>
+          <input id="buscaEvt" type="text" placeholder="Buscar..." style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px" oninput="filtrarEventosPref()">
+        </div>
+        <div id="listaEvtConteudo">${renderListaEventos(eventos.filter(e=>isPrefeito(e)))}</div>
+      </div>
+    </div>
+    <div id="novoEvento" class="view">
+      <div class="secao">
+        <h2 style="margin-bottom:20px;color:#7b0000">➕ Novo Evento do Prefeito</h2>
+        <form onsubmit="criarEvento(event)">
+          <div class="form-group"><label>Título</label><input id="evtTitulo" type="text" required placeholder="Nome do evento"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group"><label>Data e Hora</label>
+              <input id="evtData" type="datetime-local" required oninput="verificarData()">
+              <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Data retroativa</div>
+            </div>
+            <div class="form-group"><label>Local</label><input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group"><label>Responsável</label><input id="evtResp" type="text"></div>
+            <div class="form-group"><label>Telefone</label><input id="evtTel" type="tel" placeholder="(18) 99999-9999"></div>
+          </div>
+          <div class="form-group"><label>Descrição / Observações</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
+          <div class="btns-row">
+            <button type="submit" class="btn btn-vermelho">💾 Salvar Evento</button>
+            <button type="button" class="btn btn-cinza" onclick="mostrarView('inicio')">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+  ${htmlModalEvento()}${htmlModalForm()}`;
+}
 
+// ════════════════ SECRETARIA HTML ════════════════
+function htmlSecretaria() {
+  const meus=evtDoUsuario(), hoje=evtHoje();
+  const mes=(()=>{
+    const agora=new Date();
+    return meus.filter(e=>{const d=new Date(e.data_evento);return d.getMonth()===agora.getMonth()&&d.getFullYear()===agora.getFullYear();}).length;
+  })();
   return `
   <button class="menu-toggle" onclick="toggleMenu()">☰</button>
   <div class="overlay" onclick="toggleMenu()"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div style="font-size:36px">🏛️</div>
+      <img src="Logo plataforma de Agenda.png" alt="Agenda" class="sidebar-logo">
       <h3>${usuario.orgao}</h3>
       <span class="orgao-badge">${sigla(usuario.orgao)}</span>
     </div>
@@ -406,15 +547,11 @@ function htmlSecretaria() {
       <div class="nav-item" onclick="mostrarView('novoEvento')">➕ Novo Evento</div>
     </nav>
     <div class="sidebar-footer">
-      <div>${usuario.nome}</div>
-      <div>${usuario.email}</div>
+      <div>${usuario.nome}</div><div>${usuario.email}</div>
       <button class="btn-logout" onclick="logout()">Sair →</button>
     </div>
   </aside>
-
   <main class="main">
-
-    <!-- INÍCIO -->
     <div id="inicio" class="view active">
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-info"><h3>${meus.length}</h3><p>Total de Eventos</p></div></div>
@@ -422,68 +559,39 @@ function htmlSecretaria() {
         <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div></div>
         <div class="stat-card" onclick="mostrarView('novoEvento')"><div class="stat-icon">➕</div><div class="stat-info"><h3>Novo</h3><p>Criar Evento</p></div></div>
       </div>
-
       <div class="secao">
         <div class="secao-header"><h2>📌 Eventos de Hoje</h2>
           <button class="btn btn-azul" onclick="mostrarView('novoEvento')">+ Novo Evento</button>
         </div>
-        ${hoje.length === 0 ? '<div class="empty">Nenhum evento hoje</div>' :
-          hoje.map(e => cardEvento(e)).join('')}
+        ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e)).join('')}
       </div>
     </div>
-
-    <!-- CALENDÁRIO -->
-    <div id="calendario" class="view">
-      <div class="secao">
-        <div id="cal"></div>
-      </div>
-    </div>
-
-    <!-- MEUS EVENTOS -->
+    <div id="calendario" class="view"><div class="secao"><div id="cal"></div></div></div>
     <div id="meusEventos" class="view">
       <div class="secao">
-        <div class="secao-header">
-          <h2>📋 Meus Eventos</h2>
+        <div class="secao-header"><h2>📋 Meus Eventos</h2>
           <input id="buscaEvt" type="text" placeholder="Buscar..." style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px" oninput="filtrarEventos()">
         </div>
         <div id="listaEvtConteudo">${renderListaEventos(meus)}</div>
       </div>
     </div>
-
-    <!-- NOVO EVENTO -->
     <div id="novoEvento" class="view">
       <div class="secao">
         <h2 style="margin-bottom:20px">➕ Novo Evento</h2>
         <form onsubmit="criarEvento(event)">
-          <div class="form-group">
-            <label class="obrigatorio">Título</label>
-            <input id="evtTitulo" type="text" required placeholder="Nome do evento">
-          </div>
+          <div class="form-group"><label>Título</label><input id="evtTitulo" type="text" required placeholder="Nome do evento"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group">
-              <label class="obrigatorio">Data e Hora</label>
+            <div class="form-group"><label>Data e Hora</label>
               <input id="evtData" type="datetime-local" required oninput="verificarData()">
               <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Data retroativa – confirme se é proposital</div>
             </div>
-            <div class="form-group">
-              <label>Local</label>
-              <input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões">
-            </div>
+            <div class="form-group"><label>Local</label><input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group">
-              <label>Responsável</label>
-              <input id="evtResp" type="text" placeholder="Nome do responsável">
-            </div>
-            <div class="form-group">
-              <label>Telefone</label>
-              <input id="evtTel" type="tel" placeholder="(18) 99999-9999">
-            </div>
+            <div class="form-group"><label>Responsável</label><input id="evtResp" type="text" placeholder="Nome do responsável"></div>
+            <div class="form-group"><label>Telefone</label><input id="evtTel" type="tel" placeholder="(18) 99999-9999"></div>
           </div>
-          <div class="form-group">
-            <label class="obrigatorio">Descrição / Observações</label>
-            <textarea id="evtObs" required placeholder="Descreva o evento..."></textarea>
-          </div>
+          <div class="form-group"><label>Descrição / Observações</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
           <div class="btns-row">
             <button type="submit" class="btn btn-azul">💾 Salvar Evento</button>
             <button type="button" class="btn btn-cinza" onclick="mostrarView('inicio')">Cancelar</button>
@@ -491,41 +599,32 @@ function htmlSecretaria() {
         </form>
       </div>
     </div>
-
   </main>
-
-  ${htmlModalEvento()}
-  ${htmlModalForm()}
-  `;
+  ${htmlModalEvento()}${htmlModalForm()}`;
 }
 
-// ════════════════════════════════════════════════════════════
-// COMPONENTES HTML
-// ════════════════════════════════════════════════════════════
-function cardEvento(e, mostrarOrgao = false) {
-  const pref = isPrefeito(e);
+// ════════════════ COMPONENTES ════════════════
+function cardEvento(e, mostrarOrgao=false) {
+  const pref=isPrefeito(e);
   return `
   <div class="evento-card${pref?' prefeito':''}" onclick="verEvento('${e.id}')">
-    <div class="evento-titulo">
-      ${e.titulo}
-      ${pref ? '<span class="tag-prefeito">🏛️ PREFEITO</span>' : ''}
-      ${mostrarOrgao ? `<span class="tag-orgao">${sigla(e.orgao)}</span>` : ''}
+    <div class="evento-titulo">${e.titulo}
+      ${pref?'<span class="tag-prefeito">🏛️ PREFEITO</span>':''}
+      ${mostrarOrgao?`<span class="tag-orgao">${sigla(e.orgao)}</span>`:''}
     </div>
     <div class="evento-meta">
       <span>📅 ${fmtData(e.data_evento)}</span>
-      ${fmtHora(e.data_evento) ? `<span>🕐 ${fmtHora(e.data_evento)}</span>` : ''}
-      ${e.local ? `<span>📍 ${e.local}</span>` : ''}
-      ${e.responsavel ? `<span>👤 ${e.responsavel}</span>` : ''}
+      ${fmtHora(e.data_evento)?`<span>🕐 ${fmtHora(e.data_evento)}</span>`:''}
+      ${e.local?`<span>📍 ${e.local}</span>`:''}
+      ${e.responsavel?`<span>👤 ${e.responsavel}</span>`:''}
     </div>
   </div>`;
 }
 
 function renderListaEventos(lista) {
-  if (!lista || !lista.length) return '<div class="empty">Nenhum evento encontrado</div>';
-  return lista
-    .sort((a,b) => new Date(b.data_evento)-new Date(a.data_evento))
-    .map(e => cardEvento(e, usuario?.tipo === 'admin'))
-    .join('');
+  if (!lista||!lista.length) return '<div class="empty">Nenhum evento encontrado</div>';
+  return lista.sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))
+    .map(e=>cardEvento(e,usuario?.tipo==='admin'||usuario?.tipo==='prefeito')).join('');
 }
 
 function htmlModalEvento() {
@@ -546,10 +645,8 @@ function htmlModalForm() {
   return `
   <div id="modalForm" class="modal-bg" onclick="fecharModal('modalForm')">
     <div class="modal-box" onclick="event.stopPropagation()">
-      <div class="modal-head">
-        <h3>✏️ Editar Evento</h3>
-        <button class="modal-close" onclick="fecharModal('modalForm')">×</button>
-      </div>
+      <div class="modal-head"><h3>✏️ Editar Evento</h3>
+        <button class="modal-close" onclick="fecharModal('modalForm')">×</button></div>
       <div class="modal-body">
         <form id="formEditar" onsubmit="salvarEdicao(event)">
           <div class="form-group"><label>Título</label><input id="editTitulo" type="text" required></div>
@@ -574,14 +671,18 @@ function htmlModalForm() {
 }
 
 function htmlModalUsuario() {
+  const orgaos=['Secretaria de Educação','Secretaria de Saúde','Secretaria de Obras','Secretaria de Finanças',
+    'Secretaria de Cultura','Secretaria de Esportes','Secretaria de Assistência Social','Secretaria de Meio Ambiente',
+    'Secretaria de Transportes','Secretaria de Segurança','Secretaria de Turismo',
+    'Conselho Tutelar','Conselho da Criança','Conselho do Idoso','Conselho da Mulher'];
   return `
   <div id="modalUsuario" class="modal-bg" onclick="fecharModal('modalUsuario')">
     <div class="modal-box" onclick="event.stopPropagation()">
-      <div class="modal-head">
-        <h3 id="modalUsuarioTitulo">Novo Usuário</h3>
-        <button class="modal-close" onclick="fecharModal('modalUsuario')">×</button>
-      </div>
+      <div class="modal-head"><h3 id="modalUsuarioTitulo">Novo Usuário</h3>
+        <button class="modal-close" onclick="fecharModal('modalUsuario')">×</button></div>
       <div class="modal-body">
+        <p style="background:#fff3cd;color:#856404;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:16px">
+          ⚠️ Limite máximo de <strong>5 usuários</strong> por sessão (Administrador, Prefeito ou por Órgão).</p>
         <form id="formUsuario" onsubmit="salvarUsuario(event)">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div class="form-group"><label>Login</label><input id="uLogin" type="text" required autocomplete="off"></div>
@@ -591,26 +692,17 @@ function htmlModalUsuario() {
             <div class="form-group"><label>E-mail</label><input id="uEmail" type="email" required></div>
             <div class="form-group"><label>Senha</label><input id="uSenha" type="text" required autocomplete="new-password"></div>
           </div>
-          <div class="form-group">
-            <label>Órgão / Secretaria</label>
-            <select id="uOrgao" required>
-              <option value="">Selecione...</option>
-              <option>Gabinete do Prefeito</option>
-              <option>Secretaria de Educação</option>
-              <option>Secretaria de Saúde</option>
-              <option>Secretaria de Obras</option>
-              <option>Secretaria de Finanças</option>
-              <option>Secretaria de Cultura</option>
-              <option>Secretaria de Esportes</option>
-              <option>Secretaria de Assistência Social</option>
-              <option>Secretaria de Meio Ambiente</option>
-              <option>Secretaria de Transportes</option>
-              <option>Secretaria de Segurança</option>
-              <option>Secretaria de Turismo</option>
-              <option>Conselho Tutelar</option>
-              <option>Conselho da Criança</option>
-              <option>Conselho do Idoso</option>
-              <option>Conselho da Mulher</option>
+          <div class="form-group"><label>Tipo de Sessão</label>
+            <select id="uTipo" required onchange="atualizarCampoOrgao()">
+              <option value="">Selecione o tipo...</option>
+              <option value="admin">Administrador</option>
+              <option value="prefeito">Prefeito (Gabinete)</option>
+              <option value="orgao">Órgão / Secretaria</option>
+            </select>
+          </div>
+          <div class="form-group" id="campoOrgao" style="display:none"><label>Órgão / Secretaria</label>
+            <select id="uOrgao"><option value="">Selecione...</option>
+              ${orgaos.map(o=>`<option>${o}</option>`).join('')}
             </select>
           </div>
           <input type="hidden" id="uId">
@@ -624,37 +716,25 @@ function htmlModalUsuario() {
   </div>`;
 }
 
-// ════════════════════════════════════════════════════════════
-// LÓGICA
-// ════════════════════════════════════════════════════════════
-function inicializarApp() {
-  // event listeners nos nav-items
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const view = el.dataset.view || el.getAttribute('onclick')?.match(/'(\w+)'/)?.[1];
-    });
-  });
+function atualizarCampoOrgao() {
+  const tipo=$('uTipo').value, campo=$('campoOrgao'), sel=$('uOrgao');
+  campo.style.display = tipo==='orgao'?'block':'none';
+  sel.required = tipo==='orgao';
+  if(tipo!=='orgao') sel.value='';
+}
 
-  // Carregar usuários se admin
-  if (usuario?.tipo === 'admin') carregarUsuarios();
+// ════════════════ LÓGICA ════════════════
+function inicializarApp() {
+  if (usuario?.tipo==='admin') { carregarUsuarios(); carregarSolicitacoes(); }
 }
 
 function mostrarView(id) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  const el = $(id);
-  if (el) el.classList.add('active');
-
-  // Atualizar nav-item ativo
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => {
-    if (n.getAttribute('onclick')?.includes(`'${id}'`)) n.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el=$(id); if(el) el.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    n.classList.toggle('active', n.getAttribute('onclick')?.includes(`'${id}'`));
   });
-
-  // Inicializar calendário ao entrar na view
-  if (id === 'calendario' && !calendar) {
-    setTimeout(iniciarCalendario, 50);
-  }
-
+  if (id==='calendario'&&!calendar) setTimeout(iniciarCalendario,50);
   fecharMenuMobile();
 }
 
@@ -668,40 +748,37 @@ function fecharMenuMobile() {
 }
 
 function filtrarEventos() {
-  const termo = ($('buscaEvt')?.value || '').toLowerCase();
-  const base = usuario?.tipo === 'admin' ? eventos : evtDoUsuario();
-  const filtrados = termo
-    ? base.filter(e =>
-        e.titulo?.toLowerCase().includes(termo) ||
-        e.local?.toLowerCase().includes(termo) ||
-        e.responsavel?.toLowerCase().includes(termo) ||
-        e.orgao?.toLowerCase().includes(termo) ||
-        e.observacao?.toLowerCase().includes(termo))
-    : base;
-  const cont = $('listaEvtConteudo');
-  if (cont) cont.innerHTML = renderListaEventos(filtrados);
+  const termo=($('buscaEvt')?.value||'').toLowerCase();
+  const base=(usuario?.tipo==='admin'||usuario?.tipo==='prefeito')?eventos:evtDoUsuario();
+  const filtrados=termo?base.filter(e=>
+    e.titulo?.toLowerCase().includes(termo)||e.local?.toLowerCase().includes(termo)||
+    e.responsavel?.toLowerCase().includes(termo)||e.orgao?.toLowerCase().includes(termo)||
+    e.observacao?.toLowerCase().includes(termo)):base;
+  const cont=$('listaEvtConteudo');
+  if(cont) cont.innerHTML=renderListaEventos(filtrados);
+}
+
+function filtrarEventosPref() {
+  const termo=($('buscaEvt')?.value||'').toLowerCase();
+  const base=eventos.filter(e=>isPrefeito(e));
+  const filtrados=termo?base.filter(e=>e.titulo?.toLowerCase().includes(termo)||e.local?.toLowerCase().includes(termo)):base;
+  const cont=$('listaEvtConteudo'); if(cont) cont.innerHTML=renderListaEventos(filtrados);
 }
 
 function verificarData() {
-  const input = $('evtData');
-  const aviso = $('avisoRetroativo');
-  if (!input || !aviso) return;
-  const d = new Date(input.value);
-  const agora = new Date(); agora.setHours(0,0,0,0);
-  aviso.style.display = d < agora ? 'block' : 'none';
+  const input=$('evtData'),aviso=$('avisoRetroativo');
+  if(!input||!aviso) return;
+  const agora=new Date(); agora.setHours(0,0,0,0);
+  aviso.style.display=new Date(input.value)<agora?'block':'none';
 }
 
-// ── Ver evento ──────────────────────────────────────────────
 function verEvento(id) {
-  const e = eventos.find(x => String(x.id) === String(id));
-  if (!e) return;
-  const pref = isPrefeito(e);
-  const head = $('modalEventoHead');
-  head.className = 'modal-head' + (pref ? ' prefeito-head' : '');
-  $('modalEventoTitulo').textContent = e.titulo;
-
-  $('modalEventoBody').innerHTML = `
-    ${pref ? '<div style="text-align:center;margin-bottom:16px"><span class="tag-prefeito" style="font-size:13px">🏛️ Evento do Gabinete do Prefeito</span></div>' : ''}
+  const e=eventos.find(x=>String(x.id)===String(id)); if(!e) return;
+  const pref=isPrefeito(e);
+  $('modalEventoHead').className='modal-head'+(pref?' prefeito-head':'');
+  $('modalEventoTitulo').textContent=e.titulo;
+  $('modalEventoBody').innerHTML=`
+    ${pref?'<div style="text-align:center;margin-bottom:16px"><span class="tag-prefeito" style="font-size:13px">🏛️ Evento do Gabinete do Prefeito</span></div>':''}
     <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtDH(e.data_evento)}</div></div>
     <div class="info-linha"><div class="info-label">📍 Local</div><div class="info-valor">${e.local||'—'}</div></div>
     <div class="info-linha"><div class="info-label">🏢 Órgão</div><div class="info-valor">${e.orgao||'—'}</div></div>
@@ -709,219 +786,217 @@ function verEvento(id) {
     <div class="info-linha"><div class="info-label">📞 Telefone</div><div class="info-valor">${e.telefone||'—'}</div></div>
     <div class="info-linha"><div class="info-label">📝 Descrição</div><div class="info-valor">${e.observacao||'—'}</div></div>
     <div class="info-linha"><div class="info-label">✍️ Publicado</div><div class="info-valor">${e.publicado_por||'—'} · ${fmtDH(e.data_publicacao)}</div></div>
-    ${e.anexo_nome ? `<div class="info-linha"><div class="info-label">📎 Anexo</div><div class="info-valor"><a href="${e.anexo_url}" target="_blank">${e.anexo_nome}</a></div></div>` : ''}
-  `;
-
-  const podEditar = usuario?.tipo === 'admin' || e.orgao === usuario?.orgao;
-  $('modalEventoFooter').innerHTML = podEditar ? `
+    ${e.anexo_nome?`<div class="info-linha"><div class="info-label">📎 Anexo</div><div class="info-valor"><a href="${e.anexo_url}" target="_blank">${e.anexo_nome}</a></div></div>`:''}`;
+  const podEditar=usuario?.tipo==='admin'||e.orgao===usuario?.orgao;
+  $('modalEventoFooter').innerHTML=podEditar?`
     <button class="btn btn-amarelo" onclick="abrirEdicao('${e.id}')">✏️ Editar</button>
     <button class="btn btn-vermelho" onclick="confirmarExcluir('${e.id}')">🗑️ Excluir</button>
-    <button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>
-  ` : `<button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>`;
-
+    <button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>`
+    :`<button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>`;
   abrirModal('modalEvento');
 }
 
-// ── Editar evento ───────────────────────────────────────────
 function abrirEdicao(id) {
-  const e = eventos.find(x => String(x.id) === String(id));
-  if (!e) return;
+  const e=eventos.find(x=>String(x.id)===String(id)); if(!e) return;
   fecharModal('modalEvento');
-  $('editId').value = e.id;
-  $('editTitulo').value = e.titulo || '';
-  $('editData').value = e.data_evento ? e.data_evento.substring(0,16) : '';
-  $('editLocal').value = e.local || '';
-  $('editResp').value = e.responsavel || '';
-  $('editTel').value = e.telefone || '';
-  $('editObs').value = e.observacao || '';
+  $('editId').value=e.id; $('editTitulo').value=e.titulo||'';
+  $('editData').value=e.data_evento?e.data_evento.substring(0,16):'';
+  $('editLocal').value=e.local||''; $('editResp').value=e.responsavel||'';
+  $('editTel').value=e.telefone||''; $('editObs').value=e.observacao||'';
   abrirModal('modalForm');
 }
 
 async function salvarEdicao(ev) {
   ev.preventDefault();
   try {
-    await api('atualizarEvento', {
-      id: $('editId').value,
-      titulo: $('editTitulo').value,
-      data_evento: $('editData').value,
-      local: $('editLocal').value,
-      responsavel: $('editResp').value,
-      telefone: $('editTel').value,
-      observacao: $('editObs').value
-    }, 'POST');
-    fecharModal('modalForm');
-    await recarregarEventos();
-    alert('✅ Evento atualizado!');
-  } catch(e) { alert('❌ ' + e.message); }
+    await api('atualizarEvento',{id:$('editId').value,titulo:$('editTitulo').value,
+      data_evento:$('editData').value,local:$('editLocal').value,
+      responsavel:$('editResp').value,telefone:$('editTel').value,observacao:$('editObs').value});
+    fecharModal('modalForm'); await recarregarEventos(); alert('✅ Evento atualizado!');
+  } catch(e){ alert('❌ '+e.message); }
 }
 
 async function confirmarExcluir(id) {
-  const e = eventos.find(x => String(x.id) === String(id));
-  if (!confirm(`Excluir o evento "${e?.titulo}"?`)) return;
+  const e=eventos.find(x=>String(x.id)===String(id));
+  if(!confirm(`Excluir o evento "${e?.titulo}"?`)) return;
   try {
-    await api('excluirEvento', { id }, 'POST');
-    fecharModal('modalEvento');
-    await recarregarEventos();
-    alert('✅ Evento excluído!');
-  } catch(ex) { alert('❌ ' + ex.message); }
+    await api('excluirEvento',{id}); fecharModal('modalEvento');
+    await recarregarEventos(); alert('✅ Evento excluído!');
+  } catch(ex){ alert('❌ '+ex.message); }
 }
 
-// ── Criar evento ────────────────────────────────────────────
 async function criarEvento(ev) {
   ev.preventDefault();
   try {
-    await api('criarEvento', {
-      titulo: $('evtTitulo').value,
-      data_evento: $('evtData').value,
-      local: $('evtLocal').value,
-      responsavel: $('evtResp').value,
-      telefone: $('evtTel').value,
-      observacao: $('evtObs').value
-    }, 'POST');
-    ev.target.reset();
-    await recarregarEventos();
+    await api('criarEvento',{titulo:$('evtTitulo').value,data_evento:$('evtData').value,
+      local:$('evtLocal').value,responsavel:$('evtResp').value,
+      telefone:$('evtTel').value,observacao:$('evtObs').value});
+    ev.target.reset(); await recarregarEventos();
     alert('✅ Evento criado com sucesso!');
-    mostrarView('meusEventos');
-  } catch(e) { alert('❌ ' + e.message); }
+    mostrarView(usuario?.tipo==='prefeito'?'agendaPref':'meusEventos');
+  } catch(e){ alert('❌ '+e.message); }
 }
 
-// ── Recarregar eventos ──────────────────────────────────────
 async function recarregarEventos() {
-  try {
-    const r = await api('getEventos');
-    if (Array.isArray(r)) { eventos = r; }
-  } catch(e) {}
-  // Atualizar listas visíveis
-  const cont = $('listaEvtConteudo');
-  if (cont) cont.innerHTML = renderListaEventos(usuario?.tipo==='admin' ? eventos : evtDoUsuario());
-  if (calendar) {
-    calendar.removeAllEvents();
-    calendar.addEventSource(eventosParaCalendario());
-  }
+  try { const r=await api('getEventos'); if(Array.isArray(r)) eventos=r; } catch(e){}
+  const cont=$('listaEvtConteudo');
+  if(cont) cont.innerHTML=renderListaEventos(
+    usuario?.tipo==='admin'||usuario?.tipo==='prefeito'?eventos:evtDoUsuario());
+  if(calendar){ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }
 }
 
-// ── Calendário ──────────────────────────────────────────────
 function eventosParaCalendario() {
-  return evtDoUsuario().map(e => ({
-    id: String(e.id),
-    title: isMobile()
-      ? (usuario?.tipo==='admin' ? sigla(e.orgao) : fmtHora(e.data_evento)||e.titulo)
-      : (usuario?.tipo==='admin' ? `${sigla(e.orgao)}: ${e.titulo}` : e.titulo),
-    start: e.data_evento,
-    className: isPrefeito(e) ? 'prefeito-event' : '',
-    extendedProps: { eventoId: e.id }
+  return evtDoUsuario().map(e=>({
+    id:String(e.id),
+    title:isMobile()
+      ?(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'?sigla(e.orgao):fmtHora(e.data_evento)||e.titulo)
+      :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'?`${sigla(e.orgao)}: ${e.titulo}`:e.titulo),
+    start:e.data_evento,
+    className:isPrefeito(e)?'prefeito-event':'',
+    extendedProps:{eventoId:e.id}
   }));
 }
 
 function iniciarCalendario() {
-  const el = $('cal');
-  if (!el) return;
-  calendar = new FullCalendar.Calendar(el, {
-    locale: 'pt-br',
-    initialView: isMobile() ? 'dayGridMonth' : 'dayGridMonth',
-    headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,listMonth' },
-    events: eventosParaCalendario(),
-    eventClick: info => verEvento(info.event.extendedProps.eventoId),
-    height: 'auto'
+  const el=$('cal'); if(!el) return;
+  calendar=new FullCalendar.Calendar(el,{
+    locale:'pt-br', initialView:'dayGridMonth',
+    headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,listMonth'},
+    events:eventosParaCalendario(),
+    eventClick:info=>verEvento(info.event.extendedProps.eventoId),
+    height:'auto'
   });
   calendar.render();
 }
 
-// ── Usuários ────────────────────────────────────────────────
+// ════════════════ USUÁRIOS ════════════════
 async function carregarUsuarios() {
-  const cont = $('listaUsuarios');
-  if (!cont) return;
+  const cont=$('listaUsuarios'); if(!cont) return;
   try {
-    const lista = await api('getUsuarios', {}, 'POST');
-    if (!Array.isArray(lista)) { cont.innerHTML = '<div class="empty">Erro ao carregar</div>'; return; }
-    cont.innerHTML = `
-      <div class="tabela-wrap">
-        <table>
-          <thead><tr><th>Nome</th><th>Login</th><th>Órgão</th><th>Tipo</th><th>Ativo</th><th>Ações</th></tr></thead>
-          <tbody>
-          ${lista.map(u => `
-            <tr>
-              <td>${u.nome}</td><td>${u.login}</td><td>${u.orgao||'—'}</td>
-              <td>${u.tipo}</td>
-              <td>${String(u.ativo).toUpperCase()==='TRUE' ? '✅' : '❌'}</td>
-              <td>
-                <div class="btns-row">
-                  <button class="btn btn-amarelo" onclick="resetarSenha('${u.id}','${u.nome}')">🔑</button>
-                  <button class="btn btn-vermelho" onclick="excluirUsuario('${u.id}','${u.nome}')">🗑️</button>
-                </div>
-              </td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
-  } catch(e) { cont.innerHTML = '<div class="empty">Erro: ' + e.message + '</div>'; }
+    const lista=await api('getUsuarios');
+    if(!Array.isArray(lista)){cont.innerHTML='<div class="empty">Erro ao carregar</div>';return;}
+    const tipoLabel={admin:'Administrador',prefeito:'Prefeito',orgao:'Órgão'};
+    cont.innerHTML=`<div class="tabela-wrap"><table>
+      <thead><tr><th>Nome</th><th>Login</th><th>Órgão</th><th>Sessão</th><th>Ativo</th><th>Ações</th></tr></thead>
+      <tbody>${lista.map(u=>`
+        <tr${u.tipo==='prefeito'?' class="pref-row"':''}>
+          <td>${u.nome}</td><td>${u.login}</td><td>${u.orgao||'—'}</td>
+          <td>${tipoLabel[u.tipo]||u.tipo}</td>
+          <td>${String(u.ativo).toUpperCase()==='TRUE'?'✅':'❌'}</td>
+          <td><div class="btns-row">
+            <button class="btn btn-amarelo" onclick="resetarSenha('${u.id}','${u.nome}')">🔑</button>
+            <button class="btn btn-vermelho" onclick="excluirUsuario('${u.id}','${u.nome}')">🗑️</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody></table></div>`;
+  } catch(e){cont.innerHTML='<div class="empty">Erro: '+e.message+'</div>';}
 }
 
 function abrirModalNovoUsuario() {
-  $('modalUsuarioTitulo').textContent = 'Novo Usuário';
-  $('formUsuario').reset();
-  $('uId').value = '';
+  $('modalUsuarioTitulo').textContent='Novo Usuário';
+  $('formUsuario').reset(); $('uId').value='';
+  $('campoOrgao').style.display='none';
   abrirModal('modalUsuario');
 }
 
 async function salvarUsuario(ev) {
   ev.preventDefault();
+  const tipo=$('uTipo').value;
+  const orgao=tipo==='prefeito'?'Gabinete do Prefeito':tipo==='admin'?'':$('uOrgao').value;
+  if(tipo==='orgao'&&!orgao){alert('Selecione o órgão/secretaria.');return;}
   try {
-    await api('criarUsuario', {
-      login: $('uLogin').value,
-      nome: $('uNome').value,
-      email: $('uEmail').value,
-      senha: $('uSenha').value,
-      orgao: $('uOrgao').value,
-      is_prefeito: $('uOrgao').value === 'Gabinete do Prefeito'
-    }, 'POST');
-    fecharModal('modalUsuario');
-    await carregarUsuarios();
-    alert('✅ Usuário criado!');
-  } catch(e) { alert('❌ ' + e.message); }
+    await api('criarUsuario',{login:$('uLogin').value,nome:$('uNome').value,
+      email:$('uEmail').value,senha:$('uSenha').value,tipo,orgao});
+    fecharModal('modalUsuario'); await carregarUsuarios(); alert('✅ Usuário criado!');
+  } catch(e){alert('❌ '+e.message);}
 }
 
 async function resetarSenha(id, nome) {
-  const nova = prompt(`Nova senha para ${nome}:`);
-  if (!nova) return;
-  try {
-    await api('resetarSenha', { usuarioId: id, novaSenha: nova }, 'POST');
-    alert('✅ Senha alterada!');
-  } catch(e) { alert('❌ ' + e.message); }
+  const nova=prompt(`Nova senha para ${nome}:`); if(!nova) return;
+  try { await api('resetarSenha',{usuarioId:id,novaSenha:nova}); alert('✅ Senha alterada!'); }
+  catch(e){alert('❌ '+e.message);}
 }
 
 async function excluirUsuario(id, nome) {
-  if (!confirm(`Excluir o usuário "${nome}"?`)) return;
+  if(!confirm(`Excluir o usuário "${nome}"?`)) return;
+  try { await api('excluirUsuario',{id}); await carregarUsuarios(); alert('✅ Usuário excluído!'); }
+  catch(e){alert('❌ '+e.message);}
+}
+
+// ════════════════ SOLICITAÇÕES ════════════════
+async function carregarSolicitacoes() {
+  const cont=$('listaSolicitacoes'); if(!cont) return;
   try {
-    await api('excluirUsuario', { id }, 'POST');
-    await carregarUsuarios();
-    alert('✅ Usuário excluído!');
-  } catch(e) { alert('❌ ' + e.message); }
+    const lista=await api('getSolicitacoes');
+    solicitacoesList=Array.isArray(lista)?lista:[];
+    const pendentes=solicitacoesList.filter(s=>s.status==='pendente');
+    const badge=$('badgeSolic');
+    if(badge){badge.textContent=pendentes.length;badge.style.display=pendentes.length>0?'inline':'none';}
+    if(!solicitacoesList.length){cont.innerHTML='<div class="empty">Nenhuma solicitação</div>';return;}
+    cont.innerHTML=`<div class="tabela-wrap"><table>
+      <thead><tr><th>Nome</th><th>Login</th><th>E-mail</th><th>Órgão</th><th>Tipo</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead>
+      <tbody>${solicitacoesList.map(s=>`
+        <tr>
+          <td>${s.nome||'—'}</td><td>${s.login}</td><td>${s.email}</td>
+          <td>${s.orgao||'—'}</td>
+          <td>${s.tipoSolicitacao==='recuperacao'?'🔑 Recuperar Senha':'👤 Novo Acesso'}</td>
+          <td style="font-size:11px">${fmtDH(s.data_solicitacao)}</td>
+          <td><span style="color:${s.status==='pendente'?'#e67e00':'#28a745'};font-weight:600">${s.status}</span></td>
+          <td>${s.status==='pendente'?`<div class="btns-row">
+            ${s.tipoSolicitacao==='recuperacao'
+              ?`<button class="btn btn-amarelo" onclick="resetarSenhaSolicitacao('${s.id}','${s.login}')">🔑 Resetar</button>`
+              :`<button class="btn btn-verde" onclick="aprovarSolicitacao('${s.id}')">✅ Aprovar</button>`}
+            <button class="btn btn-vermelho" onclick="rejeitarSolicitacao('${s.id}')">❌</button>
+          </div>`:'—'}</td>
+        </tr>`).join('')}
+      </tbody></table></div>`;
+  } catch(e){cont.innerHTML='<div class="empty">Erro: '+e.message+'</div>';}
 }
 
-// ── Modais ──────────────────────────────────────────────────
-function abrirModal(id) { const el = $(id); if(el) el.classList.add('aberto'); }
-function fecharModal(id) { const el = $(id); if(el) el.classList.remove('aberto'); }
+async function aprovarSolicitacao(id) {
+  const s=solicitacoesList.find(x=>String(x.id)===String(id)); if(!s) return;
+  const senha=prompt(`Defina uma senha para "${s.nome}" (${s.login}):`); if(!senha) return;
+  try {
+    await api('criarUsuario',{login:s.login,nome:s.nome,email:s.email,senha,tipo:'orgao',orgao:s.orgao});
+    await api('atualizarSolicitacao',{id,status:'aprovado'});
+    await carregarSolicitacoes(); await carregarUsuarios();
+    alert('✅ Usuário aprovado e criado!');
+  } catch(e){alert('❌ '+e.message);}
+}
 
-// ── Exportar Excel ──────────────────────────────────────────
+async function resetarSenhaSolicitacao(id, login) {
+  const nova=prompt(`Nova senha para "${login}":`); if(!nova) return;
+  try {
+    const lista=await api('getUsuarios');
+    const user=lista.find(u=>u.login===login||u.email===login);
+    if(!user){alert('Usuário não encontrado na base.');return;}
+    await api('resetarSenha',{usuarioId:user.id,novaSenha:nova});
+    await api('atualizarSolicitacao',{id,status:'resolvido'});
+    await carregarSolicitacoes(); alert('✅ Senha redefinida!');
+  } catch(e){alert('❌ '+e.message);}
+}
+
+async function rejeitarSolicitacao(id) {
+  if(!confirm('Rejeitar esta solicitação?')) return;
+  try {
+    await api('atualizarSolicitacao',{id,status:'rejeitado'});
+    await carregarSolicitacoes(); alert('✅ Solicitação rejeitada.');
+  } catch(e){alert('❌ '+e.message);}
+}
+
+// ════════════════ MODAIS / UTILITÁRIOS ════════════════
+function abrirModal(id){const el=$(id);if(el)el.classList.add('aberto');}
+function fecharModal(id){const el=$(id);if(el)el.classList.remove('aberto');}
+
 function exportarExcel() {
-  const dados = evtDoUsuario().map(e => ({
-    'Título': e.titulo, 'Data': fmtDH(e.data_evento), 'Local': e.local,
-    'Órgão': e.orgao, 'Responsável': e.responsavel, 'Telefone': e.telefone,
-    'Descrição': e.observacao, 'Publicado por': e.publicado_por
-  }));
-  const ws = XLSX.utils.json_to_sheet(dados);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Eventos');
-  XLSX.writeFile(wb, 'agenda-prefeitura.xlsx');
+  const dados=evtDoUsuario().map(e=>({'Título':e.titulo,'Data':fmtDH(e.data_evento),'Local':e.local,
+    'Órgão':e.orgao,'Responsável':e.responsavel,'Telefone':e.telefone,'Descrição':e.observacao,'Publicado por':e.publicado_por}));
+  const ws=XLSX.utils.json_to_sheet(dados),wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Eventos');
+  XLSX.writeFile(wb,'agenda-prefeitura.xlsx');
 }
 
-// ── Responsividade ──────────────────────────────────────────
-window.addEventListener('resize', () => {
-  if (calendar) calendar.updateSize();
-});
-
-// ── Iniciar ─────────────────────────────────────────────────
+window.addEventListener('resize',()=>{if(calendar)calendar.updateSize();});
 render();
 </script>
 </body>
