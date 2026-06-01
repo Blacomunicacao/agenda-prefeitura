@@ -163,16 +163,17 @@ function handleCriarEvento(data) {
   if (data.arquivo_base64 && data.arquivo_nome) {
     try {
       const bytes = Utilities.base64Decode(data.arquivo_base64);
-      const blob = Utilities.newBlob(bytes, data.arquivo_tipo || 'application/octet-stream', data.arquivo_nome);
-      const pasta = DriveApp.getFoldersByName('Agenda Prefeitura Anexos').hasNext()
-        ? DriveApp.getFoldersByName('Agenda Prefeitura Anexos').next()
-        : DriveApp.createFolder('Agenda Prefeitura Anexos');
+      const mimeType = data.arquivo_tipo || 'application/octet-stream';
+      const blob = Utilities.newBlob(bytes, mimeType, data.arquivo_nome);
+      const pastaNome = 'Agenda Prefeitura Anexos';
+      const pastas = DriveApp.getFoldersByName(pastaNome);
+      const pasta = pastas.hasNext() ? pastas.next() : DriveApp.createFolder(pastaNome);
       const file = pasta.createFile(blob);
       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
       anexo_url = 'https://drive.google.com/file/d/' + file.getId() + '/view';
       anexo_nome = data.arquivo_nome;
-    } catch(e) {
-      return { error: 'Erro ao salvar anexo: ' + e.toString() };
+    } catch(driveErr) {
+      return { error: 'Erro ao salvar anexo. Autorize o acesso ao Google Drive: no editor do Apps Script, clique em Executar → autorizarDrive e aceite as permissões.' };
     }
   }
 
@@ -185,7 +186,7 @@ function handleCriarEvento(data) {
     telefone || '', observacao, anexo_url, anexo_nome,
     orgaoEvento,
     (usuario.tipo === 'prefeito' || usuario.is_prefeito) ? 'TRUE' : 'FALSE',
-    usuario.nome, usuario.email, now, now, 'ativo'
+    usuario.login, usuario.email, now, now, 'ativo'
   ]);
 
   registrarLog(usuario.email, 'criar_evento', titulo);
@@ -422,6 +423,14 @@ function criarAbas() {
     }
   });
   return { success: true, abas: resultado };
+}
+
+// ── Autorizar Drive (execute manualmente uma vez para liberar permissões) ────
+function autorizarDrive() {
+  const pasta = DriveApp.getFoldersByName('Agenda Prefeitura Anexos').hasNext()
+    ? DriveApp.getFoldersByName('Agenda Prefeitura Anexos').next()
+    : DriveApp.createFolder('Agenda Prefeitura Anexos');
+  Logger.log('Drive autorizado. Pasta: ' + pasta.getName() + ' | ID: ' + pasta.getId());
 }
 
 // ── Testes ────────────────────────────────────────────────────────────────────
