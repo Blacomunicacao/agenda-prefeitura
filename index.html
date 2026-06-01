@@ -285,10 +285,14 @@ function orgaosSelectHtml(id, required=true) {
 
 const sigla = orgao => {
   if (!orgao) return '';
-  if (SIGLAS[orgao]) return SIGLAS[orgao];
-  const m = orgao.match(/^Conselho\s+(.+)$/);
+  const norm = orgao.normalize('NFC').trim();
+  if (SIGLAS[norm]) return SIGLAS[norm];
+  const lower = norm.toLowerCase();
+  const found = Object.keys(SIGLAS).find(k => k.normalize('NFC').toLowerCase() === lower);
+  if (found) return SIGLAS[found];
+  const m = norm.match(/^Conselho\s+(.+)$/i);
   if (m) return m[1];
-  return orgao.substring(0,6).toUpperCase();
+  return norm.substring(0,6).toUpperCase();
 };
 
 function evtDoUsuario() {
