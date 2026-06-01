@@ -219,6 +219,7 @@ async function render() {
     if (!Array.isArray(eventos)) eventos = [];
   } catch(e) { eventos = []; }
 
+  calendar = null;
   if      (usuario.tipo === 'admin')    $('root').innerHTML = htmlAdmin();
   else if (usuario.tipo === 'prefeito') $('root').innerHTML = htmlPrefeito();
   else                                  $('root').innerHTML = htmlSecretaria();
@@ -757,7 +758,10 @@ function mostrarView(id) {
   document.querySelectorAll('.nav-item').forEach(n=>{
     n.classList.toggle('active', n.getAttribute('onclick')?.includes(`'${id}'`));
   });
-  if (id==='calendario'&&!calendar) setTimeout(iniciarCalendario,50);
+  if (id==='calendario') {
+    if (!calendar) setTimeout(iniciarCalendario, 150);
+    else setTimeout(()=>{ try{ calendar.updateSize(); }catch(e){ calendar=null; iniciarCalendario(); } }, 100);
+  }
   fecharMenuMobile();
 }
 
@@ -820,12 +824,12 @@ function verEvento(id) {
     <div class="info-linha"><div class="info-label">📝 Descrição</div><div class="info-valor">${e.observacao||'—'}</div></div>
     <div class="info-linha"><div class="info-label">✍️ Publicado</div><div class="info-valor">${e.publicado_por||'—'} · ${fmtDH(e.data_publicacao)}</div></div>
     ${e.anexo_nome?`<div class="info-linha"><div class="info-label">📎 Anexo</div><div class="info-valor"><a href="${e.anexo_url}" target="_blank">${e.anexo_nome}</a></div></div>`:''}`;
-  const podEditar=usuario?.tipo==='admin'||e.orgao===usuario?.orgao;
-  $('modalEventoFooter').innerHTML=podEditar?`
-    <button class="btn btn-amarelo" onclick="abrirEdicao('${e.id}')">✏️ Editar</button>
-    <button class="btn btn-vermelho" onclick="confirmarExcluir('${e.id}')">🗑️ Excluir</button>
-    <button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>`
-    :`<button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>`;
+  const podEditar = usuario?.tipo==='admin' || String(e.orgao||'').trim()===String(usuario?.orgao||'').trim();
+  const podExcluir = String(e.orgao||'').trim()===String(usuario?.orgao||'').trim();
+  $('modalEventoFooter').innerHTML=`
+    ${podEditar?`<button class="btn btn-amarelo" onclick="abrirEdicao('${e.id}')">✏️ Editar</button>`:''}
+    ${podExcluir?`<button class="btn btn-vermelho" onclick="confirmarExcluir('${e.id}')">🗑️ Excluir</button>`:''}
+    <button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>`;
   abrirModal('modalEvento');
 }
 
@@ -896,7 +900,10 @@ async function recarregarEventos() {
   const cont=$('listaEvtConteudo');
   if(cont) cont.innerHTML=renderListaEventos(
     usuario?.tipo==='admin'||usuario?.tipo==='prefeito'?eventos:evtDoUsuario());
-  if(calendar){ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }
+  if(calendar){
+    try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }
+    catch(e){ calendar=null; }
+  }
 }
 
 function eventosParaCalendario() {
