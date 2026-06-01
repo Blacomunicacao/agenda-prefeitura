@@ -159,7 +159,7 @@ async function api(action, data = {}, metodo = 'GET') {
       url = API_URL;
       opts = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action, token: token || '', ...data })
       };
     }
