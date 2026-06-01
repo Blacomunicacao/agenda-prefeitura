@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Agenda - Prefeitura de Presidente Prudente</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:hidden}
+
+/* ── Login ── */
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#004d99,#003366);padding:16px}
+.login-card{background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:440px;box-shadow:0 20px 40px rgba(0,0,0,.2);text-align:center}
+.brasao{font-size:60px;margin-bottom:12px}
+.login-card h1{font-size:22px;color:#003366;margin-bottom:4px}
+.login-card p{color:#666;font-size:14px;margin-bottom:24px}
+.form-group{margin-bottom:16px;text-align:left}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#333}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;border:1px solid #ddd;border-radius:10px;font-family:inherit;font-size:14px;outline:none;transition:border .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#004d99}
+.form-group textarea{resize:vertical;min-height:80px}
+.btn-primary{width:100%;padding:13px;background:#004d99;color:#fff;border:none;border-radius:40px;font-size:15px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-primary:hover{background:#003366}
+.erro{background:#f8d7da;color:#721c24;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+
+/* ── Layout ── */
+.app{display:flex;min-height:100vh}
+.sidebar{width:270px;background:#003366;color:#fff;position:fixed;height:100vh;overflow-y:auto;z-index:100;transition:transform .3s}
+.sidebar-header{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,.15);text-align:center}
+.sidebar-header h3{font-size:17px;margin-bottom:6px}
+.orgao-badge{display:inline-block;background:#ff9900;color:#003366;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.sidebar-nav{padding:12px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;color:rgba(255,255,255,.8);cursor:pointer;margin-bottom:4px;font-size:14px;transition:all .2s}
+.nav-item:hover,.nav-item.active{background:rgba(255,255,255,.15);color:#fff}
+.sidebar-footer{padding:14px 16px;border-top:1px solid rgba(255,255,255,.15);font-size:12px;color:rgba(255,255,255,.7)}
+.btn-logout{width:100%;margin-top:10px;padding:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;cursor:pointer;font-size:13px}
+.btn-logout:hover{background:rgba(255,255,255,.2)}
+
+.main{flex:1;margin-left:270px;padding:20px;max-width:100%;overflow-x:hidden}
+.view{display:none;animation:fadeIn .25s}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ── Cards stat ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:#fff;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;transition:all .2s}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.stat-icon{font-size:36px}
+.stat-info h3{font-size:26px;color:#003366}
+.stat-info p{font-size:13px;color:#666}
+
+/* ── Seção ── */
+.secao{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:20px}
+.secao-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.secao-header h2{font-size:18px;color:#003366}
+
+/* ── Botões ── */
+.btn{padding:9px 18px;border:none;border-radius:30px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-azul{background:#004d99;color:#fff}.btn-azul:hover{background:#003a73}
+.btn-verde{background:#28a745;color:#fff}.btn-verde:hover{background:#218838}
+.btn-vermelho{background:#dc3545;color:#fff}.btn-vermelho:hover{background:#b02a37}
+.btn-cinza{background:#6c757d;color:#fff}.btn-cinza:hover{background:#545b62}
+.btn-amarelo{background:#ffc107;color:#212529}.btn-amarelo:hover{background:#e0a800}
+.btn-outline{background:transparent;border:1px solid #004d99;color:#004d99}.btn-outline:hover{background:#004d99;color:#fff}
+.btns-row{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ── Eventos lista ── */
+.evento-card{background:#fff;border-radius:14px;padding:18px;border-left:5px solid #004d99;box-shadow:0 2px 6px rgba(0,0,0,.06);cursor:pointer;transition:all .2s;margin-bottom:12px}
+.evento-card:hover{transform:translateX(4px)}
+.evento-card.prefeito{border-left-color:#dc3545;background:#fff8f8}
+.evento-titulo{font-size:16px;font-weight:700;color:#003366;margin-bottom:10px}
+.evento-card.prefeito .evento-titulo{color:#dc3545}
+.evento-meta{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:#555}
+.evento-meta span{display:flex;align-items:center;gap:4px}
+.tag-prefeito{background:#dc3545;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px}
+.tag-orgao{background:#e8f0fe;color:#003366;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+
+/* ── Modal ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;padding:16px}
+.modal-bg.aberto{display:flex}
+.modal-box{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:88vh;overflow-y:auto;display:flex;flex-direction:column}
+.modal-head{padding:18px 22px;background:#003366;color:#fff;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1}
+.modal-head.prefeito-head{background:#dc3545}
+.modal-head h3{font-size:17px}
+.modal-close{font-size:26px;cursor:pointer;line-height:1;background:none;border:none;color:#fff}
+.modal-body{padding:22px;flex:1}
+.modal-footer{padding:14px 22px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.info-linha{display:flex;padding:9px 0;border-bottom:1px solid #f5f5f5}
+.info-label{font-weight:700;color:#003366;width:120px;flex-shrink:0;font-size:14px}
+.info-valor{flex:1;color:#333;font-size:14px;word-break:break-word}
+
+/* ── Calendário ── */
+.fc-event{cursor:pointer!important;font-size:11px!important;padding:2px 5px!important;border-radius:5px!important}
+.prefeito-event{background:#dc3545!important;border-color:#b02a37!important}
+.fc-view-harness{height:calc(100vh - 220px)!important;min-height:450px}
+
+/* ── Tabela ── */
+.tabela-wrap{overflow-x:auto;border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th,td{padding:11px 12px;text-align:left;font-size:13px;border-bottom:1px solid #f0f0f0}
+th{background:#f8f9fa;font-weight:600;color:#003366;white-space:nowrap}
+tr:hover td{background:#f8f9fa}
+tr.pref-row td{background:#fff5f5}
+tr.pref-row:hover td{background:#ffe8e8}
+
+/* ── Mobile ── */
+.menu-toggle{display:none;position:fixed;top:10px;left:10px;z-index:200;background:#003366;color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+.overlay.ativo{display:block}
+.alerta-retroativo{font-size:12px;color:#dc3545;margin-top:4px;display:none}
+.empty{text-align:center;padding:32px;color:#999;font-size:14px}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);width:260px}
+  .sidebar.aberta{transform:translateX(0)}
+  .main{margin-left:0;padding:12px;padding-top:58px}
+  .menu-toggle{display:flex;align-items:center;justify-content:center}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat-card{padding:12px}
+  .stat-icon{font-size:28px}
+  .stat-info h3{font-size:20px}
+  .fc-view-harness{height:auto!important;min-height:380px}
+}
+@media(max-width:420px){.stats-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// CONFIGURAÇÃO — substitua pela URL do seu Google Apps Script
+// ════════════════════════════════════════════════════════════
+const API_URL = localStorage.getItem('apiUrl') ||
+  'https://script.google.com/macros/s/SEU_ID_AQUI/exec';
+
+// ── Estado global ────────────────────────────────────────────
+let token    = localStorage.getItem('token');
+let usuario  = JSON.parse(localStorage.getItem('usuario') || 'null');
+let eventos  = [];
+let calendar = null;
+
+// ════════════════════════════════════════════════════════════
+// API
+// ════════════════════════════════════════════════════════════
+async function api(action, data = {}, metodo = 'GET') {
+  try {
+    let url, opts;
+    if (metodo === 'GET') {
+      const p = new URLSearchParams({ action, token: token || '', ...data });
+      url = `${API_URL}?${p}`;
+      opts = {};
+    } else {
+      url = API_URL;
+      opts = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, token: token || '', ...data })
+      };
+    }
+    const res = await fetch(url, opts);
+    const json = await res.json();
+    if (json && json.error) throw new Error(json.error);
+    return json;
+  } catch (e) {
+    if (e.message && e.message.includes('autorizado')) logout();
+    throw e;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// Utilitários
+// ════════════════════════════════════════════════════════════
+const fmtData = s => s ? new Date(s).toLocaleDateString('pt-BR') : '-';
+const fmtHora = s => s ? new Date(s).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+const fmtDH   = s => s ? new Date(s).toLocaleString('pt-BR') : '-';
+const isMobile = () => window.innerWidth <= 768;
+const isPrefeito = e => e.orgao === 'Gabinete do Prefeito';
+const $ = id => document.getElementById(id);
+
+const SIGLAS = {
+  'Gabinete do Prefeito':'PREF','Secretaria de Educação':'EDUC','Secretaria de Saúde':'SAÚD',
+  'Secretaria de Obras':'OBRS','Secretaria de Finanças':'FIN','Secretaria de Cultura':'CULT',
+  'Secretaria de Esportes':'ESP','Secretaria de Assistência Social':'SAS',
+  'Secretaria de Meio Ambiente':'AMB','Secretaria de Transportes':'TRANS',
+  'Secretaria de Segurança':'SEG','Secretaria de Turismo':'TUR',
+  'Conselho Tutelar':'CT','Conselho da Criança':'CCRI','Conselho do Idoso':'CIDO',
+  'Conselho da Mulher':'CMUL'
+};
+const sigla = orgao => SIGLAS[orgao] || orgao.substring(0,4).toUpperCase();
+
+function evtDoUsuario() {
+  if (usuario?.tipo === 'admin') return eventos;
+  return eventos.filter(e => e.orgao === usuario?.orgao);
+}
+function evtHoje() {
+  const h = new Date(); h.setHours(0,0,0,0);
+  return evtDoUsuario().filter(e => {
+    const d = new Date(e.data_evento); d.setHours(0,0,0,0);
+    return d.getTime() === h.getTime();
+  }).sort((a,b) => new Date(a.data_evento)-new Date(b.data_evento));
+}
+
+// ════════════════════════════════════════════════════════════
+// RENDER PRINCIPAL
+// ════════════════════════════════════════════════════════════
+async function render() {
+  if (!token || !usuario) {
+    $('root').innerHTML = htmlLogin();
+    return;
+  }
+  try {
+    eventos = await api('getEventos');
+    if (!Array.isArray(eventos)) eventos = [];
+  } catch(e) { eventos = []; }
+
+  $('root').innerHTML = usuario.tipo === 'admin' ? htmlAdmin() : htmlSecretaria();
+  inicializarApp();
+}
+
+function logout() {
+  token = null; usuario = null; eventos = [];
+  localStorage.removeItem('token'); localStorage.removeItem('usuario');
+  render();
+}
+
+// ════════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════════
+function htmlLogin() {
+  return `
+  <div class="login-page">
+    <div class="login-card">
+      <div class="brasao">🏛️</div>
+      <h1>Agenda da Prefeitura</h1>
+      <p>Presidente Prudente · Secretarias e Conselhos</p>
+      <div id="erroLogin" class="erro"></div>
+      <form onsubmit="fazerLogin(event)">
+        <div class="form-group">
+          <label>Usuário, Nome ou E-mail</label>
+          <input id="lUser" type="text" required autocomplete="username" placeholder="seu.usuario">
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input id="lSenha" type="password" required autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn-primary">🔓 Entrar</button>
+      </form>
+      <div style="margin-top:16px;font-size:12px;color:#aaa">
+        <a href="#" onclick="configurarUrl()">⚙️ Configurar URL da API</a>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function fazerLogin(e) {
+  e.preventDefault();
+  const err = $('erroLogin');
+  err.style.display = 'none';
+  try {
+    const res = await api('login', { usuario: $('lUser').value.trim(), senha: $('lSenha').value }, 'POST');
+    token = res.token; usuario = res.usuario;
+    localStorage.setItem('token', token);
+    localStorage.setItem('usuario', JSON.stringify(usuario));
+    render();
+  } catch(ex) {
+    err.textContent = '❌ ' + ex.message;
+    err.style.display = 'block';
+  }
+}
+
+function configurarUrl() {
+  const url = prompt('Cole a URL do Google Apps Script:', localStorage.getItem('apiUrl') || '');
+  if (url) { localStorage.setItem('apiUrl', url); location.reload(); }
+}
+
+// ════════════════════════════════════════════════════════════
+// ADMIN HTML
+// ════════════════════════════════════════════════════════════
+function htmlAdmin() {
+  const hoje = evtHoje();
+  const total = eventos.length;
+  const orgaos = [...new Set(eventos.map(e => e.orgao))].length;
+  const semana = (() => {
+    const d = new Date(); const ini = new Date(d); ini.setDate(d.getDate()-d.getDay());
+    const fim = new Date(ini); fim.setDate(ini.getDate()+6);
+    return eventos.filter(e => { const x=new Date(e.data_evento); return x>=ini && x<=fim; }).length;
+  })();
+
+  return `
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+  <div class="overlay" onclick="toggleMenu()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div style="font-size:36px">🏛️</div>
+      <h3>Agenda Prefeitura</h3>
+      <span class="orgao-badge">Administrador</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="mostrarView('dashboard')">📊 Dashboard</div>
+      <div class="nav-item" onclick="mostrarView('calendario')">📅 Calendário</div>
+      <div class="nav-item" onclick="mostrarView('listaEventos')">📋 Todos os Eventos</div>
+      <div class="nav-item" onclick="mostrarView('usuarios')">👥 Usuários</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div>${usuario.nome}</div>
+      <div>${usuario.email}</div>
+      <button class="btn-logout" onclick="logout()">Sair →</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="view active">
+      <div class="secao-header"><h2>📊 Dashboard Geral</h2>
+        <div class="btns-row">
+          <button class="btn btn-verde" onclick="exportarExcel()">📊 Excel</button>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card" onclick="mostrarView('listaEventos')">
+          <div class="stat-icon">📅</div>
+          <div class="stat-info"><h3>${total}</h3><p>Total de Eventos</p></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📆</div>
+          <div class="stat-info"><h3>${semana}</h3><p>Esta Semana</p></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔴</div>
+          <div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div>
+        </div>
+        <div class="stat-card" onclick="mostrarView('usuarios')">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-info"><h3>${orgaos}</h3><p>Órgãos Ativos</p></div>
+        </div>
+      </div>
+
+      <div class="secao">
+        <div class="secao-header"><h2>📌 Eventos de Hoje</h2></div>
+        ${hoje.length === 0 ? '<div class="empty">Nenhum evento hoje</div>' :
+          hoje.map(e => cardEvento(e, true)).join('')}
+      </div>
+    </div>
+
+    <!-- CALENDÁRIO -->
+    <div id="calendario" class="view">
+      <div class="secao">
+        <div id="cal"></div>
+      </div>
+    </div>
+
+    <!-- LISTA EVENTOS -->
+    <div id="listaEventos" class="view">
+      <div class="secao">
+        <div class="secao-header">
+          <h2>📋 Todos os Eventos</h2>
+          <div class="btns-row">
+            <input id="buscaEvt" type="text" placeholder="Buscar..." style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px" oninput="filtrarEventos()">
+          </div>
+        </div>
+        <div id="listaEvtConteudo">${renderListaEventos(eventos)}</div>
+      </div>
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div id="usuarios" class="view">
+      <div class="secao">
+        <div class="secao-header">
+          <h2>👥 Gerenciar Usuários</h2>
+          <button class="btn btn-azul" onclick="abrirModalNovoUsuario()">+ Novo Usuário</button>
+        </div>
+        <div id="listaUsuarios">Carregando...</div>
+      </div>
+    </div>
+
+  </main>
+
+  ${htmlModalEvento()}
+  ${htmlModalForm()}
+  ${htmlModalUsuario()}
+  `;
+}
+
+// ════════════════════════════════════════════════════════════
+// SECRETARIA HTML
+// ════════════════════════════════════════════════════════════
+function htmlSecretaria() {
+  const meus = evtDoUsuario();
+  const hoje = evtHoje();
+  const mes = (() => {
+    const agora = new Date();
+    return meus.filter(e => {
+      const d = new Date(e.data_evento);
+      return d.getMonth()===agora.getMonth() && d.getFullYear()===agora.getFullYear();
+    }).length;
+  })();
+
+  return `
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+  <div class="overlay" onclick="toggleMenu()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div style="font-size:36px">🏛️</div>
+      <h3>${usuario.orgao}</h3>
+      <span class="orgao-badge">${sigla(usuario.orgao)}</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="mostrarView('inicio')">🏠 Início</div>
+      <div class="nav-item" onclick="mostrarView('calendario')">📅 Calendário</div>
+      <div class="nav-item" onclick="mostrarView('meusEventos')">📋 Meus Eventos</div>
+      <div class="nav-item" onclick="mostrarView('novoEvento')">➕ Novo Evento</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div>${usuario.nome}</div>
+      <div>${usuario.email}</div>
+      <button class="btn-logout" onclick="logout()">Sair →</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- INÍCIO -->
+    <div id="inicio" class="view active">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-info"><h3>${meus.length}</h3><p>Total de Eventos</p></div></div>
+        <div class="stat-card"><div class="stat-icon">📆</div><div class="stat-info"><h3>${mes}</h3><p>Este Mês</p></div></div>
+        <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div></div>
+        <div class="stat-card" onclick="mostrarView('novoEvento')"><div class="stat-icon">➕</div><div class="stat-info"><h3>Novo</h3><p>Criar Evento</p></div></div>
+      </div>
+
+      <div class="secao">
+        <div class="secao-header"><h2>📌 Eventos de Hoje</h2>
+          <button class="btn btn-azul" onclick="mostrarView('novoEvento')">+ Novo Evento</button>
+        </div>
+        ${hoje.length === 0 ? '<div class="empty">Nenhum evento hoje</div>' :
+          hoje.map(e => cardEvento(e)).join('')}
+      </div>
+    </div>
+
+    <!-- CALENDÁRIO -->
+    <div id="calendario" class="view">
+      <div class="secao">
+        <div id="cal"></div>
+      </div>
+    </div>
+
+    <!-- MEUS EVENTOS -->
+    <div id="meusEventos" class="view">
+      <div class="secao">
+        <div class="secao-header">
+          <h2>📋 Meus Eventos</h2>
+          <input id="buscaEvt" type="text" placeholder="Buscar..." style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px" oninput="filtrarEventos()">
+        </div>
+        <div id="listaEvtConteudo">${renderListaEventos(meus)}</div>
+      </div>
+    </div>
+
+    <!-- NOVO EVENTO -->
+    <div id="novoEvento" class="view">
+      <div class="secao">
+        <h2 style="margin-bottom:20px">➕ Novo Evento</h2>
+        <form onsubmit="criarEvento(event)">
+          <div class="form-group">
+            <label class="obrigatorio">Título</label>
+            <input id="evtTitulo" type="text" required placeholder="Nome do evento">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group">
+              <label class="obrigatorio">Data e Hora</label>
+              <input id="evtData" type="datetime-local" required oninput="verificarData()">
+              <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Data retroativa – confirme se é proposital</div>
+            </div>
+            <div class="form-group">
+              <label>Local</label>
+              <input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group">
+              <label>Responsável</label>
+              <input id="evtResp" type="text" placeholder="Nome do responsável">
+            </div>
+            <div class="form-group">
+              <label>Telefone</label>
+              <input id="evtTel" type="tel" placeholder="(18) 99999-9999">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="obrigatorio">Descrição / Observações</label>
+            <textarea id="evtObs" required placeholder="Descreva o evento..."></textarea>
+          </div>
+          <div class="btns-row">
+            <button type="submit" class="btn btn-azul">💾 Salvar Evento</button>
+            <button type="button" class="btn btn-cinza" onclick="mostrarView('inicio')">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  ${htmlModalEvento()}
+  ${htmlModalForm()}
+  `;
+}
+
+// ════════════════════════════════════════════════════════════
+// COMPONENTES HTML
+// ════════════════════════════════════════════════════════════
+function cardEvento(e, mostrarOrgao = false) {
+  const pref = isPrefeito(e);
+  return `
+  <div class="evento-card${pref?' prefeito':''}" onclick="verEvento('${e.id}')">
+    <div class="evento-titulo">
+      ${e.titulo}
+      ${pref ? '<span class="tag-prefeito">🏛️ PREFEITO</span>' : ''}
+      ${mostrarOrgao ? `<span class="tag-orgao">${sigla(e.orgao)}</span>` : ''}
+    </div>
+    <div class="evento-meta">
+      <span>📅 ${fmtData(e.data_evento)}</span>
+      ${fmtHora(e.data_evento) ? `<span>🕐 ${fmtHora(e.data_evento)}</span>` : ''}
+      ${e.local ? `<span>📍 ${e.local}</span>` : ''}
+      ${e.responsavel ? `<span>👤 ${e.responsavel}</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderListaEventos(lista) {
+  if (!lista || !lista.length) return '<div class="empty">Nenhum evento encontrado</div>';
+  return lista
+    .sort((a,b) => new Date(b.data_evento)-new Date(a.data_evento))
+    .map(e => cardEvento(e, usuario?.tipo === 'admin'))
+    .join('');
+}
+
+function htmlModalEvento() {
+  return `
+  <div id="modalEvento" class="modal-bg" onclick="fecharModal('modalEvento')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div id="modalEventoHead" class="modal-head">
+        <h3 id="modalEventoTitulo">Evento</h3>
+        <button class="modal-close" onclick="fecharModal('modalEvento')">×</button>
+      </div>
+      <div id="modalEventoBody" class="modal-body"></div>
+      <div id="modalEventoFooter" class="modal-footer"></div>
+    </div>
+  </div>`;
+}
+
+function htmlModalForm() {
+  return `
+  <div id="modalForm" class="modal-bg" onclick="fecharModal('modalForm')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <h3>✏️ Editar Evento</h3>
+        <button class="modal-close" onclick="fecharModal('modalForm')">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditar" onsubmit="salvarEdicao(event)">
+          <div class="form-group"><label>Título</label><input id="editTitulo" type="text" required></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group"><label>Data e Hora</label><input id="editData" type="datetime-local" required></div>
+            <div class="form-group"><label>Local</label><input id="editLocal" type="text"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group"><label>Responsável</label><input id="editResp" type="text"></div>
+            <div class="form-group"><label>Telefone</label><input id="editTel" type="tel"></div>
+          </div>
+          <div class="form-group"><label>Descrição</label><textarea id="editObs"></textarea></div>
+          <input type="hidden" id="editId">
+          <div class="btns-row">
+            <button type="submit" class="btn btn-azul">💾 Salvar</button>
+            <button type="button" class="btn btn-cinza" onclick="fecharModal('modalForm')">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>`;
+}
+
+function htmlModalUsuario() {
+  return `
+  <div id="modalUsuario" class="modal-bg" onclick="fecharModal('modalUsuario')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <h3 id="modalUsuarioTitulo">Novo Usuário</h3>
+        <button class="modal-close" onclick="fecharModal('modalUsuario')">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="formUsuario" onsubmit="salvarUsuario(event)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group"><label>Login</label><input id="uLogin" type="text" required autocomplete="off"></div>
+            <div class="form-group"><label>Nome Completo</label><input id="uNome" type="text" required></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group"><label>E-mail</label><input id="uEmail" type="email" required></div>
+            <div class="form-group"><label>Senha</label><input id="uSenha" type="text" required autocomplete="new-password"></div>
+          </div>
+          <div class="form-group">
+            <label>Órgão / Secretaria</label>
+            <select id="uOrgao" required>
+              <option value="">Selecione...</option>
+              <option>Gabinete do Prefeito</option>
+              <option>Secretaria de Educação</option>
+              <option>Secretaria de Saúde</option>
+              <option>Secretaria de Obras</option>
+              <option>Secretaria de Finanças</option>
+              <option>Secretaria de Cultura</option>
+              <option>Secretaria de Esportes</option>
+              <option>Secretaria de Assistência Social</option>
+              <option>Secretaria de Meio Ambiente</option>
+              <option>Secretaria de Transportes</option>
+              <option>Secretaria de Segurança</option>
+              <option>Secretaria de Turismo</option>
+              <option>Conselho Tutelar</option>
+              <option>Conselho da Criança</option>
+              <option>Conselho do Idoso</option>
+              <option>Conselho da Mulher</option>
+            </select>
+          </div>
+          <input type="hidden" id="uId">
+          <div class="btns-row">
+            <button type="submit" class="btn btn-azul">💾 Salvar</button>
+            <button type="button" class="btn btn-cinza" onclick="fecharModal('modalUsuario')">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// LÓGICA
+// ════════════════════════════════════════════════════════════
+function inicializarApp() {
+  // event listeners nos nav-items
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const view = el.dataset.view || el.getAttribute('onclick')?.match(/'(\w+)'/)?.[1];
+    });
+  });
+
+  // Carregar usuários se admin
+  if (usuario?.tipo === 'admin') carregarUsuarios();
+}
+
+function mostrarView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = $(id);
+  if (el) el.classList.add('active');
+
+  // Atualizar nav-item ativo
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(`'${id}'`)) n.classList.add('active');
+  });
+
+  // Inicializar calendário ao entrar na view
+  if (id === 'calendario' && !calendar) {
+    setTimeout(iniciarCalendario, 50);
+  }
+
+  fecharMenuMobile();
+}
+
+function toggleMenu() {
+  $('sidebar').classList.toggle('aberta');
+  document.querySelector('.overlay').classList.toggle('ativo');
+}
+function fecharMenuMobile() {
+  $('sidebar').classList.remove('aberta');
+  document.querySelector('.overlay').classList.remove('ativo');
+}
+
+function filtrarEventos() {
+  const termo = ($('buscaEvt')?.value || '').toLowerCase();
+  const base = usuario?.tipo === 'admin' ? eventos : evtDoUsuario();
+  const filtrados = termo
+    ? base.filter(e =>
+        e.titulo?.toLowerCase().includes(termo) ||
+        e.local?.toLowerCase().includes(termo) ||
+        e.responsavel?.toLowerCase().includes(termo) ||
+        e.orgao?.toLowerCase().includes(termo) ||
+        e.observacao?.toLowerCase().includes(termo))
+    : base;
+  const cont = $('listaEvtConteudo');
+  if (cont) cont.innerHTML = renderListaEventos(filtrados);
+}
+
+function verificarData() {
+  const input = $('evtData');
+  const aviso = $('avisoRetroativo');
+  if (!input || !aviso) return;
+  const d = new Date(input.value);
+  const agora = new Date(); agora.setHours(0,0,0,0);
+  aviso.style.display = d < agora ? 'block' : 'none';
+}
+
+// ── Ver evento ──────────────────────────────────────────────
+function verEvento(id) {
+  const e = eventos.find(x => String(x.id) === String(id));
+  if (!e) return;
+  const pref = isPrefeito(e);
+  const head = $('modalEventoHead');
+  head.className = 'modal-head' + (pref ? ' prefeito-head' : '');
+  $('modalEventoTitulo').textContent = e.titulo;
+
+  $('modalEventoBody').innerHTML = `
+    ${pref ? '<div style="text-align:center;margin-bottom:16px"><span class="tag-prefeito" style="font-size:13px">🏛️ Evento do Gabinete do Prefeito</span></div>' : ''}
+    <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtDH(e.data_evento)}</div></div>
+    <div class="info-linha"><div class="info-label">📍 Local</div><div class="info-valor">${e.local||'—'}</div></div>
+    <div class="info-linha"><div class="info-label">🏢 Órgão</div><div class="info-valor">${e.orgao||'—'}</div></div>
+    <div class="info-linha"><div class="info-label">👤 Responsável</div><div class="info-valor">${e.responsavel||'—'}</div></div>
+    <div class="info-linha"><div class="info-label">📞 Telefone</div><div class="info-valor">${e.telefone||'—'}</div></div>
+    <div class="info-linha"><div class="info-label">📝 Descrição</div><div class="info-valor">${e.observacao||'—'}</div></div>
+    <div class="info-linha"><div class="info-label">✍️ Publicado</div><div class="info-valor">${e.publicado_por||'—'} · ${fmtDH(e.data_publicacao)}</div></div>
+    ${e.anexo_nome ? `<div class="info-linha"><div class="info-label">📎 Anexo</div><div class="info-valor"><a href="${e.anexo_url}" target="_blank">${e.anexo_nome}</a></div></div>` : ''}
+  `;
+
+  const podEditar = usuario?.tipo === 'admin' || e.orgao === usuario?.orgao;
+  $('modalEventoFooter').innerHTML = podEditar ? `
+    <button class="btn btn-amarelo" onclick="abrirEdicao('${e.id}')">✏️ Editar</button>
+    <button class="btn btn-vermelho" onclick="confirmarExcluir('${e.id}')">🗑️ Excluir</button>
+    <button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>
+  ` : `<button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>`;
+
+  abrirModal('modalEvento');
+}
+
+// ── Editar evento ───────────────────────────────────────────
+function abrirEdicao(id) {
+  const e = eventos.find(x => String(x.id) === String(id));
+  if (!e) return;
+  fecharModal('modalEvento');
+  $('editId').value = e.id;
+  $('editTitulo').value = e.titulo || '';
+  $('editData').value = e.data_evento ? e.data_evento.substring(0,16) : '';
+  $('editLocal').value = e.local || '';
+  $('editResp').value = e.responsavel || '';
+  $('editTel').value = e.telefone || '';
+  $('editObs').value = e.observacao || '';
+  abrirModal('modalForm');
+}
+
+async function salvarEdicao(ev) {
+  ev.preventDefault();
+  try {
+    await api('atualizarEvento', {
+      id: $('editId').value,
+      titulo: $('editTitulo').value,
+      data_evento: $('editData').value,
+      local: $('editLocal').value,
+      responsavel: $('editResp').value,
+      telefone: $('editTel').value,
+      observacao: $('editObs').value
+    }, 'POST');
+    fecharModal('modalForm');
+    await recarregarEventos();
+    alert('✅ Evento atualizado!');
+  } catch(e) { alert('❌ ' + e.message); }
+}
+
+async function confirmarExcluir(id) {
+  const e = eventos.find(x => String(x.id) === String(id));
+  if (!confirm(`Excluir o evento "${e?.titulo}"?`)) return;
+  try {
+    await api('excluirEvento', { id }, 'POST');
+    fecharModal('modalEvento');
+    await recarregarEventos();
+    alert('✅ Evento excluído!');
+  } catch(ex) { alert('❌ ' + ex.message); }
+}
+
+// ── Criar evento ────────────────────────────────────────────
+async function criarEvento(ev) {
+  ev.preventDefault();
+  try {
+    await api('criarEvento', {
+      titulo: $('evtTitulo').value,
+      data_evento: $('evtData').value,
+      local: $('evtLocal').value,
+      responsavel: $('evtResp').value,
+      telefone: $('evtTel').value,
+      observacao: $('evtObs').value
+    }, 'POST');
+    ev.target.reset();
+    await recarregarEventos();
+    alert('✅ Evento criado com sucesso!');
+    mostrarView('meusEventos');
+  } catch(e) { alert('❌ ' + e.message); }
+}
+
+// ── Recarregar eventos ──────────────────────────────────────
+async function recarregarEventos() {
+  try {
+    const r = await api('getEventos');
+    if (Array.isArray(r)) { eventos = r; }
+  } catch(e) {}
+  // Atualizar listas visíveis
+  const cont = $('listaEvtConteudo');
+  if (cont) cont.innerHTML = renderListaEventos(usuario?.tipo==='admin' ? eventos : evtDoUsuario());
+  if (calendar) {
+    calendar.removeAllEvents();
+    calendar.addEventSource(eventosParaCalendario());
+  }
+}
+
+// ── Calendário ──────────────────────────────────────────────
+function eventosParaCalendario() {
+  return evtDoUsuario().map(e => ({
+    id: String(e.id),
+    title: isMobile()
+      ? (usuario?.tipo==='admin' ? sigla(e.orgao) : fmtHora(e.data_evento)||e.titulo)
+      : (usuario?.tipo==='admin' ? `${sigla(e.orgao)}: ${e.titulo}` : e.titulo),
+    start: e.data_evento,
+    className: isPrefeito(e) ? 'prefeito-event' : '',
+    extendedProps: { eventoId: e.id }
+  }));
+}
+
+function iniciarCalendario() {
+  const el = $('cal');
+  if (!el) return;
+  calendar = new FullCalendar.Calendar(el, {
+    locale: 'pt-br',
+    initialView: isMobile() ? 'dayGridMonth' : 'dayGridMonth',
+    headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,listMonth' },
+    events: eventosParaCalendario(),
+    eventClick: info => verEvento(info.event.extendedProps.eventoId),
+    height: 'auto'
+  });
+  calendar.render();
+}
+
+// ── Usuários ────────────────────────────────────────────────
+async function carregarUsuarios() {
+  const cont = $('listaUsuarios');
+  if (!cont) return;
+  try {
+    const lista = await api('getUsuarios', {}, 'POST');
+    if (!Array.isArray(lista)) { cont.innerHTML = '<div class="empty">Erro ao carregar</div>'; return; }
+    cont.innerHTML = `
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>Login</th><th>Órgão</th><th>Tipo</th><th>Ativo</th><th>Ações</th></tr></thead>
+          <tbody>
+          ${lista.map(u => `
+            <tr>
+              <td>${u.nome}</td><td>${u.login}</td><td>${u.orgao||'—'}</td>
+              <td>${u.tipo}</td>
+              <td>${String(u.ativo).toUpperCase()==='TRUE' ? '✅' : '❌'}</td>
+              <td>
+                <div class="btns-row">
+                  <button class="btn btn-amarelo" onclick="resetarSenha('${u.id}','${u.nome}')">🔑</button>
+                  <button class="btn btn-vermelho" onclick="excluirUsuario('${u.id}','${u.nome}')">🗑️</button>
+                </div>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) { cont.innerHTML = '<div class="empty">Erro: ' + e.message + '</div>'; }
+}
+
+function abrirModalNovoUsuario() {
+  $('modalUsuarioTitulo').textContent = 'Novo Usuário';
+  $('formUsuario').reset();
+  $('uId').value = '';
+  abrirModal('modalUsuario');
+}
+
+async function salvarUsuario(ev) {
+  ev.preventDefault();
+  try {
+    await api('criarUsuario', {
+      login: $('uLogin').value,
+      nome: $('uNome').value,
+      email: $('uEmail').value,
+      senha: $('uSenha').value,
+      orgao: $('uOrgao').value,
+      is_prefeito: $('uOrgao').value === 'Gabinete do Prefeito'
+    }, 'POST');
+    fecharModal('modalUsuario');
+    await carregarUsuarios();
+    alert('✅ Usuário criado!');
+  } catch(e) { alert('❌ ' + e.message); }
+}
+
+async function resetarSenha(id, nome) {
+  const nova = prompt(`Nova senha para ${nome}:`);
+  if (!nova) return;
+  try {
+    await api('resetarSenha', { usuarioId: id, novaSenha: nova }, 'POST');
+    alert('✅ Senha alterada!');
+  } catch(e) { alert('❌ ' + e.message); }
+}
+
+async function excluirUsuario(id, nome) {
+  if (!confirm(`Excluir o usuário "${nome}"?`)) return;
+  try {
+    await api('excluirUsuario', { id }, 'POST');
+    await carregarUsuarios();
+    alert('✅ Usuário excluído!');
+  } catch(e) { alert('❌ ' + e.message); }
+}
+
+// ── Modais ──────────────────────────────────────────────────
+function abrirModal(id) { const el = $(id); if(el) el.classList.add('aberto'); }
+function fecharModal(id) { const el = $(id); if(el) el.classList.remove('aberto'); }
+
+// ── Exportar Excel ──────────────────────────────────────────
+function exportarExcel() {
+  const dados = evtDoUsuario().map(e => ({
+    'Título': e.titulo, 'Data': fmtDH(e.data_evento), 'Local': e.local,
+    'Órgão': e.orgao, 'Responsável': e.responsavel, 'Telefone': e.telefone,
+    'Descrição': e.observacao, 'Publicado por': e.publicado_por
+  }));
+  const ws = XLSX.utils.json_to_sheet(dados);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Eventos');
+  XLSX.writeFile(wb, 'agenda-prefeitura.xlsx');
+}
+
+// ── Responsividade ──────────────────────────────────────────
+window.addEventListener('resize', () => {
+  if (calendar) calendar.updateSize();
+});
+
+// ── Iniciar ─────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
