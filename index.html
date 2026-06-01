@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -165,6 +165,23 @@ async function api(action, data = {}) {
   }
 }
 
+async function apiPost(action, data = {}) {
+  try {
+    const url = `${API_URL}?action=${encodeURIComponent(action)}&token=${encodeURIComponent(token||'')}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ ...data, token: token || '' })
+    });
+    const json = await res.json();
+    if (json && json.error) throw new Error(json.error);
+    return json;
+  } catch (e) {
+    if (e.message && e.message.includes('autorizado')) logout();
+    throw e;
+  }
+}
+
 const fmtData = s => s ? new Date(s).toLocaleDateString('pt-BR') : '-';
 const fmtHora = s => s ? new Date(s).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
 const fmtDH   = s => s ? new Date(s).toLocaleString('pt-BR') : '-';
@@ -185,7 +202,7 @@ const sigla = orgao => SIGLAS[orgao] || orgao.substring(0,4).toUpperCase();
 
 function evtDoUsuario() {
   if (usuario?.tipo === 'admin' || usuario?.tipo === 'prefeito') return eventos;
-  return eventos.filter(e => e.orgao === usuario?.orgao);
+  return eventos.filter(e => String(e.orgao||'').trim() === String(usuario?.orgao||'').trim());
 }
 function evtHoje() {
   const h = new Date(); h.setHours(0,0,0,0);
@@ -579,19 +596,24 @@ function htmlSecretaria() {
       <div class="secao">
         <h2 style="margin-bottom:20px">➕ Novo Evento</h2>
         <form onsubmit="criarEvento(event)">
-          <div class="form-group"><label>Título</label><input id="evtTitulo" type="text" required placeholder="Nome do evento"></div>
+          <div class="form-group"><label>Título *</label><input id="evtTitulo" type="text" required placeholder="Nome do evento"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group"><label>Data e Hora</label>
+            <div class="form-group"><label>Data e Hora *</label>
               <input id="evtData" type="datetime-local" required oninput="verificarData()">
-              <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Data retroativa – confirme se é proposital</div>
+              <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Não é permitido criar eventos com data retroativa</div>
             </div>
             <div class="form-group"><label>Local</label><input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             <div class="form-group"><label>Responsável</label><input id="evtResp" type="text" placeholder="Nome do responsável"></div>
-            <div class="form-group"><label>Telefone</label><input id="evtTel" type="tel" placeholder="(18) 99999-9999"></div>
+            <div class="form-group"><label>Telefone / Contato *</label><input id="evtTel" type="tel" required placeholder="(18) 99999-9999"></div>
           </div>
-          <div class="form-group"><label>Descrição / Observações</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
+          <div class="form-group"><label>Descrição / Observações *</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
+          <div class="form-group">
+            <label>Anexo (imagem, PDF, doc — máx. 10MB)</label>
+            <input type="file" id="evtAnexo" accept="image/*,.pdf,.doc,.docx" onchange="mostrarNomeAnexo(this)" style="display:block;padding:6px 0;font-size:13px">
+            <div id="nomeAnexo" style="font-size:12px;color:#28a745;margin-top:4px"></div>
+          </div>
           <div class="btns-row">
             <button type="submit" class="btn btn-azul">💾 Salvar Evento</button>
             <button type="button" class="btn btn-cinza" onclick="mostrarView('inicio')">Cancelar</button>
@@ -617,6 +639,7 @@ function cardEvento(e, mostrarOrgao=false) {
       ${fmtHora(e.data_evento)?`<span>🕐 ${fmtHora(e.data_evento)}</span>`:''}
       ${e.local?`<span>📍 ${e.local}</span>`:''}
       ${e.responsavel?`<span>👤 ${e.responsavel}</span>`:''}
+      ${usuario?.tipo==='admin'&&e.publicado_por?`<span style="color:#888;font-size:11px">✍️ ${e.publicado_por} · ${fmtDH(e.data_publicacao)}</span>`:''}
     </div>
   </div>`;
 }
@@ -772,6 +795,16 @@ function verificarData() {
   aviso.style.display=new Date(input.value)<agora?'block':'none';
 }
 
+function mostrarNomeAnexo(input) {
+  const div=$('nomeAnexo'); if(!div) return;
+  if(input.files&&input.files[0]){
+    const f=input.files[0];
+    const mb=(f.size/1024/1024).toFixed(2);
+    if(f.size>10*1024*1024){div.textContent='❌ Arquivo muito grande (máx. 10MB)';div.style.color='#dc3545';input.value='';return;}
+    div.textContent=`📎 ${f.name} (${mb} MB)`;div.style.color='#28a745';
+  } else { div.textContent=''; }
+}
+
 function verEvento(id) {
   const e=eventos.find(x=>String(x.id)===String(id)); if(!e) return;
   const pref=isPrefeito(e);
@@ -827,11 +860,32 @@ async function confirmarExcluir(id) {
 
 async function criarEvento(ev) {
   ev.preventDefault();
+  const dataVal=$('evtData').value;
+  if(dataVal){
+    const agora=new Date(); agora.setHours(0,0,0,0);
+    if(new Date(dataVal)<agora){alert('❌ Não é permitido criar eventos com data retroativa.');return;}
+  }
+  const fileInput=$('evtAnexo');
+  let arquivo_base64='',arquivo_nome='',arquivo_tipo='';
+  if(fileInput&&fileInput.files&&fileInput.files[0]){
+    const f=fileInput.files[0];
+    if(f.size>10*1024*1024){alert('❌ Arquivo muito grande. Máximo 10MB.');return;}
+    arquivo_nome=f.name; arquivo_tipo=f.type;
+    arquivo_base64=await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=e=>res(e.target.result.split(',')[1]);
+      r.onerror=rej; r.readAsDataURL(f);
+    });
+  }
   try {
-    await api('criarEvento',{titulo:$('evtTitulo').value,data_evento:$('evtData').value,
-      local:$('evtLocal').value,responsavel:$('evtResp').value,
-      telefone:$('evtTel').value,observacao:$('evtObs').value});
-    ev.target.reset(); await recarregarEventos();
+    const payload={titulo:$('evtTitulo').value,data_evento:dataVal,
+      local:$('evtLocal')?.value||'',responsavel:$('evtResp')?.value||'',
+      telefone:$('evtTel')?.value||'',observacao:$('evtObs').value,
+      arquivo_base64,arquivo_nome,arquivo_tipo};
+    if(arquivo_base64) await apiPost('criarEvento',payload);
+    else await api('criarEvento',payload);
+    ev.target.reset(); if($('nomeAnexo'))$('nomeAnexo').textContent='';
+    await recarregarEventos();
     alert('✅ Evento criado com sucesso!');
     mostrarView(usuario?.tipo==='prefeito'?'agendaPref':'meusEventos');
   } catch(e){ alert('❌ '+e.message); }
