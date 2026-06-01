@@ -7,7 +7,7 @@
 // =====================================================
 
 // Cole aqui o ID da sua planilha Google Sheets
-const SPREADSHEET_ID = 'COLE_O_ID_DA_SUA_PLANILHA_AQUI';
+const SPREADSHEET_ID = '1lBUTNecr5eylEn7958UQz8rUFLlHIcFeKcAf0--Jswo';
 
 function doGet(e) { return handleRequest(e); }
 function doPost(e) { return handleRequest(e); }
