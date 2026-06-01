@@ -1,4 +1,4 @@
-// =====================================================
+﻿// =====================================================
 // GOOGLE APPS SCRIPT - API AGENDA DA PREFEITURA
 // =====================================================
 
@@ -40,8 +40,18 @@ function handleRequest(e) {
   }
 }
 
+function jsonSafe(obj) {
+  var s = JSON.stringify(obj), out = '', i, code;
+  for (i = 0; i < s.length; i++) {
+    code = s.charCodeAt(i);
+    if (code > 127) { out += '\\u' + ('0000' + code.toString(16)).slice(-4); }
+    else { out += s[i]; }
+  }
+  return out;
+}
+
 function responder(data, output) {
-  output.setContent(JSON.stringify(data));
+  output.setContent(jsonSafe(data));
   return output;
 }
 
@@ -88,13 +98,13 @@ function gerarToken(user) {
     is_prefeito: user.tipo === 'prefeito' || String(user.is_prefeito).toUpperCase() === 'TRUE',
     exp: Date.now() + 86400000
   };
-  return Utilities.base64Encode(JSON.stringify(payload));
+  return Utilities.base64Encode(jsonSafe(payload));
 }
 
 function verificarToken(token) {
   if (!token) return null;
   try {
-    const decoded = JSON.parse(Utilities.newBlob(Utilities.base64Decode(token)).getDataAsString());
+    const decoded = JSON.parse(Utilities.newBlob(Utilities.base64Decode(token)).getDataAsString('UTF-8'));
     if (decoded.exp < Date.now()) return null;
     return decoded;
   } catch (e) { return null; }
@@ -185,7 +195,7 @@ function handleCriarEvento(data) {
     telefone || '', observacao, anexo_url, anexo_nome,
     orgaoEvento,
     (usuario.tipo === 'prefeito' || usuario.is_prefeito) ? 'TRUE' : 'FALSE',
-    usuario.nome, usuario.email, now, now, 'ativo'
+    usuario.login, usuario.email, now, now, 'ativo'
   ]);
 
   registrarLog(usuario.email, 'criar_evento', titulo);
@@ -446,3 +456,5 @@ function testarLogin() {
   rows.forEach((r, i) => Logger.log(`${i+1}: login="${r.login}" tipo="${r.tipo}" ativo="${r.ativo}"`));
   Logger.log('Teste admin: ' + JSON.stringify(handleLogin({ usuario: 'admin', senha: 'admin123' })));
 }
+
+
