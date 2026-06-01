@@ -150,10 +150,9 @@ function handleCriarEvento(data) {
   const { titulo, data_evento, local, responsavel, telefone, observacao } = data;
   if (!titulo || !data_evento || !observacao) return { error: 'Título, data e observação são obrigatórios' };
 
-  // Bloquear datas retroativas
+  // Bloquear data/hora retroativa
   const dataEvt = new Date(data_evento);
-  const hoje = new Date(); hoje.setHours(0,0,0,0);
-  if (dataEvt < hoje) return { error: 'Não é permitido criar eventos com data retroativa.' };
+  if (dataEvt < new Date()) return { error: 'Não é permitido criar eventos com data ou hora retroativa.' };
 
   const sheet = getSheet('eventos');
   if (!sheet) return { error: 'Aba eventos não encontrada' };
@@ -186,7 +185,7 @@ function handleCriarEvento(data) {
     telefone || '', observacao, anexo_url, anexo_nome,
     orgaoEvento,
     (usuario.tipo === 'prefeito' || usuario.is_prefeito) ? 'TRUE' : 'FALSE',
-    usuario.login, usuario.email, now, now, 'ativo'
+    usuario.nome, usuario.email, now, now, 'ativo'
   ]);
 
   registrarLog(usuario.email, 'criar_evento', titulo);
