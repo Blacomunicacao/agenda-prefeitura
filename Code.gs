@@ -12,7 +12,10 @@ function handleRequest(e) {
   const output = ContentService.createTextOutput();
   output.setMimeType(ContentService.MimeType.JSON);
   try {
-    const p = e.parameter || {};
+    let p = Object.assign({}, e.parameter || {});
+    if (e.postData && e.postData.contents) {
+      try { p = Object.assign({}, p, JSON.parse(e.postData.contents)); } catch(ex) {}
+    }
     const action = p.action || '';
     switch (action) {
       case 'login':               return responder(handleLogin(p), output);
@@ -136,7 +139,7 @@ function handleGetEventos(params) {
   return rows.filter(e => {
     if (!e.id) return false;
     if (usuario.tipo === 'admin' || usuario.tipo === 'prefeito') return true;
-    return e.orgao === usuario.orgao;
+    return String(e.orgao||'').trim() === String(usuario.orgao||'').trim();
   });
 }
 
@@ -144,11 +147,34 @@ function handleCriarEvento(data) {
   const usuario = verificarToken(data.token);
   if (!usuario) return { error: 'Não autorizado' };
 
-  const { titulo, data_evento, local, responsavel, telefone, observacao, anexo_url, anexo_nome } = data;
+  const { titulo, data_evento, local, responsavel, telefone, observacao } = data;
   if (!titulo || !data_evento || !observacao) return { error: 'Título, data e observação são obrigatórios' };
+
+  // Bloquear datas retroativas
+  const dataEvt = new Date(data_evento);
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  if (dataEvt < hoje) return { error: 'Não é permitido criar eventos com data retroativa.' };
 
   const sheet = getSheet('eventos');
   if (!sheet) return { error: 'Aba eventos não encontrada' };
+
+  // Upload de anexo para o Google Drive
+  let anexo_url = '', anexo_nome = '';
+  if (data.arquivo_base64 && data.arquivo_nome) {
+    try {
+      const bytes = Utilities.base64Decode(data.arquivo_base64);
+      const blob = Utilities.newBlob(bytes, data.arquivo_tipo || 'application/octet-stream', data.arquivo_nome);
+      const pasta = DriveApp.getFoldersByName('Agenda Prefeitura Anexos').hasNext()
+        ? DriveApp.getFoldersByName('Agenda Prefeitura Anexos').next()
+        : DriveApp.createFolder('Agenda Prefeitura Anexos');
+      const file = pasta.createFile(blob);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      anexo_url = 'https://drive.google.com/file/d/' + file.getId() + '/view';
+      anexo_nome = data.arquivo_nome;
+    } catch(e) {
+      return { error: 'Erro ao salvar anexo: ' + e.toString() };
+    }
+  }
 
   const id = proximoId('eventos');
   const now = new Date().toISOString();
@@ -156,7 +182,7 @@ function handleCriarEvento(data) {
 
   sheet.appendRow([
     id, titulo, data_evento, local || '', responsavel || '',
-    telefone || '', observacao, anexo_url || '', anexo_nome || '',
+    telefone || '', observacao, anexo_url, anexo_nome,
     orgaoEvento,
     (usuario.tipo === 'prefeito' || usuario.is_prefeito) ? 'TRUE' : 'FALSE',
     usuario.nome, usuario.email, now, now, 'ativo'
