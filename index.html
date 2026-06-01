@@ -283,7 +283,13 @@ function orgaosSelectHtml(id, required=true) {
   </select>`;
 }
 
-const sigla = orgao => SIGLAS[orgao] || (orgao||'').substring(0,6).toUpperCase();
+const sigla = orgao => {
+  if (!orgao) return '';
+  if (SIGLAS[orgao]) return SIGLAS[orgao];
+  const m = orgao.match(/^Conselho\s+(.+)$/);
+  if (m) return m[1];
+  return orgao.substring(0,6).toUpperCase();
+};
 
 function evtDoUsuario() {
   return eventos; // backend already filters by orgao/tipo
@@ -491,7 +497,6 @@ function htmlAdmin() {
     <div id="dashboard" class="view active">
       <div class="secao-header"><h2>📊 Dashboard Geral</h2>
         <div class="btns-row">
-          <button class="btn btn-azul" onclick="abrirModalAnexos()">📎 Anexos</button>
           <button class="btn btn-verde" onclick="exportarExcel()">📊 Excel</button>
           <button class="btn btn-pdf" onclick="exportarPDF()">📄 PDF</button>
         </div>
@@ -500,7 +505,7 @@ function htmlAdmin() {
         <div class="stat-card" onclick="mostrarView('listaEventos')">
           <div class="stat-icon">📅</div><div class="stat-info"><h3>${total}</h3><p>Total de Eventos</p></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" onclick="mostrarEventosSemana()">
           <div class="stat-icon">📆</div><div class="stat-info"><h3>${semana}</h3><p>Esta Semana</p></div>
         </div>
         <div class="stat-card" onclick="abrirModalAnexos()">
@@ -950,8 +955,7 @@ function filtrarEventosPref() {
 function verificarData() {
   const input=$('evtData'),aviso=$('avisoRetroativo');
   if(!input||!aviso) return;
-  const agora=new Date(); agora.setHours(0,0,0,0);
-  aviso.style.display=new Date(input.value)<agora?'block':'none';
+  aviso.style.display=new Date(input.value)<new Date()?'block':'none';
 }
 
 function mostrarNomeAnexo(input) {
@@ -1023,8 +1027,7 @@ async function criarEvento(ev) {
   ev.preventDefault();
   const dataVal=$('evtData').value;
   if(dataVal){
-    const agora=new Date(); agora.setHours(0,0,0,0);
-    if(new Date(dataVal)<agora){alert('❌ Não é permitido criar eventos com data retroativa.');return;}
+    if(new Date(dataVal)<new Date()){alert('❌ Não é permitido criar eventos com data ou hora retroativa.');return;}
   }
   const fileInput=$('evtAnexo');
   let arquivo_base64='',arquivo_nome='',arquivo_tipo='';
@@ -1086,7 +1089,9 @@ function iniciarCalendario() {
   const el=$('cal'); if(!el) return;
   calendar=new FullCalendar.Calendar(el,{
     locale:'pt-br', initialView:'dayGridMonth',
-    headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,listMonth'},
+    headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,dayGridWeek,listMonth'},
+    buttonText:{today:'Hoje',month:'Mês',week:'Semana',list:'Lista'},
+    noEventsText:'Nenhum evento para exibir',
     events:eventosParaCalendario(),
     eventClick:info=>verEvento(info.event.extendedProps.eventoId),
     dateClick:info=>{
@@ -1117,6 +1122,16 @@ function abrirModalEventosDoDia(dataStr, lista) {
   abrirModal('modalDia');
 }
 
+function mostrarEventosSemana() {
+  const d=new Date(),ini=new Date(d); ini.setDate(d.getDate()-d.getDay()); ini.setHours(0,0,0,0);
+  const fim=new Date(ini); fim.setDate(ini.getDate()+6); fim.setHours(23,59,59,999);
+  const lista=eventos.filter(e=>{const x=new Date(e.data_evento);return x>=ini&&x<=fim;});
+  mostrarView('listaEventos');
+  const cont=$('listaEvtConteudo');
+  if(cont) cont.innerHTML=renderTabelaAdmin(lista);
+  const busca=$('buscaEvt'); if(busca) busca.value='';
+}
+
 // ════════════════ GRÁFICO ════════════════
 function renderizarGrafico() {
   const ctx=$('graficoOrgaos')?.getContext('2d');
@@ -1125,7 +1140,7 @@ function renderizarGrafico() {
   const contagem={};
   eventos.forEach(e=>{ if(e.orgao) contagem[e.orgao]=(contagem[e.orgao]||0)+1; });
   const entries=Object.entries(contagem).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const labels=entries.map(([k])=>SIGLAS[k]||k.substring(0,8));
+  const labels=entries.map(([k])=>sigla(k));
   const data=entries.map(([,v])=>v);
   const cores=['#004d99','#003a73','#0066cc','#0052a3','#1a6bb5','#2878c4','#3685d3','#4492e2'];
   adminChart=new Chart(ctx,{
@@ -1267,12 +1282,13 @@ async function carregarSolicitacoes() {
 
 async function aprovarSolicitacao(id) {
   const s=solicitacoesList.find(x=>String(x.id)===String(id)); if(!s) return;
-  const senha=prompt(`Defina uma senha para "${s.nome}" (${s.login}):`); if(!senha) return;
+  if(!confirm(`Aprovar solicitação de "${s.nome}" (${s.login}) para ${s.orgao||'—'}?`)) return;
+  const senha=s.login+'@PP';
   try {
     await api('criarUsuario',{login:s.login,nome:s.nome,email:s.email,senha,tipo:'orgao',orgao:s.orgao});
     await api('atualizarSolicitacao',{id,status:'aprovado'});
     await carregarSolicitacoes(); await carregarUsuarios();
-    alert('✅ Usuário aprovado e criado!');
+    alert(`✅ Usuário "${s.nome}" aprovado!\n\nSenha inicial gerada: ${senha}\nComunique ao usuário para alterar.`);
   } catch(e){alert('❌ '+e.message);}
 }
 
