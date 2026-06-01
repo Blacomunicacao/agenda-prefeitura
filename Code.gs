@@ -117,8 +117,9 @@ function handleLogin(data) {
   if (!usuario || !senha) return { error: 'Usuário e senha são obrigatórios' };
 
   const { rows } = lerAba('usuarios');
+  const u = String(usuario).toLowerCase().trim();
   const user = rows.find(r =>
-    (r.login === usuario || r.email === usuario || r.nome === usuario) &&
+    (String(r.login).toLowerCase() === u || String(r.email).toLowerCase() === u) &&
     r.senha === senha && String(r.ativo).toUpperCase() === 'TRUE'
   );
 
