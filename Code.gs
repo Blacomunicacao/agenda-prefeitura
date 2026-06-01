@@ -28,6 +28,7 @@ function handleRequest(e) {
       case 'recuperarSenha':      return responder(handleRecuperarSenha(p), output);
       case 'getSolicitacoes':     return responder(handleGetSolicitacoes(p), output);
       case 'atualizarSolicitacao':return responder(handleAtualizarSolicitacao(p), output);
+      case 'setup':               return responder(criarAbas(), output);
       default: return responder({ error: 'Ação não encontrada: ' + action }, output);
     }
   } catch (err) {
@@ -353,6 +354,29 @@ function handleAtualizarSolicitacao(data) {
 
   registrarLog(admin.email, 'atualizar_solicitacao', `ID ${data.id} → ${data.status}`);
   return { success: true };
+}
+
+// ── Setup inicial das abas ────────────────────────────────────────────────────
+
+function criarAbas() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const config = {
+    usuarios:     ['id','login','nome','email','senha','tipo','orgao','is_prefeito','ativo','data_criacao'],
+    eventos:      ['id','titulo','data_evento','local','responsavel','telefone','observacao','anexo_url','anexo_nome','orgao','is_prefeito','publicado_por','email_publicado','data_publicacao','data_atualizacao','status'],
+    logs:         ['id','data','usuario','acao','detalhes'],
+    solicitacoes: ['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao']
+  };
+  const resultado = [];
+  Object.keys(config).forEach(nome => {
+    if (!ss.getSheetByName(nome)) {
+      const s = ss.insertSheet(nome);
+      s.appendRow(config[nome]);
+      resultado.push('criada: ' + nome);
+    } else {
+      resultado.push('ja existe: ' + nome);
+    }
+  });
+  return { success: true, abas: resultado };
 }
 
 // ── Testes ────────────────────────────────────────────────────────────────────
