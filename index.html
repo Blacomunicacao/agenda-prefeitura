@@ -126,10 +126,13 @@ tr.pref-row:hover td{background:#ffe8e8}
 /* ── Badge notificação ── */
 .badge{background:#dc3545;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700;margin-left:4px}
 
+/* ── Dashboard dois colunas ── */
+.dashboard-dois-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;margin-bottom:20px}
+
 /* ── Eventos de Hoje ── */
-.eventos-hoje-container{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:20px}
+.eventos-hoje-container{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .eventos-hoje-container h3{font-size:15px;color:#003366;margin-bottom:14px}
-.eventos-hoje-lista{max-height:360px;overflow-y:auto}
+.eventos-hoje-lista{max-height:400px;overflow-y:auto}
 .evento-hoje-card{background:#f8f9fa;border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;border-left:4px solid #004d99;transition:background .2s}
 .evento-hoje-card:hover{background:#e8f0fe}
 .evento-hoje-card.prefeito{border-left-color:#dc3545;background:#fff5f5}
@@ -186,9 +189,15 @@ tr.pref-row:hover td{background:#ffe8e8}
   .info-linha{flex-direction:column}
   .info-label{width:100%;margin-bottom:2px}
 
-  /* Calendário mobile */
-  .fc{height:100%!important}
-  .fc-view-harness{height:auto!important;min-height:400px!important}
+  /* Dashboard grid vira 1 coluna */
+  .dashboard-dois-col{grid-template-columns:1fr!important}
+
+  /* Calendário mobile — ocupa tela inteira sem scroll horizontal */
+  #calendario .secao{padding:4px 0;margin:0 -12px;border-radius:0;box-shadow:none;margin-bottom:0}
+  .fc{height:100%!important;width:100%!important}
+  .fc-view-harness{height:calc(100vh - 130px)!important;min-height:400px!important;overflow-x:hidden!important}
+  .fc-daygrid-body,.fc-scrollgrid,.fc-scrollgrid-section,.fc-scrollgrid-section>td{width:100%!important}
+  .fc-scrollgrid{border-left:0!important;border-right:0!important}
   .fc-event{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:10px!important;padding:3px 5px!important;display:inline-block!important;max-width:100%!important;font-weight:500!important}
   .fc-daygrid-day-number{font-size:10px!important;padding:4px!important}
   .fc-toolbar-title{font-size:13px!important}
@@ -543,19 +552,21 @@ function htmlAdmin() {
           <div class="stat-icon">📈</div><div class="stat-info"><h3>${media}</h3><p>Métrica de Uso</p></div>
         </div>
       </div>
-      <div class="eventos-hoje-container">
-        <h3>📌 Eventos de Hoje (${hoje.length})</h3>
-        <div class="eventos-hoje-lista">
-          ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>`
-            <div class="evento-hoje-card${isPrefeito(e)?' prefeito':''}" onclick="verEvento('${e.id}')">
-              <div class="evento-hoje-titulo">${e.titulo}</div>
-              <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento)} · 🏢 ${sigla(e.orgao)}</div>
-              ${e.local?`<div class="evento-hoje-info">📍 ${e.local}</div>`:''}
-              ${e.publicado_por?`<div class="evento-hoje-info" style="color:#888">✍️ ${e.publicado_por}</div>`:''}
-            </div>`).join('')}
+      <div class="dashboard-dois-col">
+        <div id="metricaContainer"></div>
+        <div class="eventos-hoje-container">
+          <h3>📌 Eventos de Hoje (${hoje.length})</h3>
+          <div class="eventos-hoje-lista">
+            ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>`
+              <div class="evento-hoje-card${isPrefeito(e)?' prefeito':''}" onclick="verEvento('${e.id}')">
+                <div class="evento-hoje-titulo">${e.titulo}</div>
+                <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento)} · 🏢 ${sigla(e.orgao)}</div>
+                ${e.local?`<div class="evento-hoje-info">📍 ${e.local}</div>`:''}
+                ${e.publicado_por?`<div class="evento-hoje-info" style="color:#888">✍️ ${e.publicado_por}</div>`:''}
+              </div>`).join('')}
+          </div>
         </div>
       </div>
-      <div id="metricaContainer"></div>
     </div>
     <div id="calendario" class="view"><div class="secao"><div id="cal"></div></div></div>
     <div id="listaEventos" class="view">
@@ -686,7 +697,7 @@ function htmlSecretaria() {
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <img src="Logo plataforma de Agenda.png" alt="Agenda" class="sidebar-logo">
-      <h3>${usuario.orgao}</h3>
+      <h3>${sigla(usuario.orgao)}</h3>
       <span class="orgao-badge">${sigla(usuario.orgao)}</span>
     </div>
     <nav class="sidebar-nav">
@@ -792,7 +803,7 @@ function renderTabelaAdmin(lista) {
     <thead><tr><th>Órgão</th><th>Evento</th><th>Data/Hora</th><th>Publicado por</th><th>Publicado em</th><th>Anexo</th></tr></thead>
     <tbody>${sorted.map(e=>`
       <tr class="${isPrefeito(e)?'pref-row':''}" onclick="verEvento('${e.id}')" style="cursor:pointer">
-        <td>${e.orgao||'—'}${isPrefeito(e)?'  ⭐':''}</td>
+        <td>${sigla(e.orgao)||'—'}${isPrefeito(e)?'  ⭐':''}</td>
         <td>${e.titulo}</td>
         <td>${fmtData(e.data_evento)} ${fmtHora(e.data_evento)}</td>
         <td>${e.publicado_por||'—'}</td>
@@ -941,7 +952,7 @@ function renderizarMetrica() {
   const m = calcularMetricaUsabilidade();
   const top5 = m.ranking.slice(0, 5);
   container.innerHTML = `
-    <div class="secao" style="margin-top:20px">
+    <div class="secao">
       <div class="secao-header">
         <h2>📈 Métrica de Uso por Órgão</h2>
         ${m.ranking.length > 5 ? `<button class="btn btn-outline" onclick="abrirModalMetricaDetalhada()">Ver Ranking Completo</button>` : ''}
@@ -1024,7 +1035,7 @@ function abrirModalMetricaDetalhada() {
                   <div style="width:32px;text-align:center;font-size:${i<3?'18':'13'}px;font-weight:700;flex-shrink:0">${medalha(i)}</div>
                   <div style="flex:1">
                     <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
-                      <span style="font-weight:600">${item.orgao}</span>
+                      <span style="font-weight:600">${item.siglaOrgao}</span>
                       <span style="color:#666;white-space:nowrap;margin-left:8px">${item.qtd} evento${item.qtd!==1?'s':''}</span>
                     </div>
                     <div style="background:#e9ecef;border-radius:4px;height:6px">
@@ -1124,7 +1135,7 @@ function verEvento(id) {
     ${pref?'<div style="text-align:center;margin-bottom:16px"><span class="tag-prefeito" style="font-size:13px">🏛️ Evento do Gabinete do Prefeito</span></div>':''}
     <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtDH(e.data_evento)}</div></div>
     <div class="info-linha"><div class="info-label">📍 Local</div><div class="info-valor">${e.local||'—'}</div></div>
-    <div class="info-linha"><div class="info-label">🏢 Órgão</div><div class="info-valor">${e.orgao||'—'}</div></div>
+    <div class="info-linha"><div class="info-label">🏢 Órgão</div><div class="info-valor">${sigla(e.orgao)||'—'}</div></div>
     <div class="info-linha"><div class="info-label">👤 Responsável</div><div class="info-valor">${e.responsavel||'—'}</div></div>
     <div class="info-linha"><div class="info-label">📞 Telefone</div><div class="info-valor">${e.telefone||'—'}</div></div>
     <div class="info-linha"><div class="info-label">📝 Descrição</div><div class="info-valor">${e.observacao||'—'}</div></div>
@@ -1223,7 +1234,7 @@ function eventosParaCalendario() {
   return evtDoUsuario().map(e=>({
     id:String(e.id),
     title:isMobile()
-      ?(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'?sigla(e.orgao):fmtHora(e.data_evento)||e.titulo)
+      ?`${sigla(e.orgao)} ${fmtHora(e.data_evento)}`
       :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'?`${sigla(e.orgao)}: ${e.titulo}`:e.titulo),
     start:e.data_evento,
     className:isPrefeito(e)?'prefeito-event':'',
@@ -1261,7 +1272,7 @@ function abrirModalEventosDoDia(dataStr, lista) {
          onclick="fecharModal('modalDia');verEvento('${e.id}')">
       <div style="font-weight:700;color:${isPrefeito(e)?'#dc3545':'#003366'};margin-bottom:6px">${e.titulo}</div>
       <div style="font-size:12px;color:#666">⏰ ${fmtHora(e.data_evento)}</div>
-      ${e.orgao?`<div style="font-size:12px;color:#666">🏢 ${e.orgao}</div>`:''}
+      ${e.orgao?`<div style="font-size:12px;color:#666">🏢 ${sigla(e.orgao)}</div>`:''}
       ${e.local?`<div style="font-size:12px;color:#666">📍 ${e.local}</div>`:''}
       ${e.publicado_por&&usuario?.tipo==='admin'?`<div style="font-size:11px;color:#888">✍️ ${e.publicado_por}</div>`:''}
     </div>`).join('');
@@ -1286,7 +1297,7 @@ function abrirModalAnexos() {
     ?'<div class="empty">Nenhum anexo disponível</div>'
     :comAnexo.map(e=>`
       <div style="padding:14px;border-bottom:1px solid #f0f0f0">
-        <div style="font-weight:700;color:#003366;margin-bottom:4px">🏢 ${e.orgao||'—'}</div>
+        <div style="font-weight:700;color:#003366;margin-bottom:4px">🏢 ${sigla(e.orgao)||'—'}</div>
         <div style="font-weight:600;margin-bottom:6px">${e.titulo}</div>
         <div style="font-size:12px;color:#666;margin-bottom:4px">📅 ${fmtData(e.data_evento)} ${fmtHora(e.data_evento)}</div>
         <div style="font-size:12px;color:#666;margin-bottom:8px">📎 ${e.anexo_nome||'Anexo'}</div>
@@ -1331,7 +1342,7 @@ async function carregarUsuarios() {
       <thead><tr><th>Nome</th><th>Login</th><th>Órgão</th><th>Sessão</th><th>Ativo</th><th>Ações</th></tr></thead>
       <tbody>${lista.map(u=>`
         <tr${u.tipo==='prefeito'?' class="pref-row"':''}>
-          <td>${u.nome}</td><td>${u.login}</td><td>${u.orgao||'—'}</td>
+          <td>${u.nome}</td><td>${u.login}</td><td>${sigla(u.orgao)||'—'}</td>
           <td>${tipoLabel[u.tipo]||u.tipo}</td>
           <td>${String(u.ativo).toUpperCase()==='TRUE'?'✅':'❌'}</td>
           <td><div class="btns-row">
@@ -1389,7 +1400,7 @@ async function carregarSolicitacoes() {
       <tbody>${solicitacoesList.map(s=>`
         <tr>
           <td>${s.nome||'—'}</td><td>${s.login}</td><td>${s.email}</td>
-          <td>${s.orgao||'—'}</td>
+          <td>${sigla(s.orgao)||'—'}</td>
           <td>${s.tipoSolicitacao==='recuperacao'?'🔑 Recuperar Senha':'👤 Novo Acesso'}</td>
           <td style="font-size:11px">${fmtDH(s.data_solicitacao)}</td>
           <td><span style="color:${s.status==='pendente'?'#e67e00':'#28a745'};font-weight:600">${s.status}</span></td>
