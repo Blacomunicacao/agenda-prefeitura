@@ -196,6 +196,7 @@ tr.pref-row:hover td{background:#ffe8e8}
 
   /* Container sem padding lateral para dar largura máxima ao FC */
   #calendario .secao{padding:0;border-radius:0;box-shadow:none;overflow:hidden}
+  #cal{width:100%!important;box-sizing:border-box!important}
 
   /* Altura útil */
   .fc{height:100%!important}
@@ -1187,12 +1188,14 @@ function mostrarView(id) {
     n.classList.toggle('active', n.getAttribute('onclick')?.includes(`'${id}'`));
   });
 
-  // Remove padding lateral do .main ao abrir calendário para dar 100% ao FC
+  // Calendário: zera padding do .main para o FC receber 100% da largura
   const main = document.querySelector('.main');
   if (main && isMobile()) {
     if (id === 'calendario') {
       main.style.paddingLeft  = '0';
       main.style.paddingRight = '0';
+      // Sempre destrói e recria no mobile — garante medição correta do container
+      if (calendar) { try { calendar.destroy(); } catch(e) {} calendar = null; }
     } else {
       main.style.paddingLeft  = '';
       main.style.paddingRight = '';
@@ -1200,8 +1203,12 @@ function mostrarView(id) {
   }
 
   if (id==='calendario') {
-    if (!calendar) setTimeout(iniciarCalendario, 100);
-    else setTimeout(()=>{ try{ calendar.updateSize(); }catch(e){ calendar=null; iniciarCalendario(); } }, 50);
+    // Double requestAnimationFrame: espera o navegador aplicar o CSS e reflowou
+    // antes do FullCalendar medir offsetWidth do container
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (!calendar) iniciarCalendario();
+      else { try { calendar.updateSize(); } catch(e) { calendar=null; iniciarCalendario(); } }
+    }));
   }
   if (id==='dashboard' && usuario?.tipo==='admin') {
     setTimeout(renderizarMetrica, 100);
