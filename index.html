@@ -31,6 +31,7 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .btn-primary:hover{background:#003366}
 .erro{background:#f8d7da;color:#721c24;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
 .sucesso{background:#d4edda;color:#155724;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+.aviso{background:#fff3cd;color:#856404;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none;font-weight:600}
 .login-links{margin-top:18px;display:flex;justify-content:center;gap:24px;font-size:13px}
 .login-links a{color:#004d99;text-decoration:none;font-weight:500}
 .login-links a:hover{text-decoration:underline}
@@ -526,6 +527,7 @@ function htmlModalSolicitacao() {
         <button class="modal-close" onclick="fecharModal('modalSolicitacao')">×</button></div>
       <div class="modal-body">
         <p style="color:#666;font-size:13px;margin-bottom:16px">Preencha os dados. Sua solicitação será analisada pelo administrador.</p>
+        <div id="avisoSolic" class="aviso"></div>
         <div id="erroSolic" class="erro"></div><div id="okSolic" class="sucesso"></div>
         <form id="formSolic" onsubmit="enviarSolicitacao(event)">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -555,8 +557,8 @@ function abrirSolicitacao() { abrirModal('modalSolicitacao'); }
 
 async function enviarSolicitacao(ev) {
   ev.preventDefault();
-  const err=$('erroSolic'),ok=$('okSolic');
-  err.style.display='none'; ok.style.display='none';
+  const aviso=$('avisoSolic'),err=$('erroSolic'),ok=$('okSolic');
+  aviso.style.display='none'; err.style.display='none'; ok.style.display='none';
   const senha=$('sSenha').value, senhaConf=$('sSenhaConf').value;
   if (senha !== senhaConf) {
     err.textContent='❌ As senhas não coincidem.'; err.style.display='block'; return;
@@ -575,7 +577,14 @@ async function enviarSolicitacao(ev) {
     ok.style.display='block';
     $('formSolic').reset();
     setTimeout(()=>fecharModal('modalSolicitacao'),3000);
-  } catch(e){ err.textContent='❌ '+e.message; err.style.display='block'; }
+  } catch(e){
+    if(e.message&&e.message.includes('Limite')) {
+      aviso.textContent='⚠️ '+e.message;
+      aviso.style.display='block';
+    } else {
+      err.textContent='❌ '+e.message; err.style.display='block';
+    }
+  }
 }
 
 // ════════════════ MODAL RECUPERAR SENHA ════════════════
