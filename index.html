@@ -681,7 +681,7 @@ function htmlAdmin() {
             ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>`
               <div class="evento-hoje-card${isPrefeito(e)?' prefeito':''}" onclick="verEvento('${e.id}')">
                 <div class="evento-hoje-titulo">${e.titulo}</div>
-                <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento)} · 🏢 ${sigla(e.orgao)}</div>
+                <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento)} · 🏢 ${(e.sigla_orgao||sigla(e.orgao))}</div>
                 ${e.local?`<div class="evento-hoje-info">📍 ${e.local}</div>`:''}
                 ${e.publicado_por?`<div class="evento-hoje-info" style="color:#888">✍️ ${e.publicado_por}</div>`:''}
               </div>`).join('')}
@@ -818,7 +818,7 @@ function htmlSecretaria() {
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <img src="Logo plataforma de Agenda.png" alt="Agenda" class="sidebar-logo">
-      <h3>${sigla(usuario.orgao)}</h3>
+      <h3>${usuario.orgao}</h3>
       <span class="orgao-badge">${sigla(usuario.orgao)}</span>
     </div>
     <nav class="sidebar-nav">
@@ -898,7 +898,7 @@ function cardEvento(e, mostrarOrgao=false) {
   <div class="evento-card${pref?' prefeito':''}" onclick="verEvento('${e.id}')">
     <div class="evento-titulo">${e.titulo}
       ${pref?'<span class="tag-prefeito">🏛️ PREFEITO</span>':''}
-      ${mostrarOrgao?`<span class="tag-orgao">${sigla(e.orgao)}</span>`:''}
+      ${mostrarOrgao?`<span class="tag-orgao">${(e.sigla_orgao||sigla(e.orgao))}</span>`:''}
       ${temAnexo?'<span style="font-size:12px;margin-left:6px">📎</span>':''}
     </div>
     <div class="evento-meta">
@@ -924,7 +924,7 @@ function renderTabelaAdmin(lista) {
     <thead><tr><th>Órgão</th><th>Evento</th><th>Data/Hora</th><th>Publicado por</th><th>Publicado em</th><th>Anexo</th></tr></thead>
     <tbody>${sorted.map(e=>`
       <tr class="${isPrefeito(e)?'pref-row':''}" onclick="verEvento('${e.id}')" style="cursor:pointer">
-        <td>${sigla(e.orgao)||'—'}${isPrefeito(e)?'  ⭐':''}</td>
+        <td>${(e.sigla_orgao||sigla(e.orgao))||'—'}${isPrefeito(e)?'  ⭐':''}</td>
         <td>${e.titulo}</td>
         <td>${fmtData(e.data_evento)} ${fmtHora(e.data_evento)}</td>
         <td>${e.publicado_por||'—'}</td>
@@ -1234,7 +1234,7 @@ function filtrarEventos() {
   const filtrados=t?base.filter(e=>
     normBusca(e.titulo).includes(t)||normBusca(e.local).includes(t)||
     normBusca(e.responsavel).includes(t)||normBusca(e.orgao).includes(t)||
-    normBusca(sigla(e.orgao)).includes(t)||normBusca(e.observacao).includes(t)):base;
+    normBusca((e.sigla_orgao||sigla(e.orgao))).includes(t)||normBusca(e.observacao).includes(t)):base;
   const cont=$('listaEvtConteudo');
   if(cont) {
     if(usuario?.tipo==='admin') cont.innerHTML=renderTabelaAdmin(filtrados);
@@ -1275,7 +1275,7 @@ function verEvento(id) {
     ${pref?'<div style="text-align:center;margin-bottom:16px"><span class="tag-prefeito" style="font-size:13px">🏛️ Evento do Gabinete do Prefeito</span></div>':''}
     <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtDH(e.data_evento)}</div></div>
     <div class="info-linha"><div class="info-label">📍 Local</div><div class="info-valor">${e.local||'—'}</div></div>
-    <div class="info-linha"><div class="info-label">🏢 Órgão</div><div class="info-valor">${sigla(e.orgao)||'—'}</div></div>
+    <div class="info-linha"><div class="info-label">🏢 Órgão</div><div class="info-valor">${(e.sigla_orgao||sigla(e.orgao))||'—'}</div></div>
     <div class="info-linha"><div class="info-label">👤 Responsável</div><div class="info-valor">${e.responsavel||'—'}</div></div>
     <div class="info-linha"><div class="info-label">📞 Telefone</div><div class="info-valor">${e.telefone||'—'}</div></div>
     <div class="info-linha"><div class="info-label">📝 Descrição</div><div class="info-valor">${e.observacao||'—'}</div></div>
@@ -1374,8 +1374,12 @@ function eventosParaCalendario() {
   return evtDoUsuario().map(e=>({
     id:String(e.id),
     title:isMobile()
-      ?`${sigla(e.orgao)} ${fmtHora(e.data_evento)}`
-      :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'?`${sigla(e.orgao)}: ${e.titulo}`:e.titulo),
+      ?(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'
+          ?`${e.sigla_orgao||(e.sigla_orgao||sigla(e.orgao))} ${fmtHora(e.data_evento)}`
+          :`${fmtHora(e.data_evento)} ${e.titulo}`)
+      :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'
+          ?`${e.sigla_orgao||(e.sigla_orgao||sigla(e.orgao))}: ${e.titulo}`
+          :e.titulo),
     start:e.data_evento,
     className:isPrefeito(e)?(isMobile()?'prefeito-event-mobile':'prefeito-event'):'',
     extendedProps:{eventoId:e.id}
@@ -1417,7 +1421,7 @@ function abrirModalEventosDoDia(dataStr, lista) {
          onclick="fecharModal('modalDia');verEvento('${e.id}')">
       <div style="font-weight:700;color:${isPrefeito(e)?'#dc3545':'#003366'};margin-bottom:6px">${e.titulo}</div>
       <div style="font-size:12px;color:#666">⏰ ${fmtHora(e.data_evento)}</div>
-      ${e.orgao?`<div style="font-size:12px;color:#666">🏢 ${sigla(e.orgao)}</div>`:''}
+      ${e.orgao?`<div style="font-size:12px;color:#666">🏢 ${(e.sigla_orgao||sigla(e.orgao))}</div>`:''}
       ${e.local?`<div style="font-size:12px;color:#666">📍 ${e.local}</div>`:''}
       ${e.publicado_por&&usuario?.tipo==='admin'?`<div style="font-size:11px;color:#888">✍️ ${e.publicado_por}</div>`:''}
     </div>`).join('');
@@ -1442,7 +1446,7 @@ function abrirModalAnexos() {
     ?'<div class="empty">Nenhum anexo disponível</div>'
     :comAnexo.map(e=>`
       <div style="padding:14px;border-bottom:1px solid #f0f0f0">
-        <div style="font-weight:700;color:#003366;margin-bottom:4px">🏢 ${sigla(e.orgao)||'—'}</div>
+        <div style="font-weight:700;color:#003366;margin-bottom:4px">🏢 ${(e.sigla_orgao||sigla(e.orgao))||'—'}</div>
         <div style="font-weight:600;margin-bottom:6px">${e.titulo}</div>
         <div style="font-size:12px;color:#666;margin-bottom:4px">📅 ${fmtData(e.data_evento)} ${fmtHora(e.data_evento)}</div>
         <div style="font-size:12px;color:#666;margin-bottom:8px">📎 ${e.anexo_nome||'Anexo'}</div>
@@ -1598,7 +1602,7 @@ function fecharModal(id){const el=$(id);if(el)el.classList.remove('aberto');}
 
 function exportarExcel() {
   const dados=evtDoUsuario().map(e=>({'Título':e.titulo,'Data':fmtDH(e.data_evento),'Local':e.local,
-    'Órgão':sigla(e.orgao),'Responsável':e.responsavel,'Telefone':e.telefone,'Descrição':e.observacao,'Publicado por':e.publicado_por}));
+    'Órgão':(e.sigla_orgao||sigla(e.orgao)),'Responsável':e.responsavel,'Telefone':e.telefone,'Descrição':e.observacao,'Publicado por':e.publicado_por}));
   const ws=XLSX.utils.json_to_sheet(dados),wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Eventos');
   XLSX.writeFile(wb,'agenda-prefeitura.xlsx');

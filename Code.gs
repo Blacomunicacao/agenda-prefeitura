@@ -45,6 +45,58 @@ function responder(data, output) {
   return output;
 }
 
+// ── Organograma oficial: nome completo → sigla ───────────────────────────────
+var SIGLAS_ORGAOS = {
+  'Gabinete do Prefeito':'PREFEITO','Chefia de Gabinete':'GABINETE',
+  'Secretaria de Administração':'SECAD','Secretaria de Agricultura e Abastecimento':'SEAGRI',
+  'Secretaria de Assistência Social':'SAS','Secretaria de Assuntos Jurídicos e Legislativos':'SEAJUR',
+  'Secretaria de Comunicação':'SECOM','Secretaria de Cultura':'SECULT',
+  'Secretaria de Desenvolvimento Econômico':'SEDEPP','Secretaria de Educação':'SEDUC',
+  'Secretaria de Esporte':'SEMEPP','Secretaria de Finanças':'SEFIN',
+  'Secretaria de Meio Ambiente':'SEMEA',
+  'Secretaria de Mobilidade Urbana e Cooperação em Segurança Pública':'SEMOB',
+  'Secretaria de Obras e Serviços Públicos':'SOSP',
+  'Secretaria de Planejamento, Desenvolvimento Urbano e Habitação':'SEPLAN',
+  'Secretaria de Saúde':'SESAU','Secretaria de Tecnologia da Informação':'SETEC',
+  'Secretaria de Turismo':'SETUR',
+  'Conselho de Acompanhamento e Controle Social do FUNDEB e de Valorização dos Professores da Educação':'CACS-FUNDEB',
+  'Conselho de Governança Pública':'CGOV','Conselho Deliberativo do Fundo Social de Solidariedade':'CDFSS',
+  'Conselho Municipal Antidrogas':'COMAD','Conselho Municipal da Assistência Social de Presidente Prudente':'CMAS',
+  'Conselho Municipal da Condição Feminina':'CMCF','Conselho Municipal da Habitação de Interesse Social':'CMHIS',
+  'Conselho Municipal da Igualdade Racial':'COMIR','Conselho Municipal da Juventude':'COMJUVE',
+  'Conselho Municipal da Pessoa com Deficiência':'COMDEF','Conselho Municipal de Alimentação Escolar':'CAE',
+  'Conselho Municipal de Ciência, Tecnologia e Inovação':'CMCTI','Conselho Municipal de Desenvolvimento Rural':'CMDR',
+  'Conselho Municipal de Educação de Presidente Prudente':'COMED',
+  'Conselho Municipal de Patrimônio Histórico, Artístico, Arqueológico e Turístico':'CMPHAAT',
+  'Conselho Municipal de Planejamento':'CMP','Conselho Municipal de Política Cultural de Presidente Prudente':'CMPC',
+  'Conselho Municipal de Saúde':'CMS','Conselho Municipal de Segurança Alimentar e Nutricional':'COMSEA',
+  'Conselho Municipal de Turismo':'COMTUR','Conselho Municipal do Idoso':'CMI',
+  'Conselho Municipal do Meio Ambiente':'CMMA',
+  'Conselho Municipal dos Direitos da Criança e do Adolescente':'CMDCA',
+  'Conselho Tutelar de Presidente Prudente':'CTPP',
+  'Comissão Interna de Prevenção de Acidentes e Assédio':'CIPA','Comitê Gestor da Praça CEU':'CGPCEU',
+  'Controladoria Geral do Município':'CGM','Controladoria-Geral do Município':'CGM',
+  'Coordenadoria da Juventude':'JUVENTUDE','Coordenadoria da Pessoa com Deficiência':'CPD',
+  'Coordenadoria de Proteção e Defesa Civil':'COMPDEC','Coordenadoria Municipal do Idoso':'IDOSOPP',
+  'Instituto do Idoso de Presidente Prudente':'IDOSOPP',
+  'Fundo Municipal de Defesa dos Interesses Difusos':'FMDID',
+  'Fundo Social de Solidariedade de Presidente Prudente':'FUNDO',
+  'Núcleo da Escola Federativa do Município de Presidente Prudente':'NEF',
+  'Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalho':'SESMT'
+};
+
+function getSiglaOrgao(orgao) {
+  if (!orgao) return '';
+  var norm = String(orgao).trim();
+  if (SIGLAS_ORGAOS[norm]) return SIGLAS_ORGAOS[norm];
+  var lower = norm.toLowerCase();
+  var keys = Object.keys(SIGLAS_ORGAOS);
+  for (var i = 0; i < keys.length; i++) {
+    if (keys[i].toLowerCase() === lower) return SIGLAS_ORGAOS[keys[i]];
+  }
+  return norm.substring(0, 6).toUpperCase();
+}
+
 // Helpers
 function getSheet(nome) {
   return SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(nome);
@@ -162,13 +214,13 @@ function handleGetEventos(params) {
         break;
       }
     }
+    var ev = {};
+    for (var k in e) { ev[k] = e[k]; }
+    ev.sigla_orgao = getSiglaOrgao(e.orgao); // coluna do organograma
     if (pubUser) {
-      var ev = {};
-      for (var k in e) { ev[k] = e[k]; }
       ev.publicado_por = pubUser.login; // coluna B da planilha de usuarios
-      return ev;
     }
-    return e;
+    return ev;
   });
 }
 
