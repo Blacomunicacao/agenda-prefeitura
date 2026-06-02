@@ -2,14 +2,13 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>Agenda - Prefeitura de Presidente Prudente</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -51,7 +50,7 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .btn-logout{width:100%;margin-top:10px;padding:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;cursor:pointer;font-size:13px}
 .btn-logout:hover{background:rgba(255,255,255,.2)}
 
-.main{flex:1;margin-left:270px;padding:20px;max-width:100%;overflow-x:hidden}
+.main{flex:1;margin-left:270px;width:calc(100% - 270px);padding:20px;max-width:100%;overflow-x:hidden}
 .view{display:none;animation:fadeIn .25s}
 .view.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
@@ -106,9 +105,14 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .info-valor{flex:1;color:#333;font-size:14px;word-break:break-word}
 
 /* ── Calendário ── */
-.fc-event{cursor:pointer!important;font-size:11px!important;padding:2px 5px!important;border-radius:5px!important}
-.prefeito-event{background:#dc3545!important;border-color:#b02a37!important}
-.fc-view-harness{height:calc(100vh - 220px)!important;min-height:450px}
+.fc-event{cursor:pointer!important;font-size:12px!important;padding:4px 6px!important;border-radius:6px!important;white-space:normal!important;word-break:break-word!important;display:block!important}
+.fc-event .fc-event-time{display:none!important}
+.prefeito-event{background:#dc3545!important;border-color:#b02a37!important;color:#fff!important}
+.fc-view-harness{height:calc(100vh - 200px)!important;min-height:500px}
+.fc-toolbar-title{font-size:18px!important}
+.fc-button{padding:6px 12px!important;font-size:14px!important}
+.fc-col-header-cell-cushion{font-size:14px!important;font-weight:600!important}
+.fc-daygrid-day-number{font-size:14px}
 
 /* ── Tabela ── */
 .tabela-wrap{overflow-x:auto;border-radius:12px}
@@ -122,12 +126,10 @@ tr.pref-row:hover td{background:#ffe8e8}
 /* ── Badge notificação ── */
 .badge{background:#dc3545;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700;margin-left:4px}
 
-/* ── Charts Dashboard ── */
-.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
-.chart-container{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.chart-container h3{font-size:15px;color:#003366;margin-bottom:14px}
-.chart-container canvas{max-height:280px;width:100%}
-.eventos-hoje-lista{max-height:320px;overflow-y:auto}
+/* ── Eventos de Hoje ── */
+.eventos-hoje-container{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:20px}
+.eventos-hoje-container h3{font-size:15px;color:#003366;margin-bottom:14px}
+.eventos-hoje-lista{max-height:360px;overflow-y:auto}
 .evento-hoje-card{background:#f8f9fa;border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;border-left:4px solid #004d99;transition:background .2s}
 .evento-hoje-card:hover{background:#e8f0fe}
 .evento-hoje-card.prefeito{border-left-color:#dc3545;background:#fff5f5}
@@ -149,28 +151,52 @@ tr.pref-row:hover td{background:#ffe8e8}
 .form-group input,.form-group select,.form-group textarea{font-size:16px!important}
 
 @media(max-width:768px){
-  .sidebar{transform:translateX(-100%);width:80vw;max-width:280px}
+  /* Layout */
+  .sidebar{transform:translateX(-100%);width:260px}
   .sidebar.aberta{transform:translateX(0)}
-  .main{margin-left:0;padding:12px;padding-top:62px}
+  .main{margin-left:0;width:100%;padding:12px;padding-top:62px}
   .menu-toggle{display:flex;align-items:center;justify-content:center}
+
+  /* Cards */
   .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
   .stat-card{padding:12px}
   .stat-icon{font-size:28px}
   .stat-info h3{font-size:20px}
-  .fc-view-harness{height:auto!important;min-height:360px}
-  .modal-box{border-radius:16px 16px 0 0;max-height:95vh;margin-top:auto}
-  .modal-bg{align-items:flex-end;padding:0}
+
+  /* Seções e botões */
   .secao{padding:14px}
   .secao-header{flex-direction:column;align-items:flex-start}
   .secao-header .btns-row{width:100%}
   .btn{padding:10px 14px;font-size:13px}
-  .btns-row{gap:8px}
-  table{min-width:600px}
-  .modal-footer{flex-direction:column}
-  .modal-footer .btn{width:100%;justify-content:center}
+  .btns-row{gap:8px;justify-content:center}
+  .btns-row .btn{flex:1;text-align:center;justify-content:center}
+
+  /* Formulários */
   [style*="grid-template-columns:1fr 1fr"]{display:block!important}
   [style*="grid-template-columns:1fr 1fr"]>.form-group{margin-bottom:12px}
-  .charts-row{grid-template-columns:1fr}
+
+  /* Tabela */
+  table{min-width:600px}
+
+  /* Modal — sobe da base da tela */
+  .modal-bg{align-items:flex-end;padding:0}
+  .modal-box{border-radius:16px 16px 0 0;max-height:95vh;margin-top:auto}
+  .modal-footer{flex-direction:column}
+  .modal-footer .btn{width:100%;justify-content:center}
+  .info-linha{flex-direction:column}
+  .info-label{width:100%;margin-bottom:2px}
+
+  /* Calendário mobile */
+  .fc{height:100%!important}
+  .fc-view-harness{height:auto!important;min-height:400px!important}
+  .fc-event{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:10px!important;padding:3px 5px!important;display:inline-block!important;max-width:100%!important;font-weight:500!important}
+  .fc-daygrid-day-number{font-size:10px!important;padding:4px!important}
+  .fc-toolbar-title{font-size:13px!important}
+  .fc-button{padding:4px 8px!important;font-size:11px!important}
+  .fc-col-header-cell-cushion{font-size:10px!important;font-weight:600!important}
+  .fc-daygrid-day-events{min-height:40px!important}
+  .fc-toolbar{flex-direction:column!important;gap:8px!important;align-items:center!important}
+  .fc-toolbar-chunk{text-align:center}
 }
 @media(max-width:480px){
   .stats-grid{grid-template-columns:repeat(2,1fr)}
@@ -196,7 +222,6 @@ let usuario  = JSON.parse(localStorage.getItem('usuario') || 'null');
 let eventos  = [];
 let calendar = null;
 let solicitacoesList = [];
-let adminChart = null;
 
 async function api(action, data = {}) {
   try {
@@ -314,7 +339,6 @@ async function render() {
   } catch(e) { eventos = []; }
 
   calendar = null;
-  adminChart = null;
   if      (usuario.tipo === 'admin')    $('root').innerHTML = htmlAdmin();
   else if (usuario.tipo === 'prefeito') $('root').innerHTML = htmlPrefeito();
   else                                  $('root').innerHTML = htmlSecretaria();
@@ -519,22 +543,16 @@ function htmlAdmin() {
           <div class="stat-icon">📈</div><div class="stat-info"><h3>${media}</h3><p>Métrica de Uso</p></div>
         </div>
       </div>
-      <div class="charts-row">
-        <div class="chart-container">
-          <h3>📊 Eventos por Órgão</h3>
-          <canvas id="graficoOrgaos"></canvas>
-        </div>
-        <div class="chart-container">
-          <h3>📌 Eventos de Hoje (${hoje.length})</h3>
-          <div class="eventos-hoje-lista">
-            ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>`
-              <div class="evento-hoje-card${isPrefeito(e)?' prefeito':''}" onclick="verEvento('${e.id}')">
-                <div class="evento-hoje-titulo">${e.titulo}</div>
-                <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento)} · 🏢 ${sigla(e.orgao)}</div>
-                ${e.local?`<div class="evento-hoje-info">📍 ${e.local}</div>`:''}
-                ${e.publicado_por?`<div class="evento-hoje-info" style="color:#888">✍️ ${e.publicado_por}</div>`:''}
-              </div>`).join('')}
-          </div>
+      <div class="eventos-hoje-container">
+        <h3>📌 Eventos de Hoje (${hoje.length})</h3>
+        <div class="eventos-hoje-lista">
+          ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>`
+            <div class="evento-hoje-card${isPrefeito(e)?' prefeito':''}" onclick="verEvento('${e.id}')">
+              <div class="evento-hoje-titulo">${e.titulo}</div>
+              <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento)} · 🏢 ${sigla(e.orgao)}</div>
+              ${e.local?`<div class="evento-hoje-info">📍 ${e.local}</div>`:''}
+              ${e.publicado_por?`<div class="evento-hoje-info" style="color:#888">✍️ ${e.publicado_por}</div>`:''}
+            </div>`).join('')}
         </div>
       </div>
       <div id="metricaContainer"></div>
@@ -1030,8 +1048,7 @@ function inicializarApp() {
   if (usuario?.tipo==='admin') {
     carregarUsuarios();
     carregarSolicitacoes();
-    setTimeout(renderizarGrafico, 200);
-    setTimeout(renderizarMetrica, 250);
+    setTimeout(renderizarMetrica, 200);
   }
 }
 
@@ -1046,8 +1063,7 @@ function mostrarView(id) {
     else setTimeout(()=>{ try{ calendar.updateSize(); }catch(e){ calendar=null; iniciarCalendario(); } }, 100);
   }
   if (id==='dashboard' && usuario?.tipo==='admin') {
-    setTimeout(renderizarGrafico, 100);
-    setTimeout(renderizarMetrica, 150);
+    setTimeout(renderizarMetrica, 100);
   }
   fecharMenuMobile();
 }
@@ -1200,7 +1216,7 @@ async function recarregarEventos() {
     try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }
     catch(e){ calendar=null; }
   }
-  if(usuario?.tipo==='admin') renderizarGrafico();
+  if(usuario?.tipo==='admin') renderizarMetrica();
 }
 
 function eventosParaCalendario() {
@@ -1260,28 +1276,6 @@ function mostrarEventosSemana() {
   const cont=$('listaEvtConteudo');
   if(cont) cont.innerHTML=renderTabelaAdmin(lista);
   const busca=$('buscaEvt'); if(busca) busca.value='';
-}
-
-// ════════════════ GRÁFICO ════════════════
-function renderizarGrafico() {
-  const ctx=$('graficoOrgaos')?.getContext('2d');
-  if(!ctx) return;
-  if(adminChart){ try{adminChart.destroy();}catch(e){} adminChart=null; }
-  const contagem={};
-  eventos.forEach(e=>{ if(e.orgao) contagem[e.orgao]=(contagem[e.orgao]||0)+1; });
-  const entries=Object.entries(contagem).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const labels=entries.map(([k])=>sigla(k));
-  const data=entries.map(([,v])=>v);
-  const cores=['#004d99','#003a73','#0066cc','#0052a3','#1a6bb5','#2878c4','#3685d3','#4492e2'];
-  adminChart=new Chart(ctx,{
-    type:'bar',
-    data:{labels,datasets:[{label:'Eventos',data,backgroundColor:cores.slice(0,labels.length),borderRadius:6,borderSkipped:false}]},
-    options:{
-      responsive:true,maintainAspectRatio:true,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y} evento(s)`}}},
-      scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#f0f0f0'}},x:{grid:{display:false}}}
-    }
-  });
 }
 
 // ════════════════ MODAL ANEXOS ════════════════
