@@ -461,11 +461,24 @@ function logout() {
 
 function iniciarAutoRefresh() {
   if(_autoRefreshId){ clearInterval(_autoRefreshId); _autoRefreshId=null; }
-  if(usuario?.tipo!=='admin') return;
+  const tipo = usuario?.tipo;
+  if(tipo !== 'admin' && tipo !== 'orgao') return;
   _autoRefreshId = setInterval(async function(){
     try{ const r=await api('getEventos'); if(Array.isArray(r)) eventos=r; } catch(e){ return; }
-    if(calendar){ try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }catch(e){} }
-    renderizarMetrica();
+    if(tipo === 'admin'){
+      if(calendar){ try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }catch(e){} }
+      renderizarMetrica();
+    } else {
+      // Atualiza "Eventos de Hoje" e calendário para órgãos
+      const cont = $('orgaoEventosHoje');
+      if(cont){
+        const hoje = evtHoje();
+        cont.innerHTML = hoje.length===0
+          ? '<div class="empty">Nenhum evento hoje</div>'
+          : hoje.map(e=>cardEvento(e)).join('');
+      }
+      if(calendar){ try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }catch(e){} }
+    }
   }, 60000);
 }
 
@@ -850,7 +863,7 @@ function htmlSecretaria() {
         <div class="secao-header"><h2>📌 Eventos de Hoje</h2>
           <button class="btn btn-azul" onclick="mostrarView('novoEvento')">+ Novo Evento</button>
         </div>
-        ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e)).join('')}
+        <div id="orgaoEventosHoje">${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e)).join('')}</div>
       </div>
     </div>
     <div id="calendario" class="view"><div class="secao"><div id="cal"></div></div></div>
