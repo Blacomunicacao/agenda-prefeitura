@@ -87,14 +87,16 @@ var SIGLAS_ORGAOS = {
 
 function getSiglaOrgao(orgao) {
   if (!orgao) return '';
-  var norm = String(orgao).trim();
+  // NFC normaliza representações diferentes de acentos (ã, ç, é…) vindos da planilha
+  var norm = String(orgao).trim().normalize('NFC');
   if (SIGLAS_ORGAOS[norm]) return SIGLAS_ORGAOS[norm];
   var lower = norm.toLowerCase();
   var keys = Object.keys(SIGLAS_ORGAOS);
   for (var i = 0; i < keys.length; i++) {
-    if (keys[i].toLowerCase() === lower) return SIGLAS_ORGAOS[keys[i]];
+    if (keys[i].normalize('NFC').toLowerCase() === lower) return SIGLAS_ORGAOS[keys[i]];
   }
-  return norm.substring(0, 6).toUpperCase();
+  // Retorna '' para que o frontend use seu próprio lookup com fallback
+  return '';
 }
 
 // Helpers
