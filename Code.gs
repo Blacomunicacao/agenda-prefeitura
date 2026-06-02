@@ -165,7 +165,10 @@ function handleLogin(data) {
   var user = null;
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
-    if ((String(r.login).toLowerCase() === u || String(r.email).toLowerCase() === u) &&
+    var rLogin = String(r.login || '').normalize('NFC').toLowerCase().trim();
+    var rEmail = String(r.email || '').normalize('NFC').toLowerCase().trim();
+    var rNome  = String(r.nome  || '').normalize('NFC').toLowerCase().trim();
+    if ((rLogin === u || rEmail === u || rNome === u) &&
         String(r.senha || '').trim() === String(senha || '').trim() &&
         String(r.ativo).toUpperCase() === 'TRUE') {
       user = r;
