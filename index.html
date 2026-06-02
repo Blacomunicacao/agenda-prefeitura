@@ -550,6 +550,10 @@ function htmlModalSolicitacao() {
             <div class="form-group"><label>Telefone</label><input id="sTel" type="tel" placeholder="(18) 99999-9999"></div>
           </div>
           <div class="form-group"><label>Órgão / Unidade</label>${orgaosSelectHtml('sOrgao')}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group"><label>Senha</label><input id="sSenha" type="password" required placeholder="Mínimo 6 caracteres" minlength="6"></div>
+            <div class="form-group"><label>Confirmar Senha</label><input id="sSenhaConf" type="password" required placeholder="Repita a senha"></div>
+          </div>
           <div class="form-group"><label>Justificativa</label>
             <textarea id="sJust" placeholder="Por que precisa de acesso?"></textarea></div>
           <div class="btns-row">
@@ -568,11 +572,19 @@ async function enviarSolicitacao(ev) {
   ev.preventDefault();
   const err=$('erroSolic'),ok=$('okSolic');
   err.style.display='none'; ok.style.display='none';
+  const senha=$('sSenha').value, senhaConf=$('sSenhaConf').value;
+  if (senha !== senhaConf) {
+    err.textContent='❌ As senhas não coincidem.'; err.style.display='block'; return;
+  }
+  if (senha.length < 6) {
+    err.textContent='❌ A senha deve ter pelo menos 6 caracteres.'; err.style.display='block'; return;
+  }
   try {
     await api('solicitarAcesso',{
       nome:$('sNome').value, email:$('sEmail').value,
       login:$('sLogin').value, telefone:$('sTel').value,
-      orgao:$('sOrgao').value, justificativa:$('sJust').value
+      orgao:$('sOrgao').value, justificativa:$('sJust').value,
+      senha
     });
     ok.textContent='✅ Solicitação enviada! O administrador entrará em contato.';
     ok.style.display='block';
@@ -1567,12 +1579,16 @@ async function carregarSolicitacoes() {
 async function aprovarSolicitacao(id) {
   const s=solicitacoesList.find(x=>String(x.id)===String(id)); if(!s) return;
   if(!confirm(`Aprovar solicitação de "${s.nome}" (${s.login}) para ${s.orgao||'—'}?`)) return;
-  const senha=s.login+'@PP';
+  // Usa a senha escolhida pelo usuário na solicitação; fallback para padrão
+  const senha = s.senha || (s.login + '@PP');
+  const senhaGerada = !s.senha;
   try {
     await api('criarUsuario',{login:s.login,nome:s.nome,email:s.email,senha,tipo:'orgao',orgao:s.orgao});
     await api('atualizarSolicitacao',{id,status:'aprovado'});
     await carregarSolicitacoes(); await carregarUsuarios();
-    alert(`✅ Usuário "${s.nome}" aprovado!\n\nSenha inicial gerada: ${senha}\nComunique ao usuário para alterar.`);
+    alert(senhaGerada
+      ? `✅ Usuário "${s.nome}" aprovado!\n\nSenha gerada automaticamente: ${senha}\nComunique ao usuário para alterar.`
+      : `✅ Usuário "${s.nome}" aprovado!\n\nO usuário já definiu sua própria senha.`);
   } catch(e){alert('❌ '+e.message);}
 }
 

@@ -433,6 +433,7 @@ function handleSolicitarAcesso(data) {
   const telefone = data.telefone;
   const orgao = data.orgao;
   const justificativa = data.justificativa;
+  const senha = data.senha || '';
   if (!nome || !email || !login || !orgao) return { error: 'Nome, e-mail, login e orgao sao obrigatorios' };
 
   const rows = lerAba('usuarios').rows;
@@ -443,13 +444,13 @@ function handleSolicitarAcesso(data) {
   var sheet = getSheet('solicitacoes');
   if (!sheet) {
     sheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet('solicitacoes');
-    sheet.appendRow(['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao']);
+    sheet.appendRow(['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao','senha']);
   }
 
   sheet.appendRow([
     proximoId('solicitacoes'), nome, email, login,
     telefone || '', orgao, justificativa || '',
-    'pendente', 'acesso', new Date().toISOString()
+    'pendente', 'acesso', new Date().toISOString(), senha
   ]);
 
   return { success: true, message: 'Solicitação registrada com sucesso' };
@@ -542,7 +543,7 @@ function criarAbas() {
     usuarios:     ['id','login','nome','email','senha','tipo','orgao','is_prefeito','ativo','data_criacao'],
     eventos:      ['id','titulo','data_evento','local','responsavel','telefone','observacao','anexo_url','anexo_nome','orgao','is_prefeito','publicado_por','email_publicado','data_publicacao','data_atualizacao','status'],
     logs:         ['id','data','usuario','acao','detalhes'],
-    solicitacoes: ['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao']
+    solicitacoes: ['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao','senha']
   };
   const resultado = [];
   const nomes = Object.keys(config);
