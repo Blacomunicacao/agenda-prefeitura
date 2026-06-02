@@ -5,6 +5,11 @@
 const SPREADSHEET_ID = '1lBUTNecr5eylEn7958UQz8rUFLlHIcFeKcAf0--Jswo';
 const LIMITE_POR_SESSAO = 5;
 
+function getLimitePorOrgao(orgao) {
+  if (getSiglaOrgao(orgao) === 'SECOM') return 12;
+  return LIMITE_POR_SESSAO;
+}
+
 function doGet(e)  { return handleRequest(e); }
 function doPost(e) { return handleRequest(e); }
 
@@ -377,9 +382,10 @@ function handleCriarUsuario(data) {
     else if (tipo === 'orgao' && rows[j].tipo === 'orgao' && rows[j].orgao === orgao) count++;
   }
 
-  if (count >= LIMITE_POR_SESSAO) {
+  var limiteOrgao = (tipo === 'orgao') ? getLimitePorOrgao(orgao) : LIMITE_POR_SESSAO;
+  if (count >= limiteOrgao) {
     const label = tipo === 'admin' ? 'Administrador' : tipo === 'prefeito' ? 'Prefeito' : orgao;
-    return { error: 'Limite de ' + LIMITE_POR_SESSAO + ' usuários atingido para ' + label };
+    return { error: 'Limite de ' + limiteOrgao + ' usuários atingido para ' + label };
   }
 
   const orgaoFinal = tipo === 'prefeito' ? 'Gabinete do Prefeito' : (tipo === 'admin' ? '' : orgao);
@@ -458,8 +464,9 @@ function handleSolicitarAcesso(data) {
       orgaoCount++;
     }
   }
-  if (orgaoCount >= LIMITE_POR_SESSAO) {
-    return { error: 'Limite de ' + LIMITE_POR_SESSAO + ' usuários atingido para o órgão "' + orgao + '". Não é possível enviar nova solicitação.' };
+  var limiteSolic = getLimitePorOrgao(orgao);
+  if (orgaoCount >= limiteSolic) {
+    return { error: 'Limite de ' + limiteSolic + ' usuários atingido para o órgão "' + orgao + '". Não é possível enviar nova solicitação.' };
   }
 
   var sheet = getSheet('solicitacoes');
