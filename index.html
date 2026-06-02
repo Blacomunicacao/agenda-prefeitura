@@ -192,20 +192,44 @@ tr.pref-row:hover td{background:#ffe8e8}
   /* Dashboard grid vira 1 coluna */
   .dashboard-dois-col{grid-template-columns:1fr!important}
 
-  /* Calendário mobile — ocupa tela inteira sem scroll horizontal */
-  #calendario .secao{padding:4px 0;margin:0 -12px;border-radius:0;box-shadow:none;margin-bottom:0}
-  .fc{height:100%!important;width:100%!important}
-  .fc-view-harness{height:calc(100vh - 130px)!important;min-height:400px!important;overflow-x:hidden!important}
-  .fc-daygrid-body,.fc-scrollgrid,.fc-scrollgrid-section,.fc-scrollgrid-section>td{width:100%!important}
-  .fc-scrollgrid{border-left:0!important;border-right:0!important}
-  .fc-event{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:10px!important;padding:3px 5px!important;display:inline-block!important;max-width:100%!important;font-weight:500!important}
-  .fc-daygrid-day-number{font-size:10px!important;padding:4px!important}
+  /* Calendário mobile — tela cheia, 7 colunas uniformes sem distorção */
+  #calendario .secao{padding:0;margin:0 -12px;border-radius:0;box-shadow:none;overflow:hidden}
+
+  /* Container ocupa toda a largura disponível */
+  .fc{height:100%!important;overflow-x:hidden!important}
+  .fc-view-harness{height:calc(100vh - 140px)!important;min-height:400px!important}
+
+  /* Forçar table-layout:fixed — distribui 7 colunas em fatias iguais */
+  .fc-scrollgrid{width:100%!important;table-layout:fixed!important;border-left:0!important;border-right:0!important}
+  .fc-daygrid-body{width:100%!important}
+  .fc-scrollgrid-section,.fc-scrollgrid-section>td{width:100%!important}
+
+  /* Matar qualquer scroll lateral em todos os níveis */
+  .fc-view,.fc-daygrid,.fc-scroller{overflow-x:hidden!important;max-width:100%!important}
+
+  /* Colunas estritamente iguais — chave do problema */
+  .fc-col-header-cell{width:calc(100% / 7)!important;overflow:hidden!important}
+  .fc-daygrid-day{width:calc(100% / 7)!important;overflow:hidden!important}
+
+  /* Cabeçalho dos dias — abreviação 3 letras (Dom, Seg…) sem transbordar */
+  .fc-col-header-cell-cushion{font-size:9px!important;font-weight:700!important;padding:3px 0!important;display:block!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important}
+
+  /* Número do dia */
+  .fc-daygrid-day-number{font-size:9px!important;padding:2px 3px!important;line-height:1!important}
+
+  /* Evento — chip uniforme que respeita a largura da célula */
+  .fc-daygrid-event-harness{overflow:hidden!important;width:100%!important}
+  .fc-event{font-size:9px!important;padding:1px 2px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;line-height:1.4!important;margin:1px 0!important;border-radius:3px!important}
+
+  /* Altura mínima das células — compacta e uniforme */
+  .fc-daygrid-day-events{min-height:14px!important}
+  .fc-daygrid-day-frame{min-height:44px!important}
+
+  /* Toolbar */
+  .fc-toolbar{flex-direction:column!important;gap:6px!important;align-items:center!important}
+  .fc-toolbar-chunk{text-align:center!important}
   .fc-toolbar-title{font-size:13px!important}
   .fc-button{padding:4px 8px!important;font-size:11px!important}
-  .fc-col-header-cell-cushion{font-size:10px!important;font-weight:600!important}
-  .fc-daygrid-day-events{min-height:40px!important}
-  .fc-toolbar{flex-direction:column!important;gap:8px!important;align-items:center!important}
-  .fc-toolbar-chunk{text-align:center}
 }
 @media(max-width:480px){
   .stats-grid{grid-template-columns:repeat(2,1fr)}
