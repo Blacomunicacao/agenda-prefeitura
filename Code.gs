@@ -201,9 +201,10 @@ function handleGetEventos(params) {
   const eventosRows = lerAba('eventos').rows;
   const usuariosRows = lerAba('usuarios').rows;
 
+  var verTodos = params.todos === 'true' || params.todos === true;
   const filtrados = eventosRows.filter(function(e) {
     if (!e.id) return false;
-    if (usuario.tipo === 'admin' || usuario.tipo === 'prefeito') return true;
+    if (usuario.tipo === 'admin' || usuario.tipo === 'prefeito' || verTodos) return true;
     return String(e.orgao || '').trim() === String(usuario.orgao || '').trim();
   });
 
