@@ -448,6 +448,19 @@ function handleSolicitarAcesso(data) {
     if (rows[i].login === login || rows[i].email === email) return { error: 'Login ou e-mail já está em uso' };
   }
 
+  // Verifica limite de usuários antes de registrar a solicitação
+  var orgaoCount = 0;
+  for (var j = 0; j < rows.length; j++) {
+    if (rows[j].tipo === 'orgao' &&
+        String(rows[j].orgao || '').trim() === String(orgao || '').trim() &&
+        String(rows[j].ativo).toUpperCase() === 'TRUE') {
+      orgaoCount++;
+    }
+  }
+  if (orgaoCount >= LIMITE_POR_SESSAO) {
+    return { error: 'Limite de ' + LIMITE_POR_SESSAO + ' usuários atingido para o órgão "' + orgao + '". Não é possível enviar nova solicitação.' };
+  }
+
   var sheet = getSheet('solicitacoes');
   if (!sheet) {
     sheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet('solicitacoes');
