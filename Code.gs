@@ -484,13 +484,22 @@ function handleSolicitarAcesso(data) {
   rowData[headers.indexOf('telefone')]         = telefone || '';
   rowData[headers.indexOf('orgao')]            = orgao;
   rowData[headers.indexOf('justificativa')]    = justificativa || '';
-  rowData[headers.indexOf('status')]           = 'pendente';
+  rowData[headers.indexOf('status')]           = 'aprovado';
   rowData[headers.indexOf('tipoSolicitacao')]  = 'acesso';
   rowData[headers.indexOf('data_solicitacao')] = new Date().toISOString();
   rowData[headers.indexOf('senha')]            = senha;
   sheet.appendRow(rowData);
 
-  return { success: true, message: 'Solicitação registrada com sucesso' };
+  // Aprovação automática: cria o usuário diretamente na aba usuarios
+  var usuariosSheet = getSheet('usuarios');
+  if (!usuariosSheet) return { error: 'Aba usuarios não encontrada. Contate o administrador.' };
+  usuariosSheet.appendRow([
+    proximoId('usuarios'), login, nome, email, senha,
+    'orgao', orgao, 'FALSE', 'TRUE', new Date().toISOString()
+  ]);
+
+  registrarLog(email, 'auto_aprovado', 'Conta criada automaticamente via solicitacao');
+  return { success: true, aprovado: true, message: 'Conta criada com sucesso! Você já pode fazer login.' };
 }
 
 // Recuperar Senha (publico)
