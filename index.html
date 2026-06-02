@@ -274,8 +274,9 @@ const fmtDH   = s => s ? new Date(s).toLocaleString('pt-BR') : '-';
 const isMobile = () => window.innerWidth <= 768;
 // Normaliza string para busca sem distinção de acentos/ç
 const normBusca = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-const isPrefeito = e => e.orgao === 'Gabinete do Prefeito';
-const isSecom    = e => (e.sigla_orgao || sigla(e.orgao)) === 'SECOM';
+const isPrefeito     = e => e.orgao === 'Gabinete do Prefeito';
+const isSecom        = e => (e.sigla_orgao || sigla(e.orgao)) === 'SECOM';
+const isUsuarioSecom = () => usuario && sigla(usuario.orgao) === 'SECOM';
 const $ = id => document.getElementById(id);
 
 const SIGLAS = {
@@ -452,7 +453,14 @@ async function render() {
     if (!Array.isArray(eventos)) eventos = [];
   } catch(e) { eventos = []; }
 
-  if (usuario.tipo === 'orgao' && usuario.orgao !== 'Gabinete do Prefeito') {
+  if (usuario.tipo === 'orgao' && isUsuarioSecom()) {
+    // SECOM vê todos os eventos da prefeitura
+    try {
+      const r = await api('getEventos', {todos:'true'});
+      eventos = Array.isArray(r) ? r : [];
+    } catch(e) {}
+    todosEventos = [];
+  } else if (usuario.tipo === 'orgao' && usuario.orgao !== 'Gabinete do Prefeito') {
     try {
       const r = await api('getEventos', {todos:'true'});
       todosEventos = Array.isArray(r) ? r : [];
@@ -464,6 +472,7 @@ async function render() {
   calendar = null;
   if      (usuario.tipo === 'admin')    $('root').innerHTML = htmlAdmin();
   else if (usuario.tipo === 'prefeito') $('root').innerHTML = htmlPrefeito();
+  else if (isUsuarioSecom())            $('root').innerHTML = htmlSecom();
   else                                  $('root').innerHTML = htmlSecretaria();
   inicializarApp();
   iniciarAutoRefresh();
@@ -481,6 +490,13 @@ function iniciarAutoRefresh() {
   const tipo = usuario?.tipo;
   if(tipo !== 'admin' && tipo !== 'orgao') return;
   _autoRefreshId = setInterval(async function(){
+    if(isUsuarioSecom()){
+      try{ const r=await api('getEventos',{todos:'true'}); if(Array.isArray(r)) eventos=r; }catch(e){ return; }
+      const cs=$('secomEventosHoje');
+      if(cs){ const hj=evtHoje(); cs.innerHTML=hj.length===0?'<div class="empty">Nenhum evento hoje</div>':hj.map(e=>cardEvento(e,true)).join(''); }
+      if(calendar){ try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }catch(e){} }
+      return;
+    }
     try{ const r=await api('getEventos'); if(Array.isArray(r)) eventos=r; } catch(e){ return; }
     if(tipo === 'admin'){
       if(calendar){ try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }catch(e){} }
@@ -849,6 +865,62 @@ function htmlPrefeito() {
     </div>
   </main>
   ${htmlModalEvento()}${htmlModalForm()}${htmlModalDia()}`;
+}
+
+// ════════════════ SECOM HTML (leitura de toda a agenda) ════════════════
+function htmlSecom() {
+  const hoje=evtHoje(), total=eventos.length;
+  const semana=(()=>{
+    const d=new Date(),ini=new Date(d); ini.setDate(d.getDate()-d.getDay());
+    const fim=new Date(ini); fim.setDate(ini.getDate()+6);
+    return eventos.filter(e=>{const x=new Date(e.data_evento);return x>=ini&&x<=fim;}).length;
+  })();
+  const orgaos=[...new Set(eventos.map(e=>e.orgao))].length;
+  return `
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+  <div class="overlay" onclick="toggleMenu()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="Logo plataforma de Agenda.png" alt="Agenda" class="sidebar-logo">
+      <h3>Secretaria de Comunicação</h3>
+      <span class="orgao-badge">SECOM</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="mostrarView('inicio')">🏠 Início</div>
+      <div class="nav-item" onclick="mostrarView('calendario')">📅 Calendário Geral</div>
+      <div class="nav-item" onclick="mostrarView('listaEventos')">📋 Todos os Eventos</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div>${usuario.nome}</div><div>${usuario.email}</div>
+      <button class="btn-logout" onclick="logout()">Sair →</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div id="inicio" class="view active">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-info"><h3>${total}</h3><p>Total de Eventos</p></div></div>
+        <div class="stat-card"><div class="stat-icon">📆</div><div class="stat-info"><h3>${semana}</h3><p>Esta Semana</p></div></div>
+        <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div></div>
+        <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-info"><h3>${orgaos}</h3><p>Órgãos</p></div></div>
+      </div>
+      <div class="secao">
+        <div class="secao-header"><h2>📌 Agenda de Hoje — Todos os Órgãos</h2></div>
+        <div id="secomEventosHoje">
+          ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e,true)).join('')}
+        </div>
+      </div>
+    </div>
+    <div id="calendario" class="view"><div class="secao"><div id="cal"></div></div></div>
+    <div id="listaEventos" class="view">
+      <div class="secao">
+        <div class="secao-header"><h2>📋 Todos os Eventos</h2>
+          <input id="buscaEvt" type="text" placeholder="Buscar..." style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px" oninput="filtrarEventos()">
+        </div>
+        <div id="listaEvtConteudo">${renderListaEventos(eventos)}</div>
+      </div>
+    </div>
+  </main>
+  ${htmlModalEvento()}${htmlModalDia()}`;
 }
 
 // ════════════════ SECRETARIA HTML ════════════════
@@ -1335,7 +1407,7 @@ function mostrarNomeAnexo(input) {
 }
 
 function verEvento(id) {
-  const e=eventos.find(x=>String(x.id)===String(id)); if(!e) return;
+  const e=eventos.find(x=>String(x.id)===String(id))||todosEventos.find(x=>String(x.id)===String(id)); if(!e) return;
   const pref=isPrefeito(e);
   $('modalEventoHead').className='modal-head'+(pref?' prefeito-head':'');
   $('modalEventoTitulo').textContent=e.titulo;
@@ -1443,10 +1515,10 @@ function eventosParaCalendario() {
   return evtDoUsuario().map(e=>({
     id:String(e.id),
     title:isMobile()
-      ?(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'
+      ?(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom()
           ?`${fmtHora(e.data_evento)}\n${e.sigla_orgao||sigla(e.orgao)}`
           :`${fmtHora(e.data_evento)}\n${e.titulo}`)
-      :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'
+      :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom()
           ?`${fmtHora(e.data_evento)}\n${e.sigla_orgao||sigla(e.orgao)}: ${e.titulo}`
           :`${fmtHora(e.data_evento)}\n${e.titulo}`),
     start:e.data_evento,
