@@ -40,23 +40,8 @@ function handleRequest(e) {
   }
 }
 
-// Escapa todos os caracteres nao-ASCII como \uXXXX para garantir JSON puro ASCII
-function jsonSafe(obj) {
-  var s = JSON.stringify(obj);
-  var out = '';
-  for (var i = 0; i < s.length; i++) {
-    var code = s.charCodeAt(i);
-    if (code > 127) {
-      out += '\\u' + ('0000' + code.toString(16)).slice(-4);
-    } else {
-      out += s[i];
-    }
-  }
-  return out;
-}
-
 function responder(data, output) {
-  output.setContent(jsonSafe(data));
+  output.setContent(JSON.stringify(data));
   return output;
 }
 
@@ -101,7 +86,7 @@ function gerarToken(user) {
     is_prefeito: user.tipo === 'prefeito' || String(user.is_prefeito).toUpperCase() === 'TRUE',
     exp: Date.now() + 86400000
   };
-  return Utilities.base64Encode(jsonSafe(payload));
+  return Utilities.base64Encode(JSON.stringify(payload));
 }
 
 function verificarToken(token) {

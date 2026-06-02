@@ -295,6 +295,8 @@ const fmtData = s => s ? new Date(s).toLocaleDateString('pt-BR') : '-';
 const fmtHora = s => s ? new Date(s).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
 const fmtDH   = s => s ? new Date(s).toLocaleString('pt-BR') : '-';
 const isMobile = () => window.innerWidth <= 768;
+// Normaliza string para busca sem distinção de acentos/ç
+const normBusca = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 const isPrefeito = e => e.orgao === 'Gabinete do Prefeito';
 const $ = id => document.getElementById(id);
 
@@ -1226,12 +1228,12 @@ function fecharMenuMobile() {
 }
 
 function filtrarEventos() {
-  const termo=($('buscaEvt')?.value||'').toLowerCase();
+  const t=normBusca($('buscaEvt')?.value||'');
   const base=(usuario?.tipo==='admin'||usuario?.tipo==='prefeito')?eventos:evtDoUsuario();
-  const filtrados=termo?base.filter(e=>
-    e.titulo?.toLowerCase().includes(termo)||e.local?.toLowerCase().includes(termo)||
-    e.responsavel?.toLowerCase().includes(termo)||e.orgao?.toLowerCase().includes(termo)||
-    e.observacao?.toLowerCase().includes(termo)):base;
+  const filtrados=t?base.filter(e=>
+    normBusca(e.titulo).includes(t)||normBusca(e.local).includes(t)||
+    normBusca(e.responsavel).includes(t)||normBusca(e.orgao).includes(t)||
+    normBusca(sigla(e.orgao)).includes(t)||normBusca(e.observacao).includes(t)):base;
   const cont=$('listaEvtConteudo');
   if(cont) {
     if(usuario?.tipo==='admin') cont.innerHTML=renderTabelaAdmin(filtrados);
@@ -1240,9 +1242,9 @@ function filtrarEventos() {
 }
 
 function filtrarEventosPref() {
-  const termo=($('buscaEvt')?.value||'').toLowerCase();
+  const t=normBusca($('buscaEvt')?.value||'');
   const base=eventos.filter(e=>isPrefeito(e));
-  const filtrados=termo?base.filter(e=>e.titulo?.toLowerCase().includes(termo)||e.local?.toLowerCase().includes(termo)):base;
+  const filtrados=t?base.filter(e=>normBusca(e.titulo).includes(t)||normBusca(e.local).includes(t)):base;
   const cont=$('listaEvtConteudo'); if(cont) cont.innerHTML=renderListaEventos(filtrados);
 }
 
@@ -1595,7 +1597,7 @@ function fecharModal(id){const el=$(id);if(el)el.classList.remove('aberto');}
 
 function exportarExcel() {
   const dados=evtDoUsuario().map(e=>({'Título':e.titulo,'Data':fmtDH(e.data_evento),'Local':e.local,
-    'Órgão':e.orgao,'Responsável':e.responsavel,'Telefone':e.telefone,'Descrição':e.observacao,'Publicado por':e.publicado_por}));
+    'Órgão':sigla(e.orgao),'Responsável':e.responsavel,'Telefone':e.telefone,'Descrição':e.observacao,'Publicado por':e.publicado_por}));
   const ws=XLSX.utils.json_to_sheet(dados),wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Eventos');
   XLSX.writeFile(wb,'agenda-prefeitura.xlsx');
