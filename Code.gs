@@ -139,11 +139,36 @@ function handleGetEventos(params) {
   const usuario = verificarToken(params.token);
   if (!usuario) return { error: 'Não autorizado' };
 
-  const rows = lerAba('eventos').rows;
-  return rows.filter(function(e) {
+  const eventosRows = lerAba('eventos').rows;
+  const usuariosRows = lerAba('usuarios').rows;
+
+  const filtrados = eventosRows.filter(function(e) {
     if (!e.id) return false;
     if (usuario.tipo === 'admin' || usuario.tipo === 'prefeito') return true;
     return String(e.orgao || '').trim() === String(usuario.orgao || '').trim();
+  });
+
+  // Enriquece publicado_por com o login atual (coluna B da aba usuarios)
+  return filtrados.map(function(e) {
+    const emailRef = String(e.email_publicado || '').trim().toLowerCase();
+    const loginRef = String(e.publicado_por  || '').trim().toLowerCase();
+    var pubUser = null;
+    for (var i = 0; i < usuariosRows.length; i++) {
+      var u = usuariosRows[i];
+      const uEmail = String(u.email || '').toLowerCase();
+      const uLogin = String(u.login || '').toLowerCase();
+      if ((emailRef && uEmail === emailRef) || (loginRef && uLogin === loginRef)) {
+        pubUser = u;
+        break;
+      }
+    }
+    if (pubUser) {
+      var ev = {};
+      for (var k in e) { ev[k] = e[k]; }
+      ev.publicado_por = pubUser.login; // coluna B da planilha de usuarios
+      return ev;
+    }
+    return e;
   });
 }
 
