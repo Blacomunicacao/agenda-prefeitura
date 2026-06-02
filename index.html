@@ -1022,7 +1022,7 @@ function atualizarCampoOrgao() {
 
 // ════════════════ MÉTRICA DE USABILIDADE ════════════════
 function calcularMetricaUsabilidade() {
-  const totalOrgaos = Object.keys(SIGLAS).length;
+  const totalOrgaos = Object.values(ORGAOS_LIST).reduce(function(acc, lista){ return acc + lista.length; }, 0);
   const contagem = {};
   eventos.forEach(function(e) { if (e.orgao) contagem[e.orgao] = (contagem[e.orgao] || 0) + 1; });
   const orgaosAtivos = Object.keys(contagem).length;
