@@ -234,6 +234,7 @@ let usuario  = JSON.parse(localStorage.getItem('usuario') || 'null');
 let eventos  = [];
 let calendar = null;
 let solicitacoesList = [];
+let _autoRefreshId = null;
 
 async function api(action, data = {}) {
   try {
@@ -447,12 +448,24 @@ async function render() {
   else if (usuario.tipo === 'prefeito') $('root').innerHTML = htmlPrefeito();
   else                                  $('root').innerHTML = htmlSecretaria();
   inicializarApp();
+  iniciarAutoRefresh();
 }
 
 function logout() {
+  if(_autoRefreshId){ clearInterval(_autoRefreshId); _autoRefreshId=null; }
   token = null; usuario = null; eventos = [];
   localStorage.removeItem('token'); localStorage.removeItem('usuario');
   render();
+}
+
+function iniciarAutoRefresh() {
+  if(_autoRefreshId){ clearInterval(_autoRefreshId); _autoRefreshId=null; }
+  if(usuario?.tipo!=='admin') return;
+  _autoRefreshId = setInterval(async function(){
+    try{ const r=await api('getEventos'); if(Array.isArray(r)) eventos=r; } catch(e){ return; }
+    if(calendar){ try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }catch(e){} }
+    renderizarMetrica();
+  }, 60000);
 }
 
 // ════════════════ LOGIN ════════════════
