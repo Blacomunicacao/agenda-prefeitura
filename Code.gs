@@ -452,13 +452,30 @@ function handleSolicitarAcesso(data) {
   if (!sheet) {
     sheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet('solicitacoes');
     sheet.appendRow(['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao','senha']);
+  } else {
+    // Garante que a coluna 'senha' existe no cabeçalho (aba pode ter sido criada sem ela)
+    var headerRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
+    if (headerRow.indexOf('senha') === -1) {
+      sheet.getRange(1, sheet.getLastColumn() + 1).setValue('senha');
+    }
   }
 
-  sheet.appendRow([
-    proximoId('solicitacoes'), nome, email, login,
-    telefone || '', orgao, justificativa || '',
-    'pendente', 'acesso', new Date().toISOString(), senha
-  ]);
+  // Usa lerAba para garantir que a senha vai para a coluna certa
+  var aba = lerAba('solicitacoes');
+  var headers = aba.headers;
+  var rowData = new Array(headers.length).fill('');
+  rowData[headers.indexOf('id')]               = proximoId('solicitacoes');
+  rowData[headers.indexOf('nome')]             = nome;
+  rowData[headers.indexOf('email')]            = email;
+  rowData[headers.indexOf('login')]            = login;
+  rowData[headers.indexOf('telefone')]         = telefone || '';
+  rowData[headers.indexOf('orgao')]            = orgao;
+  rowData[headers.indexOf('justificativa')]    = justificativa || '';
+  rowData[headers.indexOf('status')]           = 'pendente';
+  rowData[headers.indexOf('tipoSolicitacao')]  = 'acesso';
+  rowData[headers.indexOf('data_solicitacao')] = new Date().toISOString();
+  rowData[headers.indexOf('senha')]            = senha;
+  sheet.appendRow(rowData);
 
   return { success: true, message: 'Solicitação registrada com sucesso' };
 }
