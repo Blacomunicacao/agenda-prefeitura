@@ -1535,7 +1535,11 @@ async function salvarUsuario(ev) {
     await api('criarUsuario',{login:$('uLogin').value,nome:$('uNome').value,
       email:$('uEmail').value,senha:$('uSenha').value,tipo,orgao});
     fecharModal('modalUsuario'); await carregarUsuarios(); alert('✅ Usuário criado!');
-  } catch(e){alert('❌ '+e.message);}
+  } catch(e){
+    if(e.message&&e.message.includes('Limite')) {
+      alert('⚠️ LIMITE DE USUÁRIOS ATINGIDO\n\n' + e.message + '\n\nPara cadastrar um novo usuário neste órgão, exclua um dos existentes primeiro.');
+    } else { alert('❌ '+e.message); }
+  }
 }
 
 async function resetarSenha(id, nome) {
@@ -1593,7 +1597,11 @@ async function aprovarSolicitacao(id) {
     alert(senhaGerada
       ? `✅ Usuário "${s.nome}" aprovado!\n\nSenha gerada automaticamente: ${senha}\nComunique ao usuário para alterar.`
       : `✅ Usuário "${s.nome}" aprovado!\n\nO usuário já definiu sua própria senha.`);
-  } catch(e){alert('❌ '+e.message);}
+  } catch(e){
+    if(e.message&&e.message.includes('Limite')) {
+      alert('⚠️ LIMITE DE USUÁRIOS ATINGIDO\n\n' + e.message + '\n\nO órgão "' + (s.orgao||'—') + '" já possui o número máximo de usuários cadastrados.\n\nExclua um usuário existente antes de aprovar esta solicitação.');
+    } else { alert('❌ '+e.message); }
+  }
 }
 
 async function resetarSenhaSolicitacao(id, login) {
