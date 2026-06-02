@@ -193,49 +193,13 @@ tr.pref-row:hover td{background:#ffe8e8}
   /* Dashboard grid vira 1 coluna */
   .dashboard-dois-col{grid-template-columns:1fr!important}
 
-  /* Calendário mobile — 7 colunas Dom-Sab sem corte */
-
-  /* Container sem padding lateral para dar largura máxima ao FC */
+  /* Calendário mobile: zoom 70% → todas as 7 colunas visíveis */
   #calendario .secao{padding:0;border-radius:0;box-shadow:none;overflow:hidden}
-  #cal{width:100%!important;box-sizing:border-box!important}
-
-  /* Altura útil */
-  .fc{height:100%!important}
-  .fc-view-harness{height:calc(100vh - 140px)!important;min-height:400px!important}
-
-  /* Zerar os min-width internos que o FullCalendar injeta via JS */
-  .fc .fc-daygrid-body,
-  .fc .fc-daygrid-body table,
-  .fc .fc-col-header,
-  .fc .fc-col-header table{min-width:0!important;width:100%!important}
-
-  /* Forçar table-layout:fixed para distribuir 7 colunas igualmente */
-  .fc-scrollgrid{width:100%!important;table-layout:fixed!important;border-left:0!important;border-right:0!important}
-  .fc-scrollgrid-section,.fc-scrollgrid-section>td{width:100%!important}
-
-  /* Suprimir scroll lateral em todos os layers internos */
-  .fc-view,.fc-scroller,.fc-daygrid{overflow-x:hidden!important;max-width:100%!important}
-
-  /* Cabeçalho Dom…Sab compacto e uniforme */
-  .fc-col-header-cell{overflow:hidden!important}
-  .fc-col-header-cell-cushion{font-size:9px!important;font-weight:700!important;padding:3px 1px!important;display:block!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important}
-
-  /* Número do dia */
-  .fc-daygrid-day-number{font-size:9px!important;padding:2px 3px!important;line-height:1!important}
-
-  /* Evento — chip de linha única, respeita largura da célula */
-  .fc-daygrid-event-harness{overflow:hidden!important;width:100%!important}
-  .fc-event{font-size:9px!important;padding:1px 2px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;line-height:1.4!important;margin:1px 0!important;border-radius:3px!important}
-
-  /* Células uniformes */
-  .fc-daygrid-day-events{min-height:14px!important}
-  .fc-daygrid-day-frame{min-height:44px!important}
-
-  /* Toolbar centralizada */
-  .fc-toolbar{flex-direction:column!important;gap:6px!important;align-items:center!important}
+  #cal{zoom:0.7;transform-origin:top left;overflow:hidden}
+  .fc-view-harness{height:auto!important;min-height:280px!important}
+  .fc-toolbar{flex-direction:column!important;gap:4px!important;align-items:center!important}
   .fc-toolbar-chunk{text-align:center!important}
-  .fc-toolbar-title{font-size:13px!important}
-  .fc-button{padding:4px 8px!important;font-size:11px!important}
+  .fc-event{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
 }
 @media(max-width:480px){
   .stats-grid{grid-template-columns:repeat(2,1fr)}
@@ -1403,10 +1367,11 @@ function iniciarCalendario() {
   if (isMobile()) {
     const main=document.querySelector('.main');
     if(main){ main.style.paddingLeft='0'; main.style.paddingRight='0'; }
-    // Força largura exata em px para o FC não calcular com container menor
+    // O CSS aplica zoom:0.7 em #cal, então a largura de render deve ser
+    // vw / 0.7 para que após o zoom o visual ocupe exatamente a tela inteira
     const vw = window.innerWidth;
-    el.style.width    = vw + 'px';
-    el.style.maxWidth = vw + 'px';
+    el.style.width    = Math.ceil(vw / 0.7) + 'px';
+    el.style.maxWidth = 'none';
     el.style.overflowX = 'hidden';
   } else {
     el.style.width = el.style.maxWidth = el.style.overflowX = '';
@@ -1642,8 +1607,8 @@ window.addEventListener('resize', () => {
   if (nowMobile) {
     const el = $('cal');
     if (el) {
-      el.style.width    = window.innerWidth + 'px';
-      el.style.maxWidth = window.innerWidth + 'px';
+      el.style.width    = Math.ceil(window.innerWidth / 0.7) + 'px';
+      el.style.maxWidth = 'none';
     }
   }
   if (nowMobile !== _lastMobile) {
