@@ -30,6 +30,7 @@ function handleRequest(e) {
       case 'criarUsuario':   return responder(handleCriarUsuario(p), output);
       case 'resetarSenha':   return responder(handleResetarSenha(p), output);
       case 'excluirUsuario': return responder(handleExcluirUsuario(p), output);
+      case 'debug':          return responder(handleDebug(), output);
       default:
         return responder({ error: 'Ação não encontrada: ' + action }, output);
     }
@@ -105,14 +106,21 @@ function verificarToken(token) {
 // ── Login ────────────────────────────────────────────────────────────────────
 
 function handleLogin(data) {
-  const { usuario, senha } = data;
+  const usuario = (data.usuario || '').trim();
+  const senha   = (data.senha   || '').trim();
   if (!usuario || !senha) return { error: 'Usuário e senha são obrigatórios' };
 
   const { rows } = lerAba('usuarios');
-  const user = rows.find(r =>
-    (r.login === usuario || r.email === usuario || r.nome === usuario) &&
-    r.senha === senha && String(r.ativo).toUpperCase() === 'TRUE'
-  );
+  const usuarioLower = usuario.toLowerCase();
+  const user = rows.find(r => {
+    const loginOk = r.login === usuario ||
+                    (r.email || '').toLowerCase() === usuarioLower ||
+                    r.nome === usuario;
+    const senhaOk  = (String(r.senha || '')).trim() === senha;
+    const ativoVal = String(r.ativo || '').trim().toUpperCase();
+    const ativoOk  = ativoVal === 'TRUE' || ativoVal === '1' || ativoVal === 'SIM';
+    return loginOk && senhaOk && ativoOk;
+  });
 
   if (!user) {
     registrarLog(usuario, 'login_falhou', 'Credenciais inválidas');
@@ -227,15 +235,24 @@ function handleCriarUsuario(data) {
   const admin = verificarToken(data.token);
   if (!admin || admin.tipo !== 'admin') return { error: 'Acesso negado' };
 
-  const { login, nome, email, senha, orgao, is_prefeito } = data;
+  const login  = (data.login  || '').trim();
+  const nome   = (data.nome   || '').trim();
+  const email  = (data.email  || '').trim();
+  const senha  = (data.senha  || '').trim();
+  const orgao  = (data.orgao  || '').trim();
+  // URL params chegam como string; 'false' é truthy — comparar explicitamente
+  const isPref = String(data.is_prefeito).toLowerCase() === 'true' || orgao === 'Gabinete do Prefeito';
+
   if (!login || !nome || !email || !senha || !orgao) return { error: 'Todos os campos são obrigatórios' };
 
   const { rows, sheet } = lerAba('usuarios');
-  if (rows.find(r => r.login === login || r.email === email)) return { error: 'Login ou e-mail já existe' };
+  if (rows.find(r => r.login === login || (r.email || '').toLowerCase() === email.toLowerCase())) {
+    return { error: 'Login ou e-mail já existe' };
+  }
 
   sheet.appendRow([
     proximoId('usuarios'), login, nome, email, senha, 'orgao', orgao,
-    is_prefeito ? 'TRUE' : 'FALSE', 'TRUE', new Date().toISOString()
+    isPref ? 'TRUE' : 'FALSE', 'TRUE', new Date().toISOString()
   ]);
 
   registrarLog(admin.email, 'criar_usuario', login);
@@ -286,4 +303,21 @@ function testarLogin() {
   });
   const resultado = handleLogin({ usuario: 'admin', senha: 'admin123' });
   Logger.log('Resultado do login: ' + JSON.stringify(resultado));
+}
+
+function handleDebug() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const abas = ss.getSheets().map(s => s.getName());
+  const { headers, rows } = lerAba('usuarios');
+  return {
+    abas: abas,
+    headers_usuarios: headers,
+    total_usuarios: rows.length,
+    primeiro_usuario: rows[0] ? {
+      login: rows[0].login,
+      senha: rows[0].senha,
+      ativo: rows[0].ativo,
+      tipo_ativo: typeof rows[0].ativo
+    } : null
+  };
 }

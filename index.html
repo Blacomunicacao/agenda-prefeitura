@@ -137,7 +137,7 @@ tr.pref-row:hover td{background:#ffe8e8}
 // CONFIGURAÇÃO — substitua pela URL do seu Google Apps Script
 // ════════════════════════════════════════════════════════════
 const API_URL = localStorage.getItem('apiUrl') ||
-  'https://script.google.com/macros/s/AKfycbwm6gJaz-flybEnYnaxcH7DXAPdXzBw9MFODagv3PppJFDPRghZqIgYK7WoXaYr5bTk/exec';
+  'https://script.google.com/macros/s/AKfycbyEMl_w3xkIGcLX-qo589iIf8tZTGMIweVVfsBAYCXvf6UyUgyosCkNUVUI1NSEUuHZ9w/exec';
 
 // ── Estado global ────────────────────────────────────────────
 let token    = localStorage.getItem('token');
@@ -172,7 +172,7 @@ const isPrefeito = e => e.orgao === 'Gabinete do Prefeito';
 const $ = id => document.getElementById(id);
 
 const SIGLAS = {
-  'Gabinete do Prefeito':'PREF','Secretaria de Educação':'EDUC','Secretaria de Saúde':'SAÚD',
+  'Gabinete do Prefeito':'PREFEITO','Secretaria de Educação':'EDUC','Secretaria de Saúde':'SAÚD',
   'Secretaria de Obras':'OBRS','Secretaria de Finanças':'FIN','Secretaria de Cultura':'CULT',
   'Secretaria de Esportes':'ESP','Secretaria de Assistência Social':'SAS',
   'Secretaria de Meio Ambiente':'AMB','Secretaria de Transportes':'TRANS',
@@ -192,6 +192,135 @@ function evtHoje() {
     const d = new Date(e.data_evento); d.setHours(0,0,0,0);
     return d.getTime() === h.getTime();
   }).sort((a,b) => new Date(a.data_evento)-new Date(b.data_evento));
+}
+
+// ════════════════════════════════════════════════════════════
+// MÉTRICA DE USABILIDADE
+// ════════════════════════════════════════════════════════════
+function calcularMetricaUsabilidade() {
+  const totalOrgaos = Object.keys(SIGLAS).length;
+  const contagem = {};
+  eventos.forEach(e => {
+    if (e.orgao) contagem[e.orgao] = (contagem[e.orgao] || 0) + 1;
+  });
+  const orgaosAtivos = Object.keys(contagem).length;
+  const totalEventos = eventos.length;
+  const media = orgaosAtivos > 0 ? (totalEventos / orgaosAtivos).toFixed(1) : '0';
+  const taxaEngajamento = totalOrgaos > 0 ? Math.round((orgaosAtivos / totalOrgaos) * 100) : 0;
+  const ranking = Object.entries(contagem)
+    .sort((a, b) => b[1] - a[1])
+    .map(([orgao, qtd]) => ({ orgao, qtd, siglaOrgao: sigla(orgao) }));
+  return { media, taxaEngajamento, ranking, orgaosAtivos, totalOrgaos, totalEventos };
+}
+
+function renderizarMetrica() {
+  const container = $('metricaContainer');
+  if (!container) return;
+  const m = calcularMetricaUsabilidade();
+  const top5 = m.ranking.slice(0, 5);
+  container.innerHTML = `
+    <div class="secao">
+      <div class="secao-header">
+        <h2>📈 Métrica de Uso por Órgão</h2>
+        ${m.ranking.length > 5 ? `<button class="btn btn-outline" onclick="abrirModalMetricaDetalhada()">Ver Ranking Completo</button>` : ''}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px">
+        <div style="background:#e8f4f8;border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:28px;font-weight:700;color:#003366">${m.media}</div>
+          <div style="font-size:12px;color:#555;margin-top:4px">Média Eventos/Órgão</div>
+        </div>
+        <div style="background:#e8f8ee;border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:28px;font-weight:700;color:#28a745">${m.taxaEngajamento}%</div>
+          <div style="font-size:12px;color:#555;margin-top:4px">Taxa de Engajamento</div>
+        </div>
+        <div style="background:#fff3cd;border-radius:12px;padding:16px;text-align:center">
+          <div style="font-size:28px;font-weight:700;color:#856404">${m.orgaosAtivos}/${m.totalOrgaos}</div>
+          <div style="font-size:12px;color:#555;margin-top:4px">Órgãos Publicando</div>
+        </div>
+      </div>
+      ${top5.length === 0 ? '<div class="empty">Nenhum evento publicado ainda</div>' : `
+      <div style="font-size:13px;font-weight:600;color:#003366;margin-bottom:10px">🏆 TOP 5 — Órgãos mais ativos</div>
+      ${top5.map((item, i) => {
+        const pct = m.totalEventos > 0 ? Math.round((item.qtd / m.totalEventos) * 100) : 0;
+        return `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="width:24px;height:24px;background:#003366;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</div>
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+              <span style="font-weight:600">${item.siglaOrgao}</span>
+              <span style="color:#666">${item.qtd} evento${item.qtd!==1?'s':''} · ${pct}%</span>
+            </div>
+            <div style="background:#e9ecef;border-radius:4px;height:6px">
+              <div style="background:#004d99;width:${pct}%;height:6px;border-radius:4px;transition:width .5s"></div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}`}
+    </div>
+  `;
+}
+
+function abrirModalMetricaDetalhada() {
+  const m = calcularMetricaUsabilidade();
+  const modalId = 'modalMetrica';
+  let modal = $(modalId);
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'modal-bg';
+    modal.onclick = function(ev) { if (ev.target === this) fecharModal(modalId); };
+    document.body.appendChild(modal);
+  }
+  const medal = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`;
+  modal.innerHTML = `
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:520px">
+      <div class="modal-head">
+        <h3>📈 Ranking Completo — Uso por Órgão</h3>
+        <button class="modal-close" onclick="fecharModal('${modalId}')">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+          <div style="background:#e8f4f8;border-radius:10px;padding:12px;text-align:center">
+            <div style="font-size:22px;font-weight:700;color:#003366">${m.media}</div>
+            <div style="font-size:11px;color:#555">Média/Órgão</div>
+          </div>
+          <div style="background:#e8f8ee;border-radius:10px;padding:12px;text-align:center">
+            <div style="font-size:22px;font-weight:700;color:#28a745">${m.taxaEngajamento}%</div>
+            <div style="font-size:11px;color:#555">Engajamento</div>
+          </div>
+          <div style="background:#fff3cd;border-radius:10px;padding:12px;text-align:center">
+            <div style="font-size:22px;font-weight:700;color:#856404">${m.totalEventos}</div>
+            <div style="font-size:11px;color:#555">Total Eventos</div>
+          </div>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:#003366;margin-bottom:12px">📋 Ranking — ${m.ranking.length} órgão${m.ranking.length!==1?'s':''} com eventos</div>
+        <div style="max-height:360px;overflow-y:auto">
+          ${m.ranking.length === 0
+            ? '<div class="empty">Nenhum evento publicado ainda</div>'
+            : m.ranking.map((item, i) => {
+                const pct = m.totalEventos > 0 ? Math.round((item.qtd / m.totalEventos) * 100) : 0;
+                return `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f0f0f0">
+                  <div style="width:32px;text-align:center;font-size:${i<3?'18':'13'}px;font-weight:700;flex-shrink:0">${medal(i)}</div>
+                  <div style="flex:1">
+                    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+                      <span style="font-weight:600">${item.orgao}</span>
+                      <span style="color:#666;white-space:nowrap;margin-left:8px">${item.qtd} evento${item.qtd!==1?'s':''}</span>
+                    </div>
+                    <div style="background:#e9ecef;border-radius:4px;height:6px">
+                      <div style="background:#004d99;width:${pct}%;height:6px;border-radius:4px"></div>
+                    </div>
+                  </div>
+                </div>`;
+              }).join('')}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-cinza" onclick="fecharModal('${modalId}')">Fechar</button>
+      </div>
+    </div>
+  `;
+  abrirModal(modalId);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -224,7 +353,8 @@ function htmlLogin() {
   return `
   <div class="login-page">
     <div class="login-card">
-      <div class="brasao">🏛️</div>
+<!-- brasão removed -->
+      <img src="Logo plataforma de Agenda.png" alt="Agenda Logo" style="max-width:100%;height:auto;margin-top:12px;"/>
       <h1>Agenda da Prefeitura</h1>
       <p>Presidente Prudente · Secretarias e Conselhos</p>
       <div id="erroLogin" class="erro"></div>
@@ -324,11 +454,13 @@ function htmlAdmin() {
           <div class="stat-icon">🔴</div>
           <div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div>
         </div>
-        <div class="stat-card" onclick="mostrarView('usuarios')">
-          <div class="stat-icon">🏢</div>
-          <div class="stat-info"><h3>${orgaos}</h3><p>Órgãos Ativos</p></div>
+        <div class="stat-card" onclick="abrirModalMetricaDetalhada()">
+          <div class="stat-icon">📈</div>
+          <div class="stat-info"><h3>${orgaos}</h3><p>Métrica de Uso</p></div>
         </div>
       </div>
+
+      <div id="metricaContainer"></div>
 
       <div class="secao">
         <div class="secao-header"><h2>📌 Eventos de Hoje</h2></div>
@@ -627,6 +759,10 @@ function htmlModalUsuario() {
 // ════════════════════════════════════════════════════════════
 // LÓGICA
 // ════════════════════════════════════════════════════════════
+function renderizarAdminDinamico() {
+  renderizarMetrica();
+}
+
 function inicializarApp() {
   // event listeners nos nav-items
   document.querySelectorAll('.nav-item').forEach(el => {
@@ -635,8 +771,11 @@ function inicializarApp() {
     });
   });
 
-  // Carregar usuários se admin
-  if (usuario?.tipo === 'admin') carregarUsuarios();
+  // Carregar usuários e métricas se admin
+  if (usuario?.tipo === 'admin') {
+    carregarUsuarios();
+    renderizarAdminDinamico();
+  }
 }
 
 function mostrarView(id) {
@@ -920,6 +1059,10 @@ function exportarExcel() {
 window.addEventListener('resize', () => {
   if (calendar) calendar.updateSize();
 });
+
+// ── Globals ─────────────────────────────────────────────────
+window.abrirModalMetricaDetalhada = abrirModalMetricaDetalhada;
+window.fecharModal = fecharModal;
 
 // ── Iniciar ─────────────────────────────────────────────────
 render();
