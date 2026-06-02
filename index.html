@@ -233,6 +233,7 @@ const API_URL = localStorage.getItem('apiUrl') ||
 let token    = localStorage.getItem('token');
 let usuario  = JSON.parse(localStorage.getItem('usuario') || 'null');
 let eventos  = [];
+let todosEventos = [];
 let calendar = null;
 let solicitacoesList = [];
 let _autoRefreshId = null;
@@ -436,6 +437,13 @@ function evtHoje() {
     return d.getTime() === h.getTime();
   }).sort((a,b) => new Date(a.data_evento)-new Date(b.data_evento));
 }
+function evtTodosHoje() {
+  const h = new Date(); h.setHours(0,0,0,0);
+  return todosEventos.filter(e => {
+    const d = new Date(e.data_evento); d.setHours(0,0,0,0);
+    return d.getTime() === h.getTime();
+  }).sort((a,b) => new Date(a.data_evento)-new Date(b.data_evento));
+}
 
 async function render() {
   if (!token || !usuario) { $('root').innerHTML = htmlLogin(); return; }
@@ -443,6 +451,15 @@ async function render() {
     eventos = await api('getEventos');
     if (!Array.isArray(eventos)) eventos = [];
   } catch(e) { eventos = []; }
+
+  if (usuario.tipo === 'orgao' && usuario.orgao !== 'Gabinete do Prefeito') {
+    try {
+      const r = await api('getEventos', {todos:'true'});
+      todosEventos = Array.isArray(r) ? r : [];
+    } catch(e) { todosEventos = []; }
+  } else {
+    todosEventos = [];
+  }
 
   calendar = null;
   if      (usuario.tipo === 'admin')    $('root').innerHTML = htmlAdmin();
@@ -454,7 +471,7 @@ async function render() {
 
 function logout() {
   if(_autoRefreshId){ clearInterval(_autoRefreshId); _autoRefreshId=null; }
-  token = null; usuario = null; eventos = [];
+  token = null; usuario = null; eventos = []; todosEventos = [];
   localStorage.removeItem('token'); localStorage.removeItem('usuario');
   render();
 }
@@ -469,13 +486,23 @@ function iniciarAutoRefresh() {
       if(calendar){ try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }catch(e){} }
       renderizarMetrica();
     } else {
-      // Atualiza "Eventos de Hoje" e calendário para órgãos
-      const cont = $('orgaoEventosHoje');
-      if(cont){
+      // Atualiza colunas "Eventos de Hoje" e calendário para órgãos
+      if (usuario.orgao !== 'Gabinete do Prefeito') {
+        try{ const r=await api('getEventos',{todos:'true'}); if(Array.isArray(r)) todosEventos=r; }catch(e){}
+      }
+      const cont1 = $('orgaoEventosHoje');
+      if(cont1){
         const hoje = evtHoje();
-        cont.innerHTML = hoje.length===0
+        cont1.innerHTML = hoje.length===0
           ? '<div class="empty">Nenhum evento hoje</div>'
           : hoje.map(e=>cardEvento(e)).join('');
+      }
+      const cont2 = $('todosEventosHoje');
+      if(cont2){
+        const todos = evtTodosHoje();
+        cont2.innerHTML = todos.length===0
+          ? '<div class="empty">Nenhum evento hoje</div>'
+          : todos.map(e=>cardEventoResumo(e)).join('');
       }
       if(calendar){ try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }catch(e){} }
     }
@@ -859,11 +886,17 @@ function htmlSecretaria() {
         <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div></div>
         <div class="stat-card" onclick="mostrarView('novoEvento')"><div class="stat-icon">➕</div><div class="stat-info"><h3>Novo</h3><p>Criar Evento</p></div></div>
       </div>
-      <div class="secao">
-        <div class="secao-header"><h2>📌 Eventos de Hoje</h2>
-          <button class="btn btn-azul" onclick="mostrarView('novoEvento')">+ Novo Evento</button>
+      <div class="dashboard-dois-col">
+        <div class="secao">
+          <div class="secao-header"><h2>📌 Meus Eventos Hoje</h2>
+            <button class="btn btn-azul" onclick="mostrarView('novoEvento')">+ Novo</button>
+          </div>
+          <div id="orgaoEventosHoje">${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e)).join('')}</div>
         </div>
-        <div id="orgaoEventosHoje">${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e)).join('')}</div>
+        <div class="secao">
+          <div class="secao-header"><h2>🏛️ Todos os Órgãos Hoje</h2></div>
+          <div id="todosEventosHoje">${evtTodosHoje().length===0?'<div class="empty">Nenhum evento hoje</div>':evtTodosHoje().map(e=>cardEventoResumo(e)).join('')}</div>
+        </div>
       </div>
     </div>
     <div id="calendario" class="view"><div class="secao"><div id="cal"></div></div></div>
@@ -926,6 +959,23 @@ function cardEvento(e, mostrarOrgao=false) {
       ${e.local?`<span>📍 ${e.local}</span>`:''}
       ${e.responsavel?`<span>👤 ${e.responsavel}</span>`:''}
       ${usuario?.tipo==='admin'&&e.publicado_por?`<span style="color:#888;font-size:11px">✍️ ${e.publicado_por} · ${fmtDH(e.data_publicacao)}</span>`:''}
+    </div>
+  </div>`;
+}
+
+function cardEventoResumo(e) {
+  const hora = fmtHora(e.data_evento) || '';
+  const sg = e.sigla_orgao || sigla(e.orgao) || '';
+  const pref = isPrefeito(e);
+  return `
+  <div class="evento-card${pref?' prefeito':''}" onclick="verEvento('${e.id}')">
+    <div class="evento-titulo">${e.titulo}
+      ${pref?'<span class="tag-prefeito">🏛️ PREFEITO</span>':''}
+    </div>
+    <div class="evento-meta">
+      ${hora?`<span>🕐 ${hora}</span>`:''}
+      ${sg?`<span class="tag-orgao">${sg}</span>`:''}
+      ${e.local?`<span>📍 ${e.local}</span>`:''}
     </div>
   </div>`;
 }
