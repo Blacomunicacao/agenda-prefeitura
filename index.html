@@ -573,10 +573,10 @@ async function enviarSolicitacao(ev) {
       orgao:$('sOrgao').value,
       senha
     });
-    ok.textContent='✅ Solicitação enviada! O administrador entrará em contato.';
+    ok.textContent='✅ Conta criada com sucesso! Você já pode fazer login com seus dados.';
     ok.style.display='block';
     $('formSolic').reset();
-    setTimeout(()=>fecharModal('modalSolicitacao'),3000);
+    setTimeout(()=>fecharModal('modalSolicitacao'),4000);
   } catch(e){
     if(e.message&&e.message.includes('Limite')) {
       aviso.textContent='⚠️ '+e.message;
