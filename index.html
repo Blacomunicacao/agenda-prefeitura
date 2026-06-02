@@ -1400,10 +1400,16 @@ function eventosParaCalendario() {
 
 function iniciarCalendario() {
   const el=$('cal'); if(!el) return;
-  // Garante largura máxima antes de renderizar
   if (isMobile()) {
     const main=document.querySelector('.main');
     if(main){ main.style.paddingLeft='0'; main.style.paddingRight='0'; }
+    // Força largura exata em px para o FC não calcular com container menor
+    const vw = window.innerWidth;
+    el.style.width    = vw + 'px';
+    el.style.maxWidth = vw + 'px';
+    el.style.overflowX = 'hidden';
+  } else {
+    el.style.width = el.style.maxWidth = el.style.overflowX = '';
   }
   calendar=new FullCalendar.Calendar(el,{
     locale:'pt-br', initialView:'dayGridMonth',
@@ -1422,6 +1428,10 @@ function iniciarCalendario() {
     height:'auto'
   });
   calendar.render();
+  if (isMobile()) {
+    // Garante que o FC recalcula com a largura correta após o render
+    requestAnimationFrame(() => calendar.updateSize());
+  }
 }
 
 function abrirModalEventosDoDia(dataStr, lista) {
@@ -1628,8 +1638,15 @@ let _lastMobile = isMobile();
 window.addEventListener('resize', () => {
   if (!calendar) return;
   const nowMobile = isMobile();
+  // Ao girar o celular, reaplica largura exata e recalcula
+  if (nowMobile) {
+    const el = $('cal');
+    if (el) {
+      el.style.width    = window.innerWidth + 'px';
+      el.style.maxWidth = window.innerWidth + 'px';
+    }
+  }
   if (nowMobile !== _lastMobile) {
-    // Cruzou o breakpoint — refaz os eventos para aplicar título/classe corretos
     _lastMobile = nowMobile;
     calendar.removeAllEvents();
     calendar.addEventSource(eventosParaCalendario());
