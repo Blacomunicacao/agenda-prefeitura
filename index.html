@@ -520,8 +520,6 @@ function htmlModalSolicitacao() {
             <div class="form-group"><label>Senha</label><input id="sSenha" type="password" required placeholder="Mínimo 6 caracteres" minlength="6"></div>
             <div class="form-group"><label>Confirmar Senha</label><input id="sSenhaConf" type="password" required placeholder="Repita a senha"></div>
           </div>
-          <div class="form-group"><label>Justificativa</label>
-            <textarea id="sJust" placeholder="Por que precisa de acesso?"></textarea></div>
           <div class="btns-row">
             <button type="submit" class="btn btn-azul">📨 Enviar Solicitação</button>
             <button type="button" class="btn btn-cinza" onclick="fecharModal('modalSolicitacao')">Cancelar</button>
@@ -549,7 +547,7 @@ async function enviarSolicitacao(ev) {
     await api('solicitarAcesso',{
       nome:$('sNome').value, email:$('sEmail').value,
       login:$('sLogin').value, telefone:$('sTel').value,
-      orgao:$('sOrgao').value, justificativa:$('sJust').value,
+      orgao:$('sOrgao').value,
       senha
     });
     ok.textContent='✅ Solicitação enviada! O administrador entrará em contato.';

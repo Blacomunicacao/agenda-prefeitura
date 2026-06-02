@@ -140,7 +140,8 @@ function gerarToken(user) {
     is_prefeito: user.tipo === 'prefeito' || String(user.is_prefeito).toUpperCase() === 'TRUE',
     exp: Date.now() + 86400000
   };
-  return Utilities.base64Encode(JSON.stringify(payload));
+  // Charset.UTF_8 garante que acentos/ç sejam corretamente codificados
+  return Utilities.base64Encode(JSON.stringify(payload), Utilities.Charset.UTF_8);
 }
 
 function verificarToken(token) {
@@ -165,7 +166,8 @@ function handleLogin(data) {
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
     if ((String(r.login).toLowerCase() === u || String(r.email).toLowerCase() === u) &&
-        r.senha === senha && String(r.ativo).toUpperCase() === 'TRUE') {
+        String(r.senha || '').trim() === String(senha || '').trim() &&
+        String(r.ativo).toUpperCase() === 'TRUE') {
       user = r;
       break;
     }
