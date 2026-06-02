@@ -108,6 +108,7 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .fc-event{cursor:pointer!important;font-size:12px!important;padding:4px 6px!important;border-radius:6px!important;white-space:normal!important;word-break:break-word!important;display:block!important}
 .fc-event .fc-event-time{display:none!important}
 .prefeito-event{background:#dc3545!important;border-color:#b02a37!important;color:#fff!important}
+.prefeito-event-mobile{background:#dc3545!important;border-color:#b02a37!important;color:#fff!important}
 .fc-view-harness{height:calc(100vh - 200px)!important;min-height:500px}
 .fc-toolbar-title{font-size:18px!important}
 .fc-button{padding:6px 12px!important;font-size:14px!important}
@@ -1376,7 +1377,7 @@ function eventosParaCalendario() {
       ?`${sigla(e.orgao)} ${fmtHora(e.data_evento)}`
       :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'?`${sigla(e.orgao)}: ${e.titulo}`:e.titulo),
     start:e.data_evento,
-    className:isPrefeito(e)?'prefeito-event':'',
+    className:isPrefeito(e)?(isMobile()?'prefeito-event-mobile':'prefeito-event'):'',
     extendedProps:{eventoId:e.id}
   }));
 }
@@ -1603,7 +1604,18 @@ function exportarExcel() {
   XLSX.writeFile(wb,'agenda-prefeitura.xlsx');
 }
 
-window.addEventListener('resize',()=>{if(calendar)calendar.updateSize();});
+let _lastMobile = isMobile();
+window.addEventListener('resize', () => {
+  if (!calendar) return;
+  const nowMobile = isMobile();
+  if (nowMobile !== _lastMobile) {
+    // Cruzou o breakpoint — refaz os eventos para aplicar título/classe corretos
+    _lastMobile = nowMobile;
+    calendar.removeAllEvents();
+    calendar.addEventSource(eventosParaCalendario());
+  }
+  calendar.updateSize();
+});
 
 window.abrirModalMetricaDetalhada = abrirModalMetricaDetalhada;
 window.fecharModal = fecharModal;
