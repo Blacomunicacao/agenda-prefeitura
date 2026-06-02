@@ -110,6 +110,12 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .fc-list .fc-list-event-time{display:none!important}
 .prefeito-event{background:#dc3545!important;border-color:#b02a37!important;color:#fff!important}
 .prefeito-event-mobile{background:#dc3545!important;border-color:#b02a37!important;color:#fff!important}
+.secom-event{background:#ff9900!important;border-color:#e07800!important;color:#000!important}
+.secom-event-mobile{background:#ff9900!important;border-color:#e07800!important;color:#000!important}
+.fc-list-table{width:100%!important}
+.fc-list-event-title{width:100%!important;overflow:hidden!important}
+.fc-list-event{border-bottom:1px solid #dee2e6!important}
+.fc-list-event td{border-bottom:none!important}
 .fc-view-harness{height:calc(100vh - 200px)!important;min-height:500px}
 .fc-toolbar-title{font-size:18px!important}
 .fc-button{padding:6px 12px!important;font-size:14px!important}
@@ -266,6 +272,7 @@ const isMobile = () => window.innerWidth <= 768;
 // Normaliza string para busca sem distinção de acentos/ç
 const normBusca = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 const isPrefeito = e => e.orgao === 'Gabinete do Prefeito';
+const isSecom    = e => (e.sigla_orgao || sigla(e.orgao)) === 'SECOM';
 const $ = id => document.getElementById(id);
 
 const SIGLAS = {
@@ -1358,7 +1365,8 @@ function eventosParaCalendario() {
           ?`${fmtHora(e.data_evento)}\n${e.sigla_orgao||sigla(e.orgao)}: ${e.titulo}`
           :`${fmtHora(e.data_evento)}\n${e.titulo}`),
     start:e.data_evento,
-    className:isPrefeito(e)?(isMobile()?'prefeito-event-mobile':'prefeito-event'):'',
+    className:isPrefeito(e)?(isMobile()?'prefeito-event-mobile':'prefeito-event')
+      :usuario?.tipo==='admin'&&isSecom(e)?(isMobile()?'secom-event-mobile':'secom-event'):'',
     extendedProps:{eventoId:e.id}
   }));
 }
