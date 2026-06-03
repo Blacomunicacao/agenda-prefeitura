@@ -1424,9 +1424,10 @@ function verEvento(id) {
       <a href="${e.anexo_url}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#004d99;color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;text-decoration:none">
         📥 Baixar / Visualizar ${e.anexo_nome?'('+e.anexo_nome+')':''}
       </a></div></div>`:''}`;
+  const podeEditar = meuEvento || usuario?.tipo === 'admin';
   $('modalEventoFooter').innerHTML=`
-    ${meuEvento?`<button class="btn btn-amarelo" onclick="abrirEdicao('${e.id}')">✏️ Editar</button>`:''}
-    ${meuEvento?`<button class="btn btn-vermelho" onclick="confirmarExcluir('${e.id}')">🗑️ Excluir</button>`:''}
+    ${podeEditar?`<button class="btn btn-amarelo" onclick="abrirEdicao('${e.id}')">✏️ Editar</button>`:''}
+    ${podeEditar?`<button class="btn btn-vermelho" onclick="confirmarExcluir('${e.id}')">🗑️ Excluir</button>`:''}
     <button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>`;
   abrirModal('modalEvento');
 }
@@ -1452,7 +1453,7 @@ async function salvarEdicao(ev) {
 }
 
 async function confirmarExcluir(id) {
-  const e=eventos.find(x=>String(x.id)===String(id));
+  const e=eventos.find(x=>String(x.id)===String(id))||todosEventos.find(x=>String(x.id)===String(id));
   if(!confirm(`Excluir o evento "${e?.titulo}"?`)) return;
   try {
     await api('excluirEvento',{id}); fecharModal('modalEvento');
