@@ -539,28 +539,31 @@ function handleSolicitarAcesso(data) {
 
 function handleRecuperarSenha(data) {
   var login = data.login;
+  var novaSenha = data.novaSenha;
   if (!login) return { error: 'Informe seu login ou e-mail' };
+  if (!novaSenha || novaSenha.length < 6) return { error: 'A nova senha deve ter pelo menos 6 caracteres' };
 
-  var rows = lerAba('usuarios').rows;
-  var user = null;
+  var aba = lerAba('usuarios');
+  var rows = aba.rows, headers = aba.headers;
+  var idx = -1;
   for (var i = 0; i < rows.length; i++) {
-    if (rows[i].login === login || rows[i].email === login) { user = rows[i]; break; }
+    var r = rows[i];
+    var rLogin = String(r.login || '').normalize('NFC').toLowerCase().trim();
+    var rEmail = String(r.email || '').normalize('NFC').toLowerCase().trim();
+    var loginNorm = String(login).normalize('NFC').toLowerCase().trim();
+    if ((rLogin === loginNorm || rEmail === loginNorm) && String(r.ativo).toUpperCase() === 'TRUE') {
+      idx = i; break;
+    }
   }
-  if (!user) return { error: 'Usuário não encontrado. Verifique o login ou contate o administrador.' };
+  if (idx === -1) return { error: 'Usuário não encontrado. Verifique o login ou e-mail.' };
 
   return comLock(function() {
-    var sheet = getSheet('solicitacoes');
-    if (!sheet) {
-      sheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet('solicitacoes');
-      sheet.appendRow(['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao']);
-    }
-    sheet.appendRow([
-      Utilities.getUuid(), user.nome, user.email, user.login,
-      '', user.orgao || '', 'Recuperacao de senha solicitada pelo usuario',
-      'pendente', 'recuperacao', new Date().toISOString()
-    ]);
-    invalidarCache(['solicitacoes']);
-    return { success: true, message: 'Solicitação registrada. O administrador entrará em contato.' };
+    var sheet = getSheet('usuarios');
+    var col = headers.indexOf('senha') + 1;
+    sheet.getRange(idx + 2, col).setValue(novaSenha);
+    invalidarCache(['usuarios']);
+    registrarLog(rows[idx].email, 'redefinir_senha', 'Senha redefinida pelo proprio usuario');
+    return { success: true, message: 'Senha redefinida com sucesso!' };
   });
 }
 
