@@ -851,15 +851,15 @@ function htmlPrefeito() {
               <input id="evtData" type="datetime-local" required oninput="verificarData()">
               <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Data retroativa</div>
             </div>
-            <div class="form-group"><label>Local</label><input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões"></div>
+            <div class="form-group"><label>Local *</label><input id="evtLocal" type="text" required placeholder="Ex: Sala de Reuniões"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group"><label>Responsável</label><input id="evtResp" type="text"></div>
+            <div class="form-group"><label>Responsável *</label><input id="evtResp" type="text" required></div>
             <div class="form-group"><label>Telefone</label><input id="evtTel" type="tel" placeholder="(18) 99999-9999"></div>
           </div>
           <div class="form-group"><label>Descrição / Observações</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
           <div class="form-group">
-            <label>Anexo (imagem, PDF, doc — máx. 10MB)</label>
+            <label>Anexo (imagem, PDF, doc — máx. 20MB)</label>
             <input type="file" id="evtAnexo" accept="image/*,.pdf,.doc,.docx" onchange="mostrarNomeAnexo(this)" style="display:block;padding:6px 0;font-size:13px">
             <div id="nomeAnexo" style="font-size:12px;color:#28a745;margin-top:4px"></div>
             <div class="progress-bar-container" id="progressUpload"><div class="progress-bar-fill" id="progressFill"></div></div>
@@ -998,15 +998,15 @@ function htmlSecretaria() {
               <input id="evtData" type="datetime-local" required oninput="verificarData()">
               <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Não é permitido criar eventos com data retroativa</div>
             </div>
-            <div class="form-group"><label>Local</label><input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões"></div>
+            <div class="form-group"><label>Local *</label><input id="evtLocal" type="text" required placeholder="Ex: Sala de Reuniões"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group"><label>Responsável</label><input id="evtResp" type="text" placeholder="Nome do responsável"></div>
+            <div class="form-group"><label>Responsável *</label><input id="evtResp" type="text" required placeholder="Nome do responsável"></div>
             <div class="form-group"><label>Telefone / Contato *</label><input id="evtTel" type="tel" required placeholder="(18) 99999-9999"></div>
           </div>
           <div class="form-group"><label>Descrição / Observações *</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
           <div class="form-group">
-            <label>Anexo (imagem, PDF, doc — máx. 10MB)</label>
+            <label>Anexo (imagem, PDF, doc — máx. 20MB)</label>
             <input type="file" id="evtAnexo" accept="image/*,.pdf,.doc,.docx" onchange="mostrarNomeAnexo(this)" style="display:block;padding:6px 0;font-size:13px">
             <div id="nomeAnexo" style="font-size:12px;color:#28a745;margin-top:4px"></div>
             <div class="progress-bar-container" id="progressUpload"><div class="progress-bar-fill" id="progressFill"></div></div>
@@ -1409,7 +1409,7 @@ function mostrarNomeAnexo(input) {
   if(input.files&&input.files[0]){
     const f=input.files[0];
     const mb=(f.size/1024/1024).toFixed(2);
-    if(f.size>10*1024*1024){div.textContent='❌ Arquivo muito grande (máx. 10MB)';div.style.color='#dc3545';input.value='';return;}
+    if(f.size>20*1024*1024){div.textContent='❌ Arquivo muito grande (máx. 20MB)';div.style.color='#dc3545';input.value='';return;}
     div.textContent=`📎 ${f.name} (${mb} MB)`;div.style.color='#28a745';
   } else { div.textContent=''; }
 }
@@ -1422,7 +1422,8 @@ function verEvento(id) {
   const meuEvento = String(e.orgao||'').trim() === String(usuario?.orgao||'').trim();
   $('modalEventoBody').innerHTML=`
     ${pref?'<div style="text-align:center;margin-bottom:16px"><span class="tag-prefeito" style="font-size:13px">🏛️ Evento do Gabinete do Prefeito</span></div>':''}
-    <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtDH(e.data_evento)}</div></div>
+    <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtData(e.data_evento)}</div></div>
+    <div class="info-linha"><div class="info-label">⏰ Hora</div><div class="info-valor">${fmtHora(e.data_evento)}</div></div>
     <div class="info-linha"><div class="info-label">📍 Local</div><div class="info-valor">${e.local||'—'}</div></div>
     <div class="info-linha"><div class="info-label">🏢 Órgão</div><div class="info-valor">${(e.sigla_orgao||sigla(e.orgao))||'—'}</div></div>
     <div class="info-linha"><div class="info-label">👤 Responsável</div><div class="info-valor">${e.responsavel||'—'}</div></div>
@@ -1480,7 +1481,7 @@ async function criarEvento(ev) {
   let arquivo_base64='',arquivo_nome='',arquivo_tipo='';
   if(fileInput&&fileInput.files&&fileInput.files[0]){
     const f=fileInput.files[0];
-    if(f.size>10*1024*1024){alert('❌ Arquivo muito grande. Máximo 10MB.');return;}
+    if(f.size>20*1024*1024){alert('❌ Arquivo muito grande. Máximo 20MB.');return;}
     arquivo_nome=f.name; arquivo_tipo=f.type;
     const prog=$('progressUpload'),fill=$('progressFill');
     if(prog){prog.style.display='block';if(fill)fill.style.width='30%';}
