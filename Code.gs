@@ -275,7 +275,7 @@ function handleCriarEvento(data) {
   var telefone    = data.telefone;
   var observacao  = data.observacao;
 
-  if (!titulo || !data_evento || !observacao) return { error: 'Título, data e observação são obrigatórios' };
+  if (!titulo || !data_evento || !local || !responsavel || !observacao) return { error: 'Título, data, local, responsável e descrição são obrigatórios' };
   if (new Date(data_evento) < new Date()) return { error: 'Não é permitido criar eventos com data ou hora retroativa.' };
 
   var anexo_url = '', anexo_nome = '';
