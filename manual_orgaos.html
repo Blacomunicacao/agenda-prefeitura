@@ -9,180 +9,170 @@
 body{font-family:'Inter','Segoe UI',sans-serif;background:#0f172a}
 :root{--az:#003366;--az2:#004d99;--az3:#0066cc;--la:#ff9900;--vd:#16a34a;--vd2:#22c55e;--ci:#f0f2f5;--sv:#e8f0fe}
 
-/* ── botão ── */
 .btn-imp{position:fixed;bottom:28px;right:28px;z-index:9999;background:var(--la);color:#fff;border:none;padding:14px 30px;border-radius:40px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.4);font-family:inherit}
 
-/* ── página ── */
 .pag{width:1920px;height:1080px;position:relative;overflow:hidden;display:flex;page-break-after:always;break-after:page;margin-bottom:6px}
 
-/* ══════════════════ CAPA ══════════════════ */
+/* ═══ CAPA ═══ */
 .capa{background:linear-gradient(135deg,#00091f 0%,#001a40 38%,#003366 68%,#004d99 100%);flex-direction:column;align-items:center;justify-content:center}
-.cd{position:absolute;border-radius:50%;background:rgba(255,255,255,.04)}
+.cd{position:absolute;border-radius:50%}
 .capa-bar{position:absolute;bottom:0;left:0;width:100%;height:8px;background:linear-gradient(90deg,#b35900,var(--la),#ffcc00,var(--la),#b35900)}
 .capa-top{position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,transparent,var(--la),transparent)}
-.c-badge{background:var(--la);color:#fff;padding:10px 32px;border-radius:40px;font-size:15px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:44px;position:relative;z-index:1}
-.c-logo{width:136px;height:136px;background:rgba(255,255,255,.1);border-radius:32px;display:flex;align-items:center;justify-content:center;margin-bottom:36px;border:2px solid rgba(255,255,255,.2);position:relative;z-index:1;box-shadow:0 0 60px rgba(255,153,0,.18)}
-.c-logo img{max-width:110px;max-height:110px;object-fit:contain}
-.c-logo-em{font-size:64px}
-.capa h1{font-size:84px;font-weight:900;color:#fff;letter-spacing:-2px;text-align:center;line-height:1;margin-bottom:18px;position:relative;z-index:1}
-.capa h1 span{color:var(--la)}
-.c-sub{font-size:23px;color:rgba(255,255,255,.65);text-align:center;margin-bottom:52px;position:relative;z-index:1}
-.c-div{width:100px;height:5px;background:var(--la);border-radius:3px;margin-bottom:52px;position:relative;z-index:1}
+.c-badge{background:var(--la);color:#fff;padding:10px 32px;border-radius:40px;font-size:15px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:40px;position:relative;z-index:1}
+.c-logo{width:140px;height:140px;background:rgba(255,255,255,.1);border-radius:30px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;border:2px solid rgba(255,255,255,.2);position:relative;z-index:1;box-shadow:0 0 60px rgba(255,153,0,.18)}
+.c-logo img{max-width:112px;max-height:112px;object-fit:contain;border-radius:22px}
+.c-logo-em{font-size:64px;display:none}
+.c-plataforma{font-size:22px;font-weight:400;color:rgba(255,255,255,.7);letter-spacing:1px;text-align:center;margin-bottom:10px;position:relative;z-index:1}
+.capa h1{font-size:82px;font-weight:900;color:var(--la);letter-spacing:-2px;text-align:center;line-height:1;margin-bottom:48px;position:relative;z-index:1}
+.c-div{width:100px;height:5px;background:var(--la);border-radius:3px;margin-bottom:48px;position:relative;z-index:1}
 .c-stats{display:flex;gap:80px;position:relative;z-index:1}
 .c-stat .n{font-size:52px;font-weight:900;color:var(--la);line-height:1;text-align:center}
 .c-stat .l{font-size:13px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1.5px;margin-top:6px;text-align:center}
 .c-pref{position:absolute;bottom:24px;color:rgba(255,255,255,.4);font-size:13px;letter-spacing:1.5px;z-index:1}
 
-/* ══════════════════ SIDEBAR ══════════════════ */
-.sb{width:400px;min-width:400px;background:var(--az);display:flex;flex-direction:column;padding:56px 44px;position:relative;overflow:hidden}
-.sb::before{content:'';position:absolute;top:-70px;left:-70px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.05)}
-.sb::after{content:'';position:absolute;bottom:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.05)}
-.sb-c1{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:360px;height:360px;border-radius:50%;border:1px solid rgba(255,255,255,.04)}
-.sb.la{background:linear-gradient(160deg,#7a3500,#b35000,var(--la))}
-.sb.vd{background:linear-gradient(160deg,#0d3b1a,#145225,var(--vd))}
-.sb-num{font-size:140px;font-weight:900;color:rgba(255,255,255,.06);line-height:1;margin-bottom:-36px;letter-spacing:-4px;position:relative;z-index:1}
-.sb-icon{font-size:60px;margin-bottom:18px;position:relative;z-index:1}
-.sb h2{font-size:36px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:18px;position:relative;z-index:1}
-.sb-desc{font-size:15px;color:rgba(255,255,255,.7);line-height:1.8;flex:1;position:relative;z-index:1}
-.sb-foot{margin-top:auto;padding-top:28px;border-top:1px solid rgba(255,255,255,.18);position:relative;z-index:1}
-.sb-foot .lb{font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px}
-.sb-foot strong{font-size:14px;color:rgba(255,255,255,.78)}
+/* ═══ SIDEBAR ESTREITA ═══ */
+.sb{width:180px;min-width:180px;background:var(--az);display:flex;flex-direction:column;align-items:center;padding:40px 14px;position:relative;overflow:hidden}
+.sb::before{content:'';position:absolute;top:-60px;left:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.06)}
+.sb::after{content:'';position:absolute;bottom:-80px;right:-80px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.05)}
+.sb.la{background:linear-gradient(180deg,#7a3500,#b35000,var(--la))}
+.sb.vd{background:linear-gradient(180deg,#0d3b1a,#145225,var(--vd2))}
+.sb-num{font-size:96px;font-weight:900;color:rgba(255,255,255,.14);line-height:1;position:relative;z-index:1}
+.sb-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:2.5px;writing-mode:vertical-rl;transform:rotate(180deg);margin-top:18px;flex:1;text-align:center;position:relative;z-index:1}
 
-/* ══════════════════ BARRA ══════════════════ */
+/* ═══ BARRA ═══ */
 .bar{width:8px;flex-shrink:0;background:var(--la)}
 .bar.az{background:var(--az3)}
 .bar.vd{background:var(--vd2)}
 
-/* ══════════════════ BODY ══════════════════ */
-.body{flex:1;background:#f8faff;padding:48px 60px;overflow:hidden;display:flex;flex-direction:column;gap:26px;position:relative}
-.body::before{content:'';position:absolute;top:-80px;right:-80px;width:320px;height:320px;border-radius:50%;background:rgba(0,51,102,.04);pointer-events:none}
+/* ═══ BODY ═══ */
+.body{flex:1;background:#f8faff;padding:44px 56px;overflow:hidden;display:flex;flex-direction:column;gap:20px;position:relative}
+.body::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:rgba(0,51,102,.04);pointer-events:none}
 .body::after{content:'';position:absolute;bottom:-60px;left:40%;width:180px;height:180px;border-radius:50%;background:rgba(255,153,0,.04);pointer-events:none}
 
-/* header */
-.ph{padding-bottom:20px;border-bottom:2.5px solid #e2e8f0}
+/* header no topo */
+.ph{padding-bottom:16px;border-bottom:2.5px solid #e2e8f0}
 .pt{background:var(--sv);color:var(--az2);padding:4px 16px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:inline-block;margin-bottom:8px}
-.ph h3{font-size:34px;font-weight:800;color:var(--az);line-height:1.05}
-.ph p{font-size:15px;color:#64748b;margin-top:6px}
+.ph h2{font-size:30px;font-weight:800;color:var(--az);line-height:1.1}
+.ph p{font-size:14px;color:#64748b;margin-top:5px}
 
-/* ══════════════════ FLOW (setas) ══════════════════ */
+/* ═══ FLOW ═══ */
 .flow{display:flex;align-items:stretch;gap:0}
-.fc{flex:1;background:#fff;border-radius:20px;padding:30px 26px;border:1px solid #e2e8f0;box-shadow:0 4px 16px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:14px}
-.fa{display:flex;align-items:center;justify-content:center;width:56px;flex-shrink:0}
-.fa svg{display:block}
-.fcirc{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+.fc{flex:1;background:#fff;border-radius:18px;padding:24px 20px;border:1px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:12px}
+.fa{display:flex;align-items:center;justify-content:center;width:48px;flex-shrink:0}
+.fcirc{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 6px 18px rgba(0,0,0,.2)}
 .fcirc.c1{background:linear-gradient(135deg,#004d99,#0077e6)}
 .fcirc.c2{background:linear-gradient(135deg,#b35000,#ff9900)}
 .fcirc.c3{background:linear-gradient(135deg,#6d28d9,#a855f7)}
 .fcirc.c4{background:linear-gradient(135deg,#15803d,#22c55e)}
-.fcirc.em{font-size:34px}
-.fc h4{font-size:18px;font-weight:700;color:var(--az)}
-.fc p{font-size:14px;color:#555;line-height:1.68}
+.fcirc.em{font-size:30px}
+.fc h4{font-size:16px;font-weight:700;color:var(--az)}
+.fc p{font-size:13px;color:#555;line-height:1.65}
 
-/* ══════════════════ CARDS ══════════════════ */
-.cards{display:flex;gap:18px}
-.card{background:#fff;border-radius:18px;padding:26px;border:1px solid #e2e8f0;box-shadow:0 3px 12px rgba(0,0,0,.06)}
+/* ═══ CARDS ═══ */
+.cards{display:flex;gap:14px}
+.card{background:#fff;border-radius:16px;padding:20px;border:1px solid #e2e8f0;box-shadow:0 3px 10px rgba(0,0,0,.06)}
 .card.baz{border-left:5px solid var(--az2)}
 .card.bla{border-left:5px solid var(--la)}
 .card.bvd{border-left:5px solid var(--vd2)}
 .card.bvm{border-left:5px solid #ef4444}
 .card.brx{border-left:5px solid #8b5cf6}
-.card .ic{font-size:34px;margin-bottom:12px}
-.card h4{font-size:17px;font-weight:700;color:var(--az);margin-bottom:8px}
-.card p,.card li{font-size:14px;color:#555;line-height:1.7}
-.card ul{padding-left:18px}
-.card li+li{margin-top:5px}
+.card .ic{font-size:28px;margin-bottom:9px}
+.card h4{font-size:15px;font-weight:700;color:var(--az);margin-bottom:7px}
+.card p,.card li{font-size:13px;color:#555;line-height:1.7}
+.card ul{padding-left:16px}
+.card li+li{margin-top:4px}
 
-/* ══════════════════ ALERTAS ══════════════════ */
-.al{padding:16px 20px;border-radius:14px;font-size:14px;line-height:1.65;display:flex;align-items:flex-start;gap:14px;font-weight:500}
-.al .ai{font-size:22px;flex-shrink:0}
+/* ═══ ALERTAS ═══ */
+.al{padding:13px 17px;border-radius:12px;font-size:13px;line-height:1.65;display:flex;align-items:flex-start;gap:11px;font-weight:500}
+.al .ai{font-size:19px;flex-shrink:0}
 .al.am{background:#fffbeb;color:#92400e;border:1.5px solid #fbbf24}
 .al.vm{background:#fef2f2;color:#991b1b;border:1.5px solid #fca5a5}
 .al.az{background:#eff6ff;color:#1e40af;border:1.5px solid #93c5fd}
 .al.vd{background:#f0fdf4;color:#166534;border:1.5px solid #86efac}
 
-/* ══════════════════ TABELA ══════════════════ */
-.tab{background:#fff;border-radius:18px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 3px 12px rgba(0,0,0,.06)}
+/* ═══ TABELA ═══ */
+.tab{background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 3px 10px rgba(0,0,0,.06)}
 .tab table{width:100%;border-collapse:collapse}
-.tab th{background:var(--az);color:#fff;padding:14px 20px;font-size:14px;font-weight:600;text-align:left}
-.tab td{padding:13px 20px;font-size:14px;color:#374151;border-bottom:1px solid #f1f5f9}
+.tab th{background:var(--az);color:#fff;padding:13px 18px;font-size:13px;font-weight:600;text-align:left}
+.tab td{padding:12px 18px;font-size:13px;color:#374151;border-bottom:1px solid #f1f5f9}
 .tab tr:last-child td{border-bottom:none}
 .tab tr:nth-child(even) td{background:#f8faff}
-.ob{background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700}
-.op{background:#dcfce7;color:#16a34a;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700}
+.ob{background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+.op{background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
 
-/* ══════════════════ STEPS VERTICAIS ══════════════════ */
-.vs{display:flex;flex-direction:column;gap:14px}
-.vsi{display:flex;gap:14px;align-items:flex-start}
-.vsn{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0}
+/* ═══ STEPS VERTICAIS ═══ */
+.vs{display:flex;flex-direction:column;gap:11px}
+.vsi{display:flex;gap:11px;align-items:flex-start}
+.vsn{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0}
 .vsn.a{background:linear-gradient(135deg,#004d99,#0066cc)}
 .vsn.l{background:linear-gradient(135deg,#b35000,#ff9900)}
 .vsn.v{background:linear-gradient(135deg,#15803d,#22c55e)}
 .vsn.r{background:#dc2626}
-.vst h5{font-size:15px;font-weight:700;color:#1e293b}
-.vst p{font-size:13px;color:#64748b;margin-top:3px;line-height:1.5}
+.vst h5{font-size:14px;font-weight:700;color:#1e293b}
+.vst p{font-size:12px;color:#64748b;margin-top:2px;line-height:1.5}
 
-/* ══════════════════ MOCKUP LOGIN ══════════════════ */
-.mbr{background:#fff;border-radius:18px;overflow:hidden;border:1px solid #dde3ef;box-shadow:0 8px 32px rgba(0,0,0,.12)}
-.mbr-bar{background:#e9ecef;padding:10px 16px;display:flex;gap:8px;align-items:center}
-.mbr-dot{width:13px;height:13px;border-radius:50%}
-.mbr-url{flex:1;background:#fff;border-radius:8px;padding:5px 14px;font-size:11px;color:#9ca3af;margin:0 10px}
-.ml-bg{background:linear-gradient(135deg,#001a40,#003d7a);padding:28px;display:flex;align-items:center;justify-content:center;min-height:220px}
-.ml-card{background:#fff;border-radius:18px;padding:26px 22px;width:255px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.35)}
-.ml-title{font-size:15px;font-weight:700;color:var(--az);margin-bottom:2px}
-.ml-sub{font-size:10px;color:#9ca3af;margin-bottom:16px}
-.mi{width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:9px 12px;font-size:12px;margin-bottom:10px;color:#374151;font-family:inherit}
-.mb{width:100%;background:linear-gradient(135deg,var(--az2),var(--az3));color:#fff;border:none;border-radius:20px;padding:10px;font-size:13px;font-weight:700;font-family:inherit}
-.ml-links{margin-top:12px;display:flex;justify-content:space-between;font-size:10px;color:var(--az2)}
+/* ═══ MOCKUP LOGIN ═══ */
+.mbr{background:#fff;border-radius:16px;overflow:hidden;border:1px solid #dde3ef;box-shadow:0 8px 28px rgba(0,0,0,.12)}
+.mbr-bar{background:#e9ecef;padding:9px 14px;display:flex;gap:7px;align-items:center}
+.mbr-dot{width:12px;height:12px;border-radius:50%}
+.mbr-url{flex:1;background:#fff;border-radius:7px;padding:4px 12px;font-size:11px;color:#9ca3af;margin:0 8px}
+.ml-bg{background:linear-gradient(135deg,#001a40,#003d7a);padding:22px;display:flex;align-items:center;justify-content:center;min-height:200px}
+.ml-card{background:#fff;border-radius:16px;padding:22px 18px;width:245px;text-align:center;box-shadow:0 12px 36px rgba(0,0,0,.35)}
+.ml-title{font-size:14px;font-weight:700;color:var(--az);margin-bottom:2px}
+.ml-sub{font-size:10px;color:#9ca3af;margin-bottom:14px}
+.mi{width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:8px;color:#374151;font-family:inherit}
+.mb{width:100%;background:linear-gradient(135deg,var(--az2),var(--az3));color:#fff;border:none;border-radius:18px;padding:9px;font-size:12px;font-weight:700;font-family:inherit}
+.ml-links{margin-top:10px;display:flex;justify-content:space-between;font-size:10px;color:var(--az2)}
 
-/* ══════════════════ MOCKUP PAINEL ══════════════════ */
-.mp{display:flex;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 6px 24px rgba(0,0,0,.1)}
-.mpsb{width:185px;flex-shrink:0;background:var(--az);padding:16px 12px}
-.mplogo{background:rgba(255,255,255,.15);border-radius:10px;padding:10px;text-align:center;margin-bottom:14px;font-size:11px;color:#fff;font-weight:700;line-height:1.4}
-.mpitem{padding:9px 10px;border-radius:8px;color:rgba(255,255,255,.7);font-size:11px;margin-bottom:4px;display:flex;align-items:center;gap:7px}
+/* ═══ MOCKUP PAINEL ═══ */
+.mp{display:flex;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 6px 22px rgba(0,0,0,.1)}
+.mpsb{width:170px;flex-shrink:0;background:var(--az);padding:13px 10px;position:relative}
+.mplogo{background:rgba(255,255,255,.15);border-radius:9px;padding:9px;text-align:center;margin-bottom:12px;font-size:10px;color:#fff;font-weight:700;line-height:1.4}
+.mpitem{padding:8px 9px;border-radius:7px;color:rgba(255,255,255,.7);font-size:11px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
 .mpitem.a{background:rgba(255,255,255,.18);color:#fff;font-weight:700}
-.mpmn{flex:1;background:#f0f2f5;padding:14px}
-.mpst{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
-.mps{background:#fff;border-radius:10px;padding:10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.07)}
-.mps .n{font-size:20px;font-weight:800;color:var(--az)}
+.mpmn{flex:1;background:#f0f2f5;padding:12px}
+.mpst{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:9px}
+.mps{background:#fff;border-radius:9px;padding:9px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.mps .n{font-size:18px;font-weight:800;color:var(--az)}
 .mps .l{font-size:9px;color:#9ca3af;margin-top:1px}
 .mpcols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.mpcol{background:#fff;border-radius:10px;padding:10px}
-.mpcol h5{font-size:10px;font-weight:700;color:var(--az);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px}
-.mpe{background:#f0f2f5;border-radius:6px;padding:7px 8px;margin-bottom:5px;font-size:10px;color:#374151;border-left:3px solid var(--az2);line-height:1.3}
+.mpcol{background:#fff;border-radius:9px;padding:9px}
+.mpcol h5{font-size:9px;font-weight:700;color:var(--az);margin-bottom:7px;text-transform:uppercase}
+.mpe{background:#f0f2f5;border-radius:5px;padding:6px 7px;margin-bottom:4px;font-size:9px;color:#374151;border-left:3px solid var(--az2);line-height:1.3}
 .mpe.la{border-left-color:var(--la)}
 
-/* ══════════════════ BOAS PRÁTICAS ══════════════════ */
-.boas{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.boa{background:#fff;border-radius:16px;padding:26px;border:1px solid #e2e8f0;box-shadow:0 2px 10px rgba(0,0,0,.05)}
-.boa-ic{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px}
+/* ═══ BOAS PRÁTICAS ═══ */
+.boas{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.boa{background:#fff;border-radius:14px;padding:20px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.boa-ic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:9px}
 .boa-ic.az{background:var(--sv)}
 .boa-ic.la{background:#fff7ed}
 .boa-ic.vd{background:#f0fdf4}
 .boa-ic.ro{background:#f5f3ff}
-.boa h4{font-size:16px;font-weight:700;color:var(--az);margin-bottom:8px}
-.boa p{font-size:14px;color:#555;line-height:1.65}
+.boa h4{font-size:14px;font-weight:700;color:var(--az);margin-bottom:6px}
+.boa p{font-size:13px;color:#555;line-height:1.6}
 
-/* ══════════════════ CONTRACAPA ══════════════════ */
-.cc{background:linear-gradient(135deg,#00091f 0%,#001a40 50%,#003366 100%);align-items:center;justify-content:space-between;padding:80px 120px;position:relative}
-.cc-left{max-width:720px}
-.cc-badge{background:var(--la);color:#fff;padding:8px 24px;border-radius:20px;font-size:14px;font-weight:700;display:inline-block;margin-bottom:28px;letter-spacing:1px}
-.cc-left h2{font-size:62px;font-weight:900;color:#fff;line-height:1.05;margin-bottom:24px}
-.cc-left h2 span{color:var(--la)}
-.cc-left p{font-size:18px;color:rgba(255,255,255,.6);line-height:1.8;margin-bottom:40px}
-.cc-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:26px 32px;margin-bottom:18px;display:flex;gap:20px;align-items:flex-start}
-.cc-card .em{font-size:32px;flex-shrink:0}
-.cc-card h4{font-size:15px;font-weight:700;color:var(--la);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-.cc-card p{font-size:15px;color:rgba(255,255,255,.75);line-height:1.65}
-.cc-right{display:flex;flex-direction:column;align-items:center;gap:30px}
-.cc-circ{background:linear-gradient(135deg,#b35000,var(--la));width:210px;height:210px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;text-align:center;gap:8px;box-shadow:0 8px 40px rgba(255,153,0,.4)}
-.cc-circ .em{font-size:52px}
-.cc-pills{display:flex;flex-direction:column;gap:10px;align-items:center}
-.cc-pill{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:40px;padding:12px 22px;width:340px}
-.cc-pill .em{font-size:20px}
-.cc-pill p{font-size:13px;color:rgba(255,255,255,.8)}
+/* ═══ CONTRACAPA ═══ */
+.cc{background:linear-gradient(135deg,#00091f 0%,#001a40 50%,#003366 100%);align-items:center;justify-content:space-between;padding:72px 100px;position:relative}
 .cc-bar{position:absolute;bottom:0;left:0;width:100%;height:8px;background:linear-gradient(90deg,#b35900,var(--la),#ffcc00,var(--la),#b35900)}
+.cc-left{max-width:780px}
+.cc-badge{background:var(--la);color:#fff;padding:8px 24px;border-radius:20px;font-size:13px;font-weight:700;display:inline-block;margin-bottom:22px;letter-spacing:1px}
+.cc-left h2{font-size:56px;font-weight:900;color:#fff;line-height:1.05;margin-bottom:10px}
+.cc-left h2 span{color:var(--la)}
+.cc-left .cc-sub{font-size:17px;color:rgba(255,255,255,.65);margin-bottom:26px;line-height:1.5}
+.cc-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:20px 26px;margin-bottom:14px;display:flex;gap:16px;align-items:flex-start}
+.cc-card .em{font-size:28px;flex-shrink:0}
+.cc-card h4{font-size:14px;font-weight:700;color:var(--la);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.cc-card p{font-size:14px;color:rgba(255,255,255,.75);line-height:1.6}
+.cc-right{display:flex;flex-direction:column;align-items:center;gap:24px}
+.cc-circ{background:linear-gradient(135deg,#b35000,var(--la));width:200px;height:200px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;text-align:center;gap:7px;box-shadow:0 8px 36px rgba(255,153,0,.4)}
+.cc-circ .em{font-size:48px}
+.cc-pills{display:flex;flex-direction:column;gap:9px;align-items:center}
+.cc-pill{display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:40px;padding:10px 20px;width:320px}
+.cc-pill .em{font-size:18px}
+.cc-pill p{font-size:13px;color:rgba(255,255,255,.8)}
 
-/* ══════════════════ PRINT ══════════════════ */
+/* ═══ PRINT ═══ */
 @media print{
   body{background:#0f172a}
   .btn-imp{display:none}
@@ -194,51 +184,45 @@ body{font-family:'Inter','Segoe UI',sans-serif;background:#0f172a}
 <body>
 <button class="btn-imp" onclick="window.print()">🖨️ Exportar PDF</button>
 
-<!-- ══════════ CAPA ══════════ -->
+<!-- ════════════ CAPA ════════════ -->
 <div class="pag capa">
   <div class="cd" style="width:600px;height:600px;top:-150px;right:-150px;background:radial-gradient(circle,rgba(255,153,0,.12) 0%,transparent 70%)"></div>
   <div class="cd" style="width:700px;height:700px;bottom:-200px;left:-200px;background:radial-gradient(circle,rgba(0,102,204,.2) 0%,transparent 70%)"></div>
-  <div class="cd" style="width:200px;height:200px;top:80px;left:80px"></div>
-  <div class="cd" style="width:280px;height:280px;top:40px;left:40px"></div>
-  <div class="cd" style="width:240px;height:240px;bottom:80px;right:80px"></div>
-  <div class="cd" style="width:340px;height:340px;bottom:40px;right:40px"></div>
+  <div class="cd" style="width:200px;height:200px;top:80px;left:80px;background:rgba(255,255,255,.04)"></div>
+  <div class="cd" style="width:290px;height:290px;top:38px;left:38px;background:rgba(255,255,255,.03)"></div>
+  <div class="cd" style="width:240px;height:240px;bottom:80px;right:80px;background:rgba(255,255,255,.04)"></div>
+  <div class="cd" style="width:340px;height:340px;bottom:38px;right:38px;background:rgba(255,255,255,.03)"></div>
   <div class="capa-bar"></div>
   <div class="capa-top"></div>
+
   <div class="c-badge">Prefeitura de Presidente Prudente</div>
   <div class="c-logo">
-    <img src="Logo plataforma de Agenda.png" alt="Logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-    <span class="c-logo-em" style="display:none">📅</span>
+    <img src="Logo plataforma de Agenda.png" alt="Logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <span class="c-logo-em">📅</span>
   </div>
-  <h1>Manual do <span>Usuário</span></h1>
-  <p class="c-sub">Plataforma de Agenda Municipal · Secretarias e Conselhos</p>
+  <p class="c-plataforma">Plataforma de Agenda</p>
+  <h1>Manual do Usuário</h1>
   <div class="c-div"></div>
   <div class="c-stats">
-    <div class="c-stat"><div class="n">8</div><div class="l">Seções</div></div>
+    <div class="c-stat"><div class="n">9</div><div class="l">Seções</div></div>
     <div class="c-stat"><div class="n">5</div><div class="l">Funcionalidades</div></div>
-    <div class="c-stat"><div class="n">∞</div><div class="l">Órgãos</div></div>
+    <div class="c-stat"><div class="n">54</div><div class="l">Órgãos</div></div>
   </div>
   <p class="c-pref">Prefeitura Municipal de Presidente Prudente · 2026</p>
 </div>
 
-<!-- ══════════ 01 APRESENTAÇÃO ══════════ -->
+<!-- ════════════ 01 APRESENTAÇÃO ════════════ -->
 <div class="pag">
   <div class="sb">
-    <div class="sb-c1"></div>
     <div class="sb-num">01</div>
-    <div class="sb-icon">📋</div>
-    <h2>Apresentação</h2>
-    <p class="sb-desc">A Plataforma de Agenda é o sistema oficial da Prefeitura para registro e divulgação de eventos institucionais. Cada secretaria publica seus eventos e acompanha a agenda completa da prefeitura em tempo real.</p>
-    <div class="sb-foot">
-      <span class="lb">Documento</span>
-      <strong>Manual do Usuário — Órgãos</strong>
-    </div>
+    <div class="sb-label">Apresentação</div>
   </div>
   <div class="bar"></div>
   <div class="body">
     <div class="ph">
       <div class="pt">Visão Geral</div>
-      <h3>O que é e para que serve</h3>
-      <p>Entenda o propósito da plataforma antes de começar a utilizá-la</p>
+      <h2>Apresentação</h2>
+      <p>A Plataforma de Agenda é o sistema oficial da Prefeitura para registro e divulgação de eventos institucionais. Cada secretaria publica seus eventos e acompanha a agenda completa em tempo real.</p>
     </div>
 
     <div class="flow">
@@ -247,151 +231,99 @@ body{font-family:'Inter','Segoe UI',sans-serif;background:#0f172a}
         <h4>Agenda Centralizada</h4>
         <p>Todos os eventos de todas as secretarias e conselhos em <strong>um único lugar</strong>, acessível a qualquer hora e de qualquer dispositivo com internet.</p>
       </div>
-      <div class="fa">
-        <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><line x1="4" y1="22" x2="36" y2="22" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="26,13 36,22 26,31" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
+      <div class="fa"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><line x1="4" y1="20" x2="32" y2="20" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="23,11 32,20 23,29" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="fc">
         <div class="fcirc c2 em">🏢</div>
         <h4>Gestão por Órgão</h4>
-        <p>Cada secretaria gerencia <strong>apenas seus próprios eventos</strong>. Criação, edição e exclusão são restritas ao órgão responsável pelo evento.</p>
+        <p>Cada secretaria gerencia <strong>apenas seus próprios eventos</strong>. Criação, edição e exclusão são restritas ao órgão responsável.</p>
       </div>
-      <div class="fa">
-        <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><line x1="4" y1="22" x2="36" y2="22" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="26,13 36,22 26,31" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
+      <div class="fa"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><line x1="4" y1="20" x2="32" y2="20" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="23,11 32,20 23,29" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="fc">
         <div class="fcirc c3 em">👁️</div>
         <h4>Visibilidade Total</h4>
         <p>Consulte os eventos do seu órgão e <strong>veja o que acontece em toda a prefeitura</strong> no mesmo dia — tudo em uma única tela.</p>
       </div>
-      <div class="fa">
-        <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><line x1="4" y1="22" x2="36" y2="22" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="26,13 36,22 26,31" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
+      <div class="fa"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><line x1="4" y1="20" x2="32" y2="20" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="23,11 32,20 23,29" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="fc">
         <div class="fcirc c4 em">📱</div>
         <h4>Multiplataforma</h4>
-        <p>Funciona no <strong>computador, tablet e celular</strong>. Acesse pelo navegador, sem necessidade de instalar nenhum aplicativo.</p>
+        <p>Funciona no <strong>computador, tablet e celular</strong>. Acesse pelo navegador, sem necessidade de instalar aplicativos.</p>
       </div>
     </div>
 
     <div class="cards">
-      <div class="card baz" style="flex:1">
-        <div class="ic">👤</div>
-        <h4>Quem pode usar</h4>
-        <p>Servidores das secretarias e conselhos municipais com conta ativa. Cada órgão pode ter até <strong>5 usuários</strong> simultâneos.</p>
-      </div>
-      <div class="card bla" style="flex:1">
-        <div class="ic">🌐</div>
-        <h4>Como acessar</h4>
-        <p>Abra o Chrome, Edge ou Firefox e acesse o link da plataforma fornecido pela SECOM ou pelo administrador do sistema.</p>
-      </div>
-      <div class="card bvd" style="flex:1">
-        <div class="ic">🔄</div>
-        <h4>Atualização automática</h4>
-        <p>O painel atualiza a cada <strong>60 segundos</strong> automaticamente. Você sempre verá os eventos mais recentes sem precisar recarregar.</p>
-      </div>
-      <div class="card brx" style="flex:1">
-        <div class="ic">🔒</div>
-        <h4>Acesso seguro</h4>
-        <p>Cada usuário tem login e senha individuais. Nenhum dado é compartilhado entre órgãos sem permissão.</p>
-      </div>
+      <div class="card baz" style="flex:1"><div class="ic">👤</div><h4>Quem pode usar</h4><p>Servidores das secretarias e conselhos com conta ativa. Cada órgão pode ter até <strong>5 usuários</strong> simultâneos.</p></div>
+      <div class="card bla" style="flex:1"><div class="ic">🌐</div><h4>Como acessar</h4><p>Abra o Chrome, Edge ou Firefox e acesse o link fornecido pela SECOM ou pelo administrador do sistema.</p></div>
+      <div class="card bvd" style="flex:1"><div class="ic">🔄</div><h4>Atualização automática</h4><p>O painel atualiza a cada <strong>60 segundos</strong> automaticamente. Sempre com os eventos mais recentes.</p></div>
+      <div class="card brx" style="flex:1"><div class="ic">🔒</div><h4>Acesso seguro</h4><p>Cada usuário tem login e senha individuais. Dados não são compartilhados entre órgãos sem permissão.</p></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ 02 PRIMEIRO ACESSO ══════════ -->
+<!-- ════════════ 02 PRIMEIRO ACESSO ════════════ -->
 <div class="pag">
   <div class="sb">
-    <div class="sb-c1"></div>
     <div class="sb-num">02</div>
-    <div class="sb-icon">👤</div>
-    <h2>Primeiro Acesso</h2>
-    <p class="sb-desc">Antes de usar a plataforma você precisa solicitar sua conta. O processo é rápido e, se houver vagas no seu órgão, a conta é criada imediatamente.</p>
-    <div class="sb-foot">
-      <span class="lb">Tempo estimado</span>
-      <strong>Menos de 2 minutos</strong>
-    </div>
+    <div class="sb-label">Primeiro Acesso</div>
   </div>
   <div class="bar"></div>
   <div class="body">
     <div class="ph">
       <div class="pt">Cadastro</div>
-      <h3>Solicitando sua conta de acesso</h3>
-      <p>Siga os passos abaixo para criar seu usuário na plataforma</p>
+      <h2>Primeiro Acesso</h2>
+      <p>Antes de usar a plataforma você precisa solicitar sua conta. O processo é rápido e, se houver vagas no seu órgão, a conta é criada imediatamente.</p>
     </div>
 
     <div class="flow">
       <div class="fc" style="align-items:center;text-align:center">
         <div class="fcirc c1">1</div>
         <h4>Abra a plataforma</h4>
-        <p>Acesse o link no navegador. Na tela de login, clique em <strong>"👤 Criar Conta"</strong>.</p>
+        <p>Acesse o link no navegador. Na tela de login, clique em <strong>"Criar Conta"</strong>.</p>
       </div>
-      <div class="fa">
-        <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><line x1="4" y1="22" x2="36" y2="22" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="26,13 36,22 26,31" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
+      <div class="fa"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><line x1="4" y1="20" x2="32" y2="20" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="23,11 32,20 23,29" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="fc" style="align-items:center;text-align:center">
         <div class="fcirc c2">2</div>
         <h4>Preencha o formulário</h4>
-        <p>Informe <strong>nome, e-mail, login, telefone, órgão, senha</strong> e uma justificativa de acesso.</p>
+        <p>Informe <strong>nome, e-mail, login, telefone, órgão</strong> e uma senha de acesso.</p>
       </div>
-      <div class="fa">
-        <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><line x1="4" y1="22" x2="36" y2="22" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="26,13 36,22 26,31" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
+      <div class="fa"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><line x1="4" y1="20" x2="32" y2="20" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="23,11 32,20 23,29" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="fc" style="align-items:center;text-align:center">
         <div class="fcirc c3">3</div>
         <h4>Envie a solicitação</h4>
-        <p>Clique em <strong>"Enviar Solicitação"</strong>. O sistema verifica automaticamente se há vagas disponíveis no seu órgão.</p>
+        <p>Clique em <strong>"Enviar Solicitação"</strong>. O sistema verifica automaticamente se há vagas no seu órgão.</p>
       </div>
-      <div class="fa">
-        <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><line x1="4" y1="22" x2="36" y2="22" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="26,13 36,22 26,31" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
+      <div class="fa"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><line x1="4" y1="20" x2="32" y2="20" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/><polyline points="23,11 32,20 23,29" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="fc" style="align-items:center;text-align:center;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-color:#86efac">
         <div class="fcirc c4">✓</div>
         <h4>Conta criada!</h4>
-        <p>Se houver vaga disponível, a conta é criada <strong>imediatamente</strong>. Você já pode fazer login.</p>
+        <p>Se houver vaga, a conta é criada <strong>imediatamente</strong>. Você já pode fazer login.</p>
       </div>
     </div>
 
     <div class="cards">
-      <div class="al am" style="flex:1">
-        <span class="ai">⚠️</span>
-        <div><strong>Limite de usuários:</strong> cada órgão comporta até 5 usuários ativos. Se o limite estiver atingido, o sistema exibirá uma mensagem de aviso. Contate o administrador do sistema.</div>
-      </div>
-      <div class="al az" style="flex:1">
-        <span class="ai">💡</span>
-        <div><strong>Dica para o login:</strong> escolha um nome simples, sem espaços ou acentos. Exemplos: <strong>joao.silva</strong> ou <strong>jsilva</strong>. Você pode entrar com login, nome ou e-mail.</div>
-      </div>
-      <div class="al vd" style="flex:1">
-        <span class="ai">🔑</span>
-        <div><strong>Senha segura:</strong> escolha uma senha com pelo menos <strong>6 caracteres</strong>. Ela pode ser alterada a qualquer momento pela tela de login, sem precisar do administrador.</div>
-      </div>
+      <div class="al am" style="flex:1"><span class="ai">⚠️</span><div><strong>Limite de usuários:</strong> cada órgão comporta até 5 usuários ativos. Se o limite estiver atingido, o sistema exibe uma mensagem de aviso. Contate o administrador.</div></div>
+      <div class="al az" style="flex:1"><span class="ai">💡</span><div><strong>Dica para o login:</strong> escolha um nome simples, sem espaços ou acentos. Exemplos: <strong>joao.silva</strong> ou <strong>jsilva</strong>. Você pode entrar com login, nome ou e-mail.</div></div>
+      <div class="al vd" style="flex:1"><span class="ai">🔑</span><div><strong>Senha segura:</strong> escolha uma senha com pelo menos <strong>6 caracteres</strong>. Pode ser alterada a qualquer momento pela tela de login.</div></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ 03 LOGIN E RECUPERAÇÃO ══════════ -->
+<!-- ════════════ 03 LOGIN E RECUPERAÇÃO ════════════ -->
 <div class="pag">
   <div class="sb">
-    <div class="sb-c1"></div>
     <div class="sb-num">03</div>
-    <div class="sb-icon">🔓</div>
-    <h2>Fazendo Login</h2>
-    <p class="sb-desc">Entre na plataforma com seu usuário e senha. Caso esqueça a senha, você mesmo pode redefini-la diretamente na tela de login, sem depender do administrador.</p>
-    <div class="sb-foot">
-      <span class="lb">Acesso</span>
-      <strong>Login · Recuperação de Senha</strong>
-    </div>
+    <div class="sb-label">Login e Recuperação</div>
   </div>
   <div class="bar"></div>
   <div class="body">
     <div class="ph">
       <div class="pt">Autenticação</div>
-      <h3>Entrando na plataforma</h3>
-      <p>Como acessar o sistema e o que fazer se esquecer a senha</p>
+      <h2>Fazendo Login</h2>
+      <p>Entre na plataforma com seu usuário e senha. Caso esqueça a senha, você mesmo pode redefini-la diretamente na tela de login, sem depender do administrador.</p>
     </div>
 
-    <div style="display:flex;gap:32px;flex:1">
-      <!-- coluna esquerda: mockup login -->
-      <div style="flex:1;display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;gap:26px;flex:1">
+      <div style="flex:1;display:flex;flex-direction:column;gap:14px">
         <div class="mbr">
           <div class="mbr-bar">
             <div class="mbr-dot" style="background:#ff5f57"></div>
@@ -401,96 +333,75 @@ body{font-family:'Inter','Segoe UI',sans-serif;background:#0f172a}
           </div>
           <div class="ml-bg">
             <div class="ml-card">
-              <div class="ml-title">📅 Plataforma de Agenda</div>
+              <div class="ml-title">Plataforma de Agenda</div>
               <div class="ml-sub">Presidente Prudente · Secretarias e Conselhos</div>
               <input class="mi" value="joao.silva" placeholder="Usuário, Nome ou E-mail">
               <input class="mi" type="password" value="••••••••" placeholder="Senha">
-              <button class="mb">🔓 Entrar</button>
-              <div class="ml-links">
-                <span>👤 Criar Conta</span>
-                <span>🔑 Recuperar Senha</span>
-              </div>
+              <button class="mb">Entrar</button>
+              <div class="ml-links"><span>Criar Conta</span><span>Recuperar Senha</span></div>
             </div>
           </div>
         </div>
-        <div class="al am">
-          <span class="ai">📱</span>
-          <div><strong>No celular:</strong> verifique se o teclado não está adicionando maiúsculas automáticas no campo de usuário antes de tentar entrar.</div>
-        </div>
-        <div class="al az">
-          <span class="ai">💡</span>
-          <div>O campo usuário aceita <strong>login, nome completo ou e-mail</strong> cadastrado. Use qualquer um dos três.</div>
-        </div>
+        <div class="al am"><span class="ai">📱</span><div><strong>No celular:</strong> verifique se o teclado não está adicionando maiúsculas automáticas no campo de usuário.</div></div>
+        <div class="al az"><span class="ai">💡</span><div>O campo aceita <strong>login, nome completo ou e-mail</strong> cadastrado no sistema.</div></div>
       </div>
-
-      <!-- coluna direita: recuperação de senha -->
-      <div style="flex:1.1;display:flex;flex-direction:column;gap:18px">
+      <div style="flex:1.1;display:flex;flex-direction:column;gap:12px">
         <div class="card bvd">
-          <div class="ic">🔑</div>
-          <h4>Redefinindo sua senha</h4>
-          <p style="margin-bottom:16px">Você não precisa do administrador para recuperar o acesso. Faça tudo pela tela de login em menos de 1 minuto:</p>
+          <h4 style="font-size:16px;margin-bottom:12px">Redefinindo sua senha</h4>
+          <p style="margin-bottom:12px;font-size:13px;color:#555">Você não precisa do administrador. Faça tudo pela tela de login em menos de 1 minuto:</p>
           <div class="vs">
-            <div class="vsi">
-              <div class="vsn a">1</div>
-              <div class="vst"><h5>Clique em "🔑 Recuperar Senha"</h5><p>Botão abaixo do formulário de login</p></div>
-            </div>
-            <div class="vsi">
-              <div class="vsn l">2</div>
-              <div class="vst"><h5>Informe seu login ou e-mail</h5><p>O mesmo usado no cadastro da conta</p></div>
-            </div>
-            <div class="vsi">
-              <div class="vsn l">3</div>
-              <div class="vst"><h5>Digite e confirme a nova senha</h5><p>Mínimo de 6 caracteres</p></div>
-            </div>
-            <div class="vsi">
-              <div class="vsn v">✓</div>
-              <div class="vst"><h5>Clique em "Redefinir Senha"</h5><p>Senha atualizada — pode fazer login imediatamente</p></div>
-            </div>
+            <div class="vsi"><div class="vsn a">1</div><div class="vst"><h5>Clique em "Recuperar Senha"</h5><p>Botão abaixo do formulário de login</p></div></div>
+            <div class="vsi"><div class="vsn l">2</div><div class="vst"><h5>Informe seu login ou e-mail</h5><p>O mesmo usado no cadastro da conta</p></div></div>
+            <div class="vsi"><div class="vsn l">3</div><div class="vst"><h5>Digite e confirme a nova senha</h5><p>Mínimo de 6 caracteres</p></div></div>
+            <div class="vsi"><div class="vsn v">✓</div><div class="vst"><h5>Clique em "Redefinir Senha"</h5><p>Senha atualizada — faça login imediatamente</p></div></div>
           </div>
         </div>
-        <div class="al vd">
-          <span class="ai">✅</span>
-          <div><strong>Redefinição autônoma:</strong> o processo é feito diretamente pelo usuário, sem contato com o administrador. Simples, rápido e seguro.</div>
-        </div>
+        <div class="al vd"><span class="ai">✅</span><div><strong>Redefinição autônoma:</strong> processo feito diretamente pelo usuário, sem contato com o administrador. Simples, rápido e seguro.</div></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ 04 CONHECENDO O PAINEL ══════════ -->
+<!-- ════════════ 04 CONHECENDO O PAINEL ════════════ -->
 <div class="pag">
   <div class="sb">
-    <div class="sb-c1"></div>
     <div class="sb-num">04</div>
-    <div class="sb-icon">🏠</div>
-    <h2>Conhecendo o Painel</h2>
-    <p class="sb-desc">Após o login você acessa o painel do seu órgão. A tela inicial apresenta um resumo do dia: eventos do seu órgão e de toda a prefeitura.</p>
-    <div class="sb-foot">
-      <span class="lb">Seções disponíveis</span>
-      <strong>Início · Calendário · Meus Eventos · Novo Evento</strong>
-    </div>
+    <div class="sb-label">Conhecendo o Painel</div>
   </div>
   <div class="bar az"></div>
   <div class="body">
     <div class="ph">
       <div class="pt">Interface</div>
-      <h3>Mapa do sistema — o que cada seção faz</h3>
-      <p>Entenda cada área da plataforma antes de começar a usar</p>
+      <h2>Conhecendo o Painel</h2>
+      <p>Após o login você acessa o painel do seu órgão com resumo do dia: eventos do seu órgão e de toda a prefeitura.</p>
     </div>
 
-    <div style="display:flex;gap:28px;flex:1">
-      <!-- mockup painel grande -->
-      <div style="flex:1.5;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;gap:0;flex:1;align-items:stretch">
+      <!-- Seções à ESQUERDA -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:11px">
+        <div class="card baz" style="flex:1"><h4>Início</h4><p>Cards de resumo + dois painéis do dia: <strong>Meus Eventos Hoje</strong> e <strong>Todos os Órgãos Hoje</strong>.</p></div>
+        <div class="card bla" style="flex:1"><h4>Calendário</h4><p>Visualize nos formatos <strong>Mês, Semana, Dia</strong> e <strong>Lista</strong>. Clique em qualquer evento para ver os detalhes completos.</p></div>
+        <div class="card bvd" style="flex:1"><h4>Meus Eventos</h4><p>Lista completa de todos os eventos do seu órgão com campo de busca por título.</p></div>
+        <div class="card brx" style="flex:1"><h4>Novo Evento</h4><p>Formulário para publicar um novo evento na agenda. Campos obrigatórios marcados com (*).</p></div>
+      </div>
+
+      <!-- Setas centrais -->
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:space-around;width:60px;flex-shrink:0;padding:6px 0">
+        <svg width="42" height="28" viewBox="0 0 42 28" fill="none"><line x1="4" y1="14" x2="34" y2="14" stroke="#004d99" stroke-width="2.5" stroke-linecap="round"/><polyline points="25,5 34,14 25,23" stroke="#004d99" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="42" height="28" viewBox="0 0 42 28" fill="none"><line x1="4" y1="14" x2="34" y2="14" stroke="#ff9900" stroke-width="2.5" stroke-linecap="round"/><polyline points="25,5 34,14 25,23" stroke="#ff9900" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="42" height="28" viewBox="0 0 42 28" fill="none"><line x1="4" y1="14" x2="34" y2="14" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"/><polyline points="25,5 34,14 25,23" stroke="#22c55e" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="42" height="28" viewBox="0 0 42 28" fill="none"><line x1="4" y1="14" x2="34" y2="14" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round"/><polyline points="25,5 34,14 25,23" stroke="#8b5cf6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+
+      <!-- Mockup à DIREITA -->
+      <div style="flex:1.4;display:flex;flex-direction:column;gap:11px">
         <div class="mp">
           <div class="mpsb">
-            <div class="mplogo">📅 Plataforma<br>de Agenda</div>
-            <div class="mpitem a"><span>🏠</span> Início</div>
-            <div class="mpitem"><span>📅</span> Calendário</div>
-            <div class="mpitem"><span>📋</span> Meus Eventos</div>
-            <div class="mpitem"><span>➕</span> Novo Evento</div>
-            <div style="position:absolute;bottom:14px;left:12px;right:12px;border-top:1px solid rgba(255,255,255,.15);padding-top:10px">
-              <div style="font-size:10px;color:rgba(255,255,255,.5)">João Silva · SEDUC</div>
-            </div>
+            <div class="mplogo">Plataforma de Agenda</div>
+            <div class="mpitem a" style="border-left:3px solid #004d99">Início</div>
+            <div class="mpitem" style="border-left:3px solid #ff9900">Calendário</div>
+            <div class="mpitem" style="border-left:3px solid #22c55e">Meus Eventos</div>
+            <div class="mpitem" style="border-left:3px solid #8b5cf6">Novo Evento</div>
           </div>
           <div class="mpmn">
             <div class="mpst">
@@ -500,320 +411,235 @@ body{font-family:'Inter','Segoe UI',sans-serif;background:#0f172a}
               <div class="mps" style="border:2px solid var(--la)"><div class="n" style="color:var(--la)">+</div><div class="l" style="color:var(--la)">Novo</div></div>
             </div>
             <div class="mpcols">
-              <div class="mpcol">
-                <h5>📌 Meus Eventos Hoje</h5>
-                <div class="mpe">09:00 · Reunião de Planejamento</div>
-                <div class="mpe">14:00 · Formação de Professores</div>
-              </div>
-              <div class="mpcol">
-                <h5>🏛️ Todos os Órgãos Hoje</h5>
-                <div class="mpe la">08:30 · SEMEA · Audiência Pública</div>
-                <div class="mpe">10:00 · SESAU · Vacinação</div>
-                <div class="mpe la">15:00 · SEPLAN · Reunião Técnica</div>
-              </div>
+              <div class="mpcol"><h5>Meus Eventos Hoje</h5><div class="mpe">09:00 · Reunião de Planejamento</div><div class="mpe">14:00 · Formação de Professores</div></div>
+              <div class="mpcol"><h5>Todos os Órgãos Hoje</h5><div class="mpe la">08:30 · SEMEA · Audiência</div><div class="mpe">10:00 · SESAU · Vacinação</div><div class="mpe la">15:00 · SEPLAN · Reunião</div></div>
             </div>
           </div>
         </div>
-        <div style="display:flex;gap:12px">
-          <div class="al az" style="flex:1;padding:14px 18px">
-            <span class="ai" style="font-size:18px">🔄</span>
-            <div style="font-size:13px">Atualização automática a cada <strong>60 segundos</strong></div>
-          </div>
-          <div class="al vd" style="flex:1;padding:14px 18px">
-            <span class="ai" style="font-size:18px">📱</span>
-            <div style="font-size:13px">No celular, toque em <strong>☰</strong> para o menu</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- seções explicadas -->
-      <div style="flex:1;display:flex;flex-direction:column;gap:14px">
-        <div class="card baz">
-          <div class="ic">🏠</div>
-          <h4>Início</h4>
-          <p>Cards de resumo + dois painéis do dia: <strong>Meus Eventos Hoje</strong> (só do seu órgão) e <strong>Todos os Órgãos Hoje</strong> (agenda completa da prefeitura).</p>
-        </div>
-        <div class="card bla">
-          <div class="ic">📅</div>
-          <h4>Calendário</h4>
-          <p>Visualize seus eventos nos formatos <strong>Mês, Semana, Dia</strong> e <strong>Lista</strong>. Clique em qualquer evento para ver os detalhes completos.</p>
-        </div>
-        <div class="card bvd">
-          <div class="ic">📋</div>
-          <h4>Meus Eventos</h4>
-          <p>Lista completa de todos os eventos do seu órgão com campo de busca. Clique no evento para editar ou excluir.</p>
-        </div>
-        <div class="card brx">
-          <div class="ic">➕</div>
-          <h4>Novo Evento</h4>
-          <p>Formulário para publicar um novo evento na agenda. Campos obrigatórios marcados com asterisco (*).</p>
+        <div style="display:flex;gap:10px">
+          <div class="al az" style="flex:1;padding:11px 14px"><span class="ai" style="font-size:16px">🔄</span><div style="font-size:12px">Atualização automática a cada <strong>60 segundos</strong></div></div>
+          <div class="al vd" style="flex:1;padding:11px 14px"><span class="ai" style="font-size:16px">📱</span><div style="font-size:12px">No celular, toque em <strong>☰</strong> para o menu</div></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ 05 LANÇANDO UM EVENTO ══════════ -->
+<!-- ════════════ 05 LANÇANDO UM EVENTO ════════════ -->
 <div class="pag">
   <div class="sb la">
-    <div class="sb-c1"></div>
     <div class="sb-num">05</div>
-    <div class="sb-icon">➕</div>
-    <h2>Lançando um Evento</h2>
-    <p class="sb-desc">Publique um novo evento na agenda da prefeitura. Preencha todos os campos para garantir a melhor divulgação do seu evento institucional.</p>
-    <div class="sb-foot">
-      <span class="lb">Campos obrigatórios</span>
-      <strong>Título · Data · Telefone · Descrição</strong>
-    </div>
+    <div class="sb-label">Lançando um Evento</div>
   </div>
   <div class="bar"></div>
   <div class="body">
     <div class="ph">
       <div class="pt">Publicação</div>
-      <h3>Formulário de novo evento</h3>
-      <p>Acesse pelo menu <strong>➕ Novo Evento</strong> ou pelo botão na tela Início</p>
+      <h2>Lançando um Evento</h2>
+      <p>Publique um novo evento na agenda da prefeitura. Preencha todos os campos para garantir a melhor divulgação.</p>
     </div>
 
-    <div style="display:flex;gap:28px;flex:1">
-      <!-- tabela de campos -->
+    <div style="display:flex;gap:22px;flex:1">
       <div style="flex:1.4">
         <div class="tab">
           <table>
             <tr><th>Campo</th><th>Obrigatoriedade</th><th>Instrução de preenchimento</th></tr>
-            <tr><td><strong>📝 Título</strong></td><td><span class="ob">Obrigatório</span></td><td>Nome claro e objetivo do evento institucional</td></tr>
-            <tr><td><strong>📅 Data e Hora</strong></td><td><span class="ob">Obrigatório</span></td><td>Data futura — eventos com data retroativa são bloqueados</td></tr>
-            <tr><td><strong>📍 Local</strong></td><td><span class="op">Opcional</span></td><td>Endereço completo ou nome do espaço (ex.: Câmara Municipal)</td></tr>
-            <tr><td><strong>👤 Responsável</strong></td><td><span class="op">Opcional</span></td><td>Nome de quem coordena ou responde pelo evento</td></tr>
-            <tr><td><strong>📞 Telefone</strong></td><td><span class="ob">Obrigatório</span></td><td>Número para informações: formato (18) 99999-9999</td></tr>
-            <tr><td><strong>📄 Descrição</strong></td><td><span class="ob">Obrigatório</span></td><td>Detalhes, público-alvo, programação e informações gerais</td></tr>
-            <tr><td><strong>📎 Anexo</strong></td><td><span class="op">Opcional</span></td><td>Imagem, PDF ou documento até 10 MB (flyer, convite, pauta)</td></tr>
+            <tr><td><strong>Título</strong></td><td><span class="ob">Obrigatório</span></td><td>Nome claro e objetivo do evento institucional</td></tr>
+            <tr><td><strong>Data e Hora</strong></td><td><span class="ob">Obrigatório</span></td><td>Data futura — eventos com data retroativa são bloqueados automaticamente</td></tr>
+            <tr><td><strong>Local</strong></td><td><span class="ob">Obrigatório</span></td><td>Endereço completo ou nome do espaço (ex.: Câmara Municipal)</td></tr>
+            <tr><td><strong>Responsável</strong></td><td><span class="ob">Obrigatório</span></td><td>Nome de quem coordena ou responde pelo evento</td></tr>
+            <tr><td><strong>Telefone</strong></td><td><span class="ob">Obrigatório</span></td><td>Número para informações: formato (18) 99999-9999</td></tr>
+            <tr><td><strong>Descrição</strong></td><td><span class="ob">Obrigatório</span></td><td>Detalhes, público-alvo, programação e demandas de comunicação (ver página 06)</td></tr>
+            <tr><td><strong>Anexo</strong></td><td><span class="op">Opcional</span></td><td>Imagem, PDF ou documento até 20 MB (flyer, convite, pauta)</td></tr>
           </table>
         </div>
       </div>
-
-      <!-- instruções -->
-      <div style="flex:1;display:flex;flex-direction:column;gap:16px">
-        <div class="card bla">
-          <div class="ic">💾</div>
-          <h4>Como salvar</h4>
-          <p>Após preencher os campos obrigatórios, clique em <strong>"💾 Salvar Evento"</strong>. Uma mensagem de confirmação será exibida e o evento aparece automaticamente no calendário.</p>
-        </div>
-        <div class="al vm">
-          <span class="ai">⛔</span>
-          <div><strong>Data retroativa não é permitida.</strong> O sistema bloqueia eventos com data anterior ao momento atual. Verifique antes de salvar.</div>
-        </div>
-        <div class="al am">
-          <span class="ai">📎</span>
-          <div><strong>Anexos:</strong> aceita JPG, PNG, PDF e Word. Máximo de <strong>10 MB</strong> por arquivo. Armazenado no Google Drive da prefeitura.</div>
-        </div>
-        <div class="al az">
-          <span class="ai">💡</span>
-          <div><strong>Boa prática:</strong> publique o evento com pelo menos <strong>48 horas de antecedência</strong> para garantir ampla visibilidade.</div>
-        </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:13px">
+        <div class="card bla"><h4>Como salvar</h4><p>Após preencher os campos obrigatórios, clique em <strong>"Salvar Evento"</strong>. Uma mensagem de confirmação será exibida e o evento aparece automaticamente no calendário.</p></div>
+        <div class="al vm"><span class="ai">⛔</span><div><strong>Data retroativa não é permitida.</strong> O sistema bloqueia eventos com data anterior ao momento atual.</div></div>
+        <div class="al am"><span class="ai">📎</span><div><strong>Anexos:</strong> aceita JPG, PNG, PDF e Word. Tamanho máximo de <strong>20 MB</strong> por arquivo.</div></div>
+        <div class="al az"><span class="ai">💡</span><div><strong>Boa prática:</strong> publique com pelo menos <strong>48 horas de antecedência</strong> para garantir ampla visibilidade.</div></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ 06 VISUALIZANDO EVENTOS ══════════ -->
+<!-- ════════════ 06 CAMPO DESCRIÇÃO ════════════ -->
 <div class="pag">
   <div class="sb">
-    <div class="sb-c1"></div>
     <div class="sb-num">06</div>
-    <div class="sb-icon">📅</div>
-    <h2>Visualizando Eventos</h2>
-    <p class="sb-desc">Consulte os eventos do seu órgão pela lista ou pelo calendário. Clique em qualquer evento para ver todos os detalhes completos.</p>
-    <div class="sb-foot">
-      <span class="lb">Modos de visualização</span>
-      <strong>Mês · Semana · Dia · Lista</strong>
+    <div class="sb-label">Campo Descrição</div>
+  </div>
+  <div class="bar"></div>
+  <div class="body">
+    <div class="ph">
+      <div class="pt">Preenchimento</div>
+      <h2>O que posso escrever no campo Descrição?</h2>
+      <p>Use este campo para detalhar o evento e indicar o apoio necessário do Departamento de Comunicação. Seja específico para garantir atendimento ágil.</p>
     </div>
+
+    <div style="display:flex;gap:18px;flex:1">
+      <!-- Produção Gráfica -->
+      <div style="flex:1;background:#fff;border-radius:16px;padding:20px;border:1px solid #e2e8f0;box-shadow:0 3px 10px rgba(0,0,0,.06);border-top:4px solid var(--az2)">
+        <div style="font-size:12px;font-weight:700;color:var(--az2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Produção Gráfica</div>
+        <ul style="padding-left:0;list-style:none;display:flex;flex-direction:column;gap:10px">
+          <li style="display:flex;gap:8px;font-size:13px;color:#374151"><span style="color:var(--az2);font-weight:700;flex-shrink:0;margin-top:1px">›</span><span>Quais <strong>peças gráficas</strong> serão necessárias (banner, folder, cartaz, crachá, convite, arte para redes sociais, backdrop, lonas, adesivos, totem, sinalização interna/externa)</span></li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#374151"><span style="color:var(--az2);font-weight:700;flex-shrink:0;margin-top:1px">›</span><span><strong>Quantidades</strong> estimadas de cada peça</span></li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#374151"><span style="color:var(--az2);font-weight:700;flex-shrink:0;margin-top:1px">›</span><span><strong>Formato e dimensões</strong> (se já definidas)</span></li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#374151"><span style="color:var(--az2);font-weight:700;flex-shrink:0;margin-top:1px">›</span><span><strong>Prazo final</strong> para entrega ou instalação</span></li>
+        </ul>
+      </div>
+
+      <!-- Produção Estrutural -->
+      <div style="flex:1;background:#fff;border-radius:16px;padding:20px;border:1px solid #e2e8f0;box-shadow:0 3px 10px rgba(0,0,0,.06);border-top:4px solid var(--la)">
+        <div style="font-size:12px;font-weight:700;color:#b35000;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Produção Estrutural / Montagem</div>
+        <ul style="padding-left:0;list-style:none;display:flex;flex-direction:column;gap:10px">
+          <li style="display:flex;gap:8px;font-size:13px;color:#374151"><span style="color:var(--la);font-weight:700;flex-shrink:0;margin-top:1px">›</span><span><strong>Suporte audiovisual</strong> (telão, projetor, som, microfones, iluminação cênica)</span></li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#374151"><span style="color:var(--la);font-weight:700;flex-shrink:0;margin-top:1px">›</span><span><strong>Estrutura física</strong> (palco, tribunas, estandes, painéis, toldos, pórticos, bandeiras)</span></li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#374151"><span style="color:var(--la);font-weight:700;flex-shrink:0;margin-top:1px">›</span><span><strong>Equipamentos</strong> (totens de autoatendimento, TVs, cabos, adaptadores)</span></li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#374151"><span style="color:var(--la);font-weight:700;flex-shrink:0;margin-top:1px">›</span><span><strong>Acessibilidade</strong> (tradução em Libras, audiodescrição, material em Braille)</span></li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#374151"><span style="color:var(--la);font-weight:700;flex-shrink:0;margin-top:1px">›</span><span><strong>Equipe no dia</strong> (câmeras, fotógrafos, técnicos de som, montadores)</span></li>
+        </ul>
+      </div>
+
+      <!-- Exemplo + aviso -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+        <div style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1.5px solid #fed7aa;border-radius:16px;padding:20px">
+          <div style="font-size:12px;font-weight:700;color:#b35000;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Exemplo de preenchimento correto</div>
+          <p style="font-size:13px;color:#7c3d00;line-height:1.75;font-style:italic">"Serão necessários: 1 banner de 2×1m para a entrada, 50 pastas personalizadas com programas, 30 crachás, 2 totens direcionais, iluminação para palco e 1 técnico de som durante 4h."</p>
+        </div>
+        <div class="al vm"><span class="ai">⛔</span><div><strong>Evite frases genéricas</strong> como "preciso de apoio gráfico". Quanto mais específico for o campo, mais ágil será o atendimento da SECOM. Revise antes de finalizar.</div></div>
+        <div class="al az"><span class="ai">💡</span><div>Você pode usar a Descrição para <strong>qualquer informação relevante</strong> sobre o evento, não apenas demandas de comunicação.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ 07 VISUALIZANDO EVENTOS ════════════ -->
+<div class="pag">
+  <div class="sb">
+    <div class="sb-num">07</div>
+    <div class="sb-label">Visualizando Eventos</div>
   </div>
   <div class="bar az"></div>
   <div class="body">
     <div class="ph">
       <div class="pt">Consulta</div>
-      <h3>Calendário, lista e detalhes do evento</h3>
-      <p>Encontre e consulte qualquer evento do seu órgão com rapidez</p>
+      <h2>Visualizando Eventos</h2>
+      <p>Consulte os eventos do seu órgão pela lista ou pelo calendário. Clique em qualquer evento para ver todos os detalhes.</p>
     </div>
 
-    <div style="display:flex;gap:28px;flex:1">
-      <!-- modos de visualização -->
-      <div style="flex:1;display:flex;flex-direction:column;gap:16px">
-        <div class="card baz">
-          <div class="ic">📋</div>
-          <h4>Meus Eventos — Lista</h4>
-          <p>Acesse <strong>"📋 Meus Eventos"</strong> para ver todos em ordem cronológica. Use o campo de busca para encontrar pelo título. Clique no card para ver os detalhes.</p>
-        </div>
+    <div style="display:flex;gap:22px;flex:1">
+      <div style="flex:1;display:flex;flex-direction:column;gap:13px">
+        <div class="card baz"><h4>Meus Eventos — Lista</h4><p>Acesse <strong>"Meus Eventos"</strong> para ver todos em ordem cronológica. Use o campo de busca para encontrar pelo título. Clique no card para abrir os detalhes.</p></div>
         <div class="card" style="border-left:5px solid var(--az2)">
-          <div class="ic">📅</div>
           <h4>Calendário — 4 modos de visualização</h4>
           <ul style="margin-top:6px">
             <li><strong>Mês</strong> — visão geral de todos os eventos do mês</li>
             <li><strong>Semana</strong> — eventos organizados por dia da semana</li>
             <li><strong>Dia</strong> — linha do tempo detalhada de um dia</li>
-            <li><strong>Lista</strong> — formato de listagem: hora · órgão · título</li>
+            <li><strong>Lista</strong> — formato: hora · órgão · título</li>
           </ul>
         </div>
-        <div class="al az">
-          <span class="ai">💡</span>
-          <div><strong>Clique em um dia</strong> no calendário para ver um resumo rápido de todos os eventos daquela data.</div>
-        </div>
-        <div class="al am">
-          <span class="ai">🏛️</span>
-          <div>Na tela <strong>Início</strong>, o painel <em>"Todos os Órgãos Hoje"</em> mostra os eventos de toda a prefeitura no dia atual.</div>
-        </div>
+        <div class="al az"><span class="ai">💡</span><div><strong>Clique em um dia</strong> no calendário para ver um resumo rápido de todos os eventos daquela data.</div></div>
+        <div class="al am"><span class="ai">🏛️</span><div>Na tela <strong>Início</strong>, o painel <em>"Todos os Órgãos Hoje"</em> mostra os eventos de toda a prefeitura no dia atual.</div></div>
       </div>
-
-      <!-- detalhes do evento -->
-      <div style="flex:1.2;display:flex;flex-direction:column;gap:0">
-        <div class="card" style="flex:1">
-          <div class="ic">🗂️</div>
-          <h4 style="margin-bottom:16px">Informações exibidas ao clicar num evento</h4>
-          <div style="display:flex;flex-direction:column;gap:10px;background:#f8faff;border-radius:14px;padding:18px">
-            <div style="display:flex;gap:10px;align-items:center"><span style="font-size:18px;width:28px">📅</span><span style="font-size:14px;color:#374151"><strong>Data e Hora:</strong> DD/MM/AAAA às HH:MM</span></div>
-            <div style="display:flex;gap:10px;align-items:center"><span style="font-size:18px;width:28px">📍</span><span style="font-size:14px;color:#374151"><strong>Local:</strong> endereço ou nome do espaço</span></div>
-            <div style="display:flex;gap:10px;align-items:center"><span style="font-size:18px;width:28px">🏢</span><span style="font-size:14px;color:#374151"><strong>Órgão:</strong> secretaria responsável pelo evento</span></div>
-            <div style="display:flex;gap:10px;align-items:center"><span style="font-size:18px;width:28px">👤</span><span style="font-size:14px;color:#374151"><strong>Responsável:</strong> nome do coordenador</span></div>
-            <div style="display:flex;gap:10px;align-items:center"><span style="font-size:18px;width:28px">📞</span><span style="font-size:14px;color:#374151"><strong>Telefone:</strong> contato para informações</span></div>
-            <div style="display:flex;gap:10px;align-items:center"><span style="font-size:18px;width:28px">📝</span><span style="font-size:14px;color:#374151"><strong>Descrição:</strong> detalhes e observações completas</span></div>
-            <div style="display:flex;gap:10px;align-items:center"><span style="font-size:18px;width:28px">📎</span><span style="font-size:14px;color:#374151"><strong>Anexo:</strong> botão para baixar ou visualizar o arquivo</span></div>
+      <div style="flex:1.2">
+        <div class="card" style="height:100%">
+          <h4 style="margin-bottom:13px">Informações exibidas ao clicar num evento</h4>
+          <div style="display:flex;flex-direction:column;gap:9px;background:#f8faff;border-radius:12px;padding:16px">
+            <div style="display:flex;gap:9px;align-items:center"><span style="font-size:15px;width:24px">📅</span><span style="font-size:13px;color:#374151"><strong>Data e Hora:</strong> DD/MM/AAAA às HH:MM</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><span style="font-size:15px;width:24px">📍</span><span style="font-size:13px;color:#374151"><strong>Local:</strong> endereço ou nome do espaço</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><span style="font-size:15px;width:24px">🏢</span><span style="font-size:13px;color:#374151"><strong>Órgão:</strong> secretaria responsável</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><span style="font-size:15px;width:24px">👤</span><span style="font-size:13px;color:#374151"><strong>Responsável:</strong> coordenador do evento</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><span style="font-size:15px;width:24px">📞</span><span style="font-size:13px;color:#374151"><strong>Telefone:</strong> contato para informações</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><span style="font-size:15px;width:24px">📝</span><span style="font-size:13px;color:#374151"><strong>Descrição:</strong> detalhes e observações</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><span style="font-size:15px;width:24px">📎</span><span style="font-size:13px;color:#374151"><strong>Anexo:</strong> botão para baixar / visualizar</span></div>
           </div>
-          <div style="display:flex;gap:10px;margin-top:16px">
-            <div style="flex:1;background:var(--la);color:#fff;padding:11px;border-radius:10px;text-align:center;font-size:14px;font-weight:600">✏️ Editar</div>
-            <div style="flex:1;background:#ef4444;color:#fff;padding:11px;border-radius:10px;text-align:center;font-size:14px;font-weight:600">🗑️ Excluir</div>
-            <div style="flex:1;background:#94a3b8;color:#fff;padding:11px;border-radius:10px;text-align:center;font-size:14px;font-weight:600">Fechar</div>
+          <div style="display:flex;gap:10px;margin-top:13px">
+            <div style="flex:1;background:var(--la);color:#fff;padding:10px;border-radius:9px;text-align:center;font-size:13px;font-weight:600">✏️ Editar</div>
+            <div style="flex:1;background:#ef4444;color:#fff;padding:10px;border-radius:9px;text-align:center;font-size:13px;font-weight:600">🗑️ Excluir</div>
+            <div style="flex:1;background:#94a3b8;color:#fff;padding:10px;border-radius:9px;text-align:center;font-size:13px;font-weight:600">Fechar</div>
           </div>
-          <p style="font-size:12px;color:#94a3b8;margin-top:10px">* Editar e excluir aparecem apenas para eventos do seu próprio órgão.</p>
+          <p style="font-size:11px;color:#94a3b8;margin-top:8px">* Editar e excluir aparecem apenas para eventos do seu próprio órgão.</p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ 07 EDITANDO E BOAS PRÁTICAS ══════════ -->
+<!-- ════════════ 08 EDITANDO E BOAS PRÁTICAS ════════════ -->
 <div class="pag">
   <div class="sb vd">
-    <div class="sb-c1"></div>
-    <div class="sb-num">07</div>
-    <div class="sb-icon">✏️</div>
-    <h2>Editando e Excluindo</h2>
-    <p class="sb-desc">Você pode editar ou excluir qualquer evento do seu órgão a qualquer momento. A exclusão é permanente e não pode ser desfeita.</p>
-    <div class="sb-foot">
-      <span class="lb">Permissão</span>
-      <strong>Apenas eventos do seu órgão</strong>
-    </div>
+    <div class="sb-num">08</div>
+    <div class="sb-label">Editando e Boas Práticas</div>
   </div>
   <div class="bar vd"></div>
   <div class="body">
     <div class="ph">
       <div class="pt">Gestão</div>
-      <h3>Editando, excluindo e boas práticas</h3>
-      <p>Mantenha a agenda sempre atualizada e com informações precisas</p>
+      <h2>Editando e Excluindo</h2>
+      <p>Você pode editar ou excluir qualquer evento do seu órgão a qualquer momento. A exclusão é permanente e não pode ser desfeita.</p>
     </div>
 
-    <div style="display:flex;gap:28px;flex:1">
-      <!-- edit / delete flows -->
-      <div style="flex:1;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;gap:22px;flex:1">
+      <div style="flex:1;display:flex;flex-direction:column;gap:13px">
         <div class="card bvd">
-          <div class="ic">✏️</div>
           <h4>Como editar um evento</h4>
           <div class="vs" style="margin-top:10px">
-            <div class="vsi">
-              <div class="vsn a">1</div>
-              <div class="vst"><h5>Clique no evento para abrir os detalhes</h5><p>Pelo calendário, lista ou painel Início</p></div>
-            </div>
-            <div class="vsi">
-              <div class="vsn l">2</div>
-              <div class="vst"><h5>Clique no botão <strong>"✏️ Editar"</strong></h5><p>Disponível apenas para eventos do seu órgão</p></div>
-            </div>
-            <div class="vsi">
-              <div class="vsn l">3</div>
-              <div class="vst"><h5>Altere os campos desejados</h5><p>Todos os campos do formulário podem ser atualizados</p></div>
-            </div>
-            <div class="vsi">
-              <div class="vsn v">✓</div>
-              <div class="vst"><h5>Clique em <strong>"💾 Salvar"</strong></h5><p>Alteração salva imediatamente no calendário</p></div>
-            </div>
+            <div class="vsi"><div class="vsn a">1</div><div class="vst"><h5>Clique no evento para abrir os detalhes</h5><p>Pelo calendário, lista ou painel Início</p></div></div>
+            <div class="vsi"><div class="vsn l">2</div><div class="vst"><h5>Clique no botão "Editar"</h5><p>Disponível apenas para eventos do seu órgão</p></div></div>
+            <div class="vsi"><div class="vsn l">3</div><div class="vst"><h5>Altere os campos desejados</h5><p>Todos os campos podem ser atualizados</p></div></div>
+            <div class="vsi"><div class="vsn v">✓</div><div class="vst"><h5>Clique em "Salvar"</h5><p>Alteração salva imediatamente no calendário</p></div></div>
           </div>
         </div>
         <div class="card bvm">
-          <div class="ic">🗑️</div>
           <h4>Como excluir um evento</h4>
           <div class="vs" style="margin-top:10px">
-            <div class="vsi">
-              <div class="vsn a">1</div>
-              <div class="vst"><h5>Clique no evento para abrir os detalhes</h5></div>
-            </div>
-            <div class="vsi">
-              <div class="vsn r">2</div>
-              <div class="vst"><h5>Clique em <strong>"🗑️ Excluir"</strong></h5></div>
-            </div>
-            <div class="vsi">
-              <div class="vsn r">!</div>
-              <div class="vst"><h5>Confirme na janela de diálogo</h5><p style="color:#dc2626">Ação permanente — não pode ser desfeita</p></div>
-            </div>
+            <div class="vsi"><div class="vsn a">1</div><div class="vst"><h5>Clique no evento para abrir os detalhes</h5></div></div>
+            <div class="vsi"><div class="vsn r">2</div><div class="vst"><h5>Clique em "Excluir"</h5></div></div>
+            <div class="vsi"><div class="vsn r">!</div><div class="vst"><h5>Confirme na janela de diálogo</h5><p style="color:#dc2626">Ação permanente — não pode ser desfeita</p></div></div>
           </div>
         </div>
       </div>
 
-      <!-- boas práticas -->
       <div style="flex:1.3">
-        <div style="margin-bottom:16px">
+        <div style="margin-bottom:13px">
           <div class="pt">Boas Práticas</div>
-          <h4 style="font-size:22px;font-weight:800;color:var(--az);margin-top:6px">Dicas para manter a agenda de qualidade</h4>
+          <h4 style="font-size:20px;font-weight:800;color:var(--az);margin-top:6px">Dicas para manter a agenda com qualidade</h4>
         </div>
         <div class="boas">
-          <div class="boa">
-            <div class="boa-ic la">⏰</div>
-            <h4>Publique com antecedência</h4>
-            <p>Lance os eventos com pelo menos <strong>48 horas</strong> de antecedência para garantir visibilidade máxima.</p>
-          </div>
-          <div class="boa">
-            <div class="boa-ic az">📝</div>
-            <h4>Títulos claros e objetivos</h4>
-            <p>Use títulos <strong>descritivos</strong>. Evite abreviações que outros órgãos não reconheçam.</p>
-          </div>
-          <div class="boa">
-            <div class="boa-ic vd">📍</div>
-            <h4>Sempre informe o local</h4>
-            <p>Quando o evento tiver endereço definido, preencha sempre o campo <strong>Local</strong>.</p>
-          </div>
-          <div class="boa">
-            <div class="boa-ic ro">🔒</div>
-            <h4>Não compartilhe senhas</h4>
-            <p>Cada servidor deve ter seu <strong>próprio login</strong>. Solicite uma conta individual quando necessário.</p>
-          </div>
-        </div>
-        <div class="al am" style="margin-top:16px">
-          <span class="ai">⚠️</span>
-          <div><strong>Nunca edite diretamente na planilha.</strong> Alterações feitas fora do sistema podem não aparecer imediatamente por conta do cache. Sempre use a plataforma.</div>
+          <div class="boa"><div class="boa-ic la">⏰</div><h4>Publique com antecedência</h4><p>Lance com pelo menos <strong>48 horas</strong> de antecedência para garantir visibilidade máxima.</p></div>
+          <div class="boa"><div class="boa-ic az">📝</div><h4>Títulos claros</h4><p>Use títulos <strong>descritivos</strong>. Evite abreviações que outros órgãos não reconheçam.</p></div>
+          <div class="boa"><div class="boa-ic vd">📍</div><h4>Informe o local</h4><p>Preencha sempre o campo <strong>Local</strong> quando o endereço já estiver definido.</p></div>
+          <div class="boa"><div class="boa-ic ro">🔒</div><h4>Não compartilhe senhas</h4><p>Cada servidor deve ter seu <strong>próprio login</strong>. Solicite conta individual quando necessário.</p></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ CONTRACAPA ══════════ -->
+<!-- ════════════ CONTRACAPA ════════════ -->
 <div class="pag cc">
-  <div style="position:absolute;top:-120px;right:-120px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,153,0,.1) 0%,transparent 70%)"></div>
-  <div style="position:absolute;bottom:-150px;left:600px;width:400px;height:400px;border-radius:50%;border:1px solid rgba(255,255,255,.04)"></div>
+  <div style="position:absolute;top:-100px;right:-100px;width:450px;height:450px;border-radius:50%;background:radial-gradient(circle,rgba(255,153,0,.1) 0%,transparent 70%)"></div>
+  <div style="position:absolute;bottom:-120px;left:500px;width:360px;height:360px;border-radius:50%;border:1px solid rgba(255,255,255,.04)"></div>
   <div class="cc-bar"></div>
   <div class="cc-left">
     <div class="cc-badge">SUPORTE E CONTATO</div>
     <h2>Dúvidas ou<br><span>Problemas Técnicos?</span></h2>
-    <p>Em caso de dificuldades com o sistema, entre em contato com os canais de suporte da prefeitura. Nossa equipe está pronta para ajudar.</p>
-    <div class="cc-card">
-      <div class="em">🏛️</div>
-      <div>
-        <h4>Administrador do Sistema</h4>
-        <p>Para questões de acesso, criação de usuários, reset de senha ou problemas técnicos diretamente no sistema.</p>
-      </div>
-    </div>
+    <p class="cc-sub">Em caso de problemas com a plataforma, entre em contato com a SECOM.</p>
     <div class="cc-card">
       <div class="em">📢</div>
       <div>
         <h4>Secretaria de Comunicação — SECOM</h4>
-        <p>Para orientações sobre publicação de eventos, padrão visual e divulgação institucional.</p>
+        <p>Para questões de acesso, problemas técnicos no sistema, publicação de eventos e orientações gerais sobre o uso da plataforma.</p>
+      </div>
+    </div>
+    <div class="cc-card" style="background:rgba(255,153,0,.1);border-color:rgba(255,153,0,.3)">
+      <div class="em">⚠️</div>
+      <div>
+        <h4 style="color:#ffcc44">Atenção — Sistema em fase de testes</h4>
+        <p>Por se tratar de um protótipo, ao logar e criar um novo evento <strong>o sistema pode ficar lento</strong>. Se algum evento sumir da agenda ou não salvar o preenchimento dos campos, <strong>informe a SECOM imediatamente</strong>.</p>
       </div>
     </div>
   </div>
@@ -823,23 +649,14 @@ body{font-family:'Inter','Segoe UI',sans-serif;background:#0f172a}
       Plataforma<br>de Agenda
     </div>
     <div style="text-align:center">
-      <div style="color:rgba(255,255,255,.7);font-size:17px;font-weight:600;margin-bottom:6px">Prefeitura de Presidente Prudente</div>
+      <div style="color:rgba(255,255,255,.7);font-size:16px;font-weight:600;margin-bottom:5px">Prefeitura de Presidente Prudente</div>
       <div style="color:rgba(255,255,255,.38);font-size:13px">Manual do Usuário · Versão 2026</div>
-      <div style="color:rgba(255,255,255,.38);font-size:13px;margin-top:4px">Secretarias e Conselhos Municipais</div>
+      <div style="color:rgba(255,255,255,.38);font-size:13px;margin-top:3px">Secretarias e Conselhos Municipais</div>
     </div>
     <div class="cc-pills">
-      <div class="cc-pill">
-        <span class="em">✅</span>
-        <p>Redefinição de senha <strong>autônoma</strong></p>
-      </div>
-      <div class="cc-pill">
-        <span class="em">🔄</span>
-        <p>Atualização automática a cada <strong>60s</strong></p>
-      </div>
-      <div class="cc-pill">
-        <span class="em">📱</span>
-        <p>Compatível com <strong>celular e tablet</strong></p>
-      </div>
+      <div class="cc-pill"><span class="em">✅</span><p>Redefinição de senha <strong>autônoma</strong></p></div>
+      <div class="cc-pill"><span class="em">🔄</span><p>Atualização automática a cada <strong>60s</strong></p></div>
+      <div class="cc-pill"><span class="em">📱</span><p>Compatível com <strong>celular e tablet</strong></p></div>
     </div>
   </div>
 </div>
