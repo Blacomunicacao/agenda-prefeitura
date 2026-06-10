@@ -111,7 +111,10 @@ var SIGLAS_ORGAOS = {
   'Fundo Municipal de Defesa dos Interesses Difusos':'FMDID',
   'Fundo Social de Solidariedade de Presidente Prudente':'FUNDO',
   'Núcleo da Escola Federativa do Município de Presidente Prudente':'NEF',
-  'Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalho':'SESMT'
+  'Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalho':'SESMT',
+  'Serviço de Assistência a Saúde dos Municipários':'SASSOM',
+  'Prudenprev':'PRUDENPREV',
+  'Fundação Inova Prudente':'INOVAPP'
 };
 
 function getSiglaOrgao(orgao) {
