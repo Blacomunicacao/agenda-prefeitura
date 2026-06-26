@@ -812,9 +812,9 @@ function htmlSecom() {
   <main class="main">
     <div id="inicio" class="view active">
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-info"><h3>${total}</h3><p>Total de Eventos</p></div></div>
-        <div class="stat-card"><div class="stat-icon">📆</div><div class="stat-info"><h3>${semana}</h3><p>Esta Semana</p></div></div>
-        <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div></div>
+        <div class="stat-card" onclick="mostrarView('listaEventos')"><div class="stat-icon">📅</div><div class="stat-info"><h3>${total}</h3><p>Total de Eventos</p></div></div>
+        <div class="stat-card" onclick="mostrarEventosSemanaSecom()"><div class="stat-icon">📆</div><div class="stat-info"><h3>${semana}</h3><p>Esta Semana</p></div></div>
+        <div class="stat-card" onclick="mostrarEventosHojeSecom()"><div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div></div>
         <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-info"><h3>${orgaos}</h3><p>Órgãos</p></div></div>
       </div>
       <div class="secao">
@@ -1497,6 +1497,25 @@ function mostrarEventosSemana() {
   mostrarView('listaEventos');
   const cont=$('listaEvtConteudo');
   if(cont) cont.innerHTML=renderTabelaAdmin(lista);
+  const busca=$('buscaEvt'); if(busca) busca.value='';
+}
+
+function mostrarEventosSemanaSecom() {
+  const d=new Date(),ini=new Date(d); ini.setDate(d.getDate()-d.getDay()); ini.setHours(0,0,0,0);
+  const fim=new Date(ini); fim.setDate(ini.getDate()+6); fim.setHours(23,59,59,999);
+  const lista=eventos.filter(e=>{const x=new Date(e.data_evento);return x>=ini&&x<=fim;});
+  mostrarView('listaEventos');
+  const cont=$('listaEvtConteudo');
+  if(cont) cont.innerHTML=renderListaEventos(lista);
+  const busca=$('buscaEvt'); if(busca) busca.value='';
+}
+
+function mostrarEventosHojeSecom() {
+  const h=new Date(); h.setHours(0,0,0,0);
+  const lista=eventos.filter(e=>{const d=new Date(e.data_evento); d.setHours(0,0,0,0); return d.getTime()===h.getTime();});
+  mostrarView('listaEventos');
+  const cont=$('listaEvtConteudo');
+  if(cont) cont.innerHTML=renderListaEventos(lista);
   const busca=$('buscaEvt'); if(busca) busca.value='';
 }
 
