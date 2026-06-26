@@ -31,7 +31,6 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .btn-primary:hover{background:#003366}
 .erro{background:#f8d7da;color:#721c24;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
 .sucesso{background:#d4edda;color:#155724;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
-.aviso{background:#fff3cd;color:#856404;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none;font-weight:600}
 .login-links{margin-top:18px;display:flex;justify-content:center;gap:24px;font-size:13px}
 .login-links a{color:#004d99;text-decoration:none;font-weight:500}
 .login-links a:hover{text-decoration:underline}
@@ -106,17 +105,10 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .info-valor{flex:1;color:#333;font-size:14px;word-break:break-word}
 
 /* ── Calendário ── */
-.fc-event{cursor:pointer!important;font-size:12px!important;padding:4px 6px!important;border-radius:6px!important;white-space:pre-line!important;word-break:break-word!important;display:block!important;line-height:1.3!important}
+.fc-event{cursor:pointer!important;font-size:12px!important;padding:4px 6px!important;border-radius:6px!important;white-space:normal!important;word-break:break-word!important;display:block!important}
 .fc-event .fc-event-time{display:none!important}
-.fc-list .fc-list-event-time{display:none!important}
 .prefeito-event{background:#dc3545!important;border-color:#b02a37!important;color:#fff!important}
 .prefeito-event-mobile{background:#dc3545!important;border-color:#b02a37!important;color:#fff!important}
-.secom-event{background:#ff9900!important;border-color:#e07800!important;color:#000!important}
-.secom-event-mobile{background:#ff9900!important;border-color:#e07800!important;color:#000!important}
-.fc-list-table{width:100%!important}
-.fc-list-event-title{width:100%!important;overflow:hidden!important}
-.fc-list-event{border-bottom:1px solid #dee2e6!important}
-.fc-list-event td{border-bottom:none!important}
 .fc-view-harness{height:calc(100vh - 200px)!important;min-height:500px}
 .fc-toolbar-title{font-size:18px!important}
 .fc-button{padding:6px 12px!important;font-size:14px!important}
@@ -235,8 +227,8 @@ let usuario  = JSON.parse(localStorage.getItem('usuario') || 'null');
 let eventos  = [];
 let todosEventos = [];
 let calendar = null;
-let solicitacoesList = [];
 let _autoRefreshId = null;
+let solicitacoesList = [];
 
 async function api(action, data = {}) {
   try {
@@ -301,31 +293,6 @@ const SIGLAS = {
   'Secretaria de Saúde':'SESAU',
   'Secretaria de Tecnologia da Informação':'SETEC',
   'Secretaria de Turismo':'SETUR',
-  // Conselhos
-  'Conselho de Acompanhamento e Controle Social do FUNDEB e de Valorização dos Professores da Educação':'CACS-FUNDEB',
-  'Conselho de Governança Pública':'CGOV',
-  'Conselho Deliberativo do Fundo Social de Solidariedade':'CDFSS',
-  'Conselho Municipal Antidrogas':'COMAD',
-  'Conselho Municipal da Assistência Social de Presidente Prudente':'CMAS',
-  'Conselho Municipal da Condição Feminina':'CMCF',
-  'Conselho Municipal da Habitação de Interesse Social':'CMHIS',
-  'Conselho Municipal da Igualdade Racial':'COMIR',
-  'Conselho Municipal da Juventude':'COMJUVE',
-  'Conselho Municipal da Pessoa com Deficiência':'COMDEF',
-  'Conselho Municipal de Alimentação Escolar':'CAE',
-  'Conselho Municipal de Ciência, Tecnologia e Inovação':'CMCTI',
-  'Conselho Municipal de Desenvolvimento Rural':'CMDR',
-  'Conselho Municipal de Educação de Presidente Prudente':'COMED',
-  'Conselho Municipal de Patrimônio Histórico, Artístico, Arqueológico e Turístico':'CMPHAAT',
-  'Conselho Municipal de Planejamento':'CMP',
-  'Conselho Municipal de Política Cultural de Presidente Prudente':'CMPC',
-  'Conselho Municipal de Saúde':'CMS',
-  'Conselho Municipal de Segurança Alimentar e Nutricional':'COMSEA',
-  'Conselho Municipal de Turismo':'COMTUR',
-  'Conselho Municipal do Idoso':'CMI',
-  'Conselho Municipal do Meio Ambiente':'CMMA',
-  'Conselho Municipal dos Direitos da Criança e do Adolescente':'CMDCA',
-  'Conselho Tutelar de Presidente Prudente':'CTPP',
   // Outras Unidades
   'Comissão Interna de Prevenção de Acidentes e Assédio':'CIPA',
   'Comitê Gestor da Praça CEU':'CGPCEU',
@@ -339,11 +306,7 @@ const SIGLAS = {
   'Fundo Municipal de Defesa dos Interesses Difusos':'FMDID',
   'Fundo Social de Solidariedade de Presidente Prudente':'FUNDO',
   'Núcleo da Escola Federativa do Município de Presidente Prudente':'NEF',
-  'Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalho':'SESMT',
-  // Administração Indireta
-  'Serviço de Assistência a Saúde dos Municipários':'SASSOM',
-  'Prudenprev':'PRUDENPREV',
-  'Fundação Inova Prudente':'INOVAPP'
+  'Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalho':'SESMT'
 };
 
 const ORGAOS_LIST = {
@@ -370,32 +333,6 @@ const ORGAOS_LIST = {
     'Secretaria de Tecnologia da Informação',
     'Secretaria de Turismo'
   ],
-  'Conselhos':[
-    'Conselho de Acompanhamento e Controle Social do FUNDEB e de Valorização dos Professores da Educação',
-    'Conselho de Governança Pública',
-    'Conselho Deliberativo do Fundo Social de Solidariedade',
-    'Conselho Municipal Antidrogas',
-    'Conselho Municipal da Assistência Social de Presidente Prudente',
-    'Conselho Municipal da Condição Feminina',
-    'Conselho Municipal da Habitação de Interesse Social',
-    'Conselho Municipal da Igualdade Racial',
-    'Conselho Municipal da Juventude',
-    'Conselho Municipal da Pessoa com Deficiência',
-    'Conselho Municipal de Alimentação Escolar',
-    'Conselho Municipal de Ciência, Tecnologia e Inovação',
-    'Conselho Municipal de Desenvolvimento Rural',
-    'Conselho Municipal de Educação de Presidente Prudente',
-    'Conselho Municipal de Patrimônio Histórico, Artístico, Arqueológico e Turístico',
-    'Conselho Municipal de Planejamento',
-    'Conselho Municipal de Política Cultural de Presidente Prudente',
-    'Conselho Municipal de Saúde',
-    'Conselho Municipal de Segurança Alimentar e Nutricional',
-    'Conselho Municipal de Turismo',
-    'Conselho Municipal do Idoso',
-    'Conselho Municipal do Meio Ambiente',
-    'Conselho Municipal dos Direitos da Criança e do Adolescente',
-    'Conselho Tutelar de Presidente Prudente'
-  ],
   'Outras Unidades':[
     'Comissão Interna de Prevenção de Acidentes e Assédio',
     'Comitê Gestor da Praça CEU',
@@ -408,11 +345,6 @@ const ORGAOS_LIST = {
     'Fundo Social de Solidariedade de Presidente Prudente',
     'Núcleo da Escola Federativa do Município de Presidente Prudente',
     'Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalho'
-  ],
-  'Administração Indireta':[
-    'Serviço de Assistência a Saúde dos Municipários',
-    'Prudenprev',
-    'Fundação Inova Prudente'
   ]
 };
 
@@ -432,8 +364,6 @@ const sigla = orgao => {
   const lower = norm.toLowerCase();
   const found = Object.keys(SIGLAS).find(k => k.normalize('NFC').toLowerCase() === lower);
   if (found) return SIGLAS[found];
-  const m = norm.match(/^Conselho\s+(.+)$/i);
-  if (m) return m[1];
   return norm.substring(0,6).toUpperCase();
 };
 
@@ -447,13 +377,6 @@ function evtHoje() {
     return d.getTime() === h.getTime();
   }).sort((a,b) => new Date(a.data_evento)-new Date(b.data_evento));
 }
-function evtTodosHoje() {
-  const h = new Date(); h.setHours(0,0,0,0);
-  return todosEventos.filter(e => {
-    const d = new Date(e.data_evento); d.setHours(0,0,0,0);
-    return d.getTime() === h.getTime();
-  }).sort((a,b) => new Date(a.data_evento)-new Date(b.data_evento));
-}
 
 async function render() {
   if (!token || !usuario) { $('root').innerHTML = htmlLogin(); return; }
@@ -463,17 +386,10 @@ async function render() {
   } catch(e) { eventos = []; }
 
   if (usuario.tipo === 'orgao' && isUsuarioSecom()) {
-    // SECOM vê todos os eventos da prefeitura
-    try {
-      const r = await api('getEventos', {todos:'true'});
-      eventos = Array.isArray(r) ? r : [];
-    } catch(e) {}
+    try { const r = await api('getEventos', {todos:'true'}); eventos = Array.isArray(r) ? r : []; } catch(e) {}
     todosEventos = [];
   } else if (usuario.tipo === 'orgao' && usuario.orgao !== 'Gabinete do Prefeito') {
-    try {
-      const r = await api('getEventos', {todos:'true'});
-      todosEventos = Array.isArray(r) ? r : [];
-    } catch(e) { todosEventos = []; }
+    try { const r = await api('getEventos', {todos:'true'}); todosEventos = Array.isArray(r) ? r : []; } catch(e) { todosEventos = []; }
   } else {
     todosEventos = [];
   }
@@ -488,50 +404,10 @@ async function render() {
 }
 
 function logout() {
-  if(_autoRefreshId){ clearInterval(_autoRefreshId); _autoRefreshId=null; }
+  if (_autoRefreshId) { clearInterval(_autoRefreshId); _autoRefreshId = null; }
   token = null; usuario = null; eventos = []; todosEventos = [];
   localStorage.removeItem('token'); localStorage.removeItem('usuario');
   render();
-}
-
-function iniciarAutoRefresh() {
-  if(_autoRefreshId){ clearInterval(_autoRefreshId); _autoRefreshId=null; }
-  const tipo = usuario?.tipo;
-  if(tipo !== 'admin' && tipo !== 'orgao') return;
-  _autoRefreshId = setInterval(async function(){
-    if(isUsuarioSecom()){
-      try{ const r=await api('getEventos',{todos:'true'}); if(Array.isArray(r)) eventos=r; }catch(e){ return; }
-      const cs=$('secomEventosHoje');
-      if(cs){ const hj=evtHoje(); cs.innerHTML=hj.length===0?'<div class="empty">Nenhum evento hoje</div>':hj.map(e=>cardEvento(e,true)).join(''); }
-      if(calendar){ try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }catch(e){} }
-      return;
-    }
-    try{ const r=await api('getEventos'); if(Array.isArray(r)) eventos=r; } catch(e){ return; }
-    if(tipo === 'admin'){
-      if(calendar){ try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }catch(e){} }
-      renderizarMetrica();
-    } else {
-      // Atualiza colunas "Eventos de Hoje" e calendário para órgãos
-      if (usuario.orgao !== 'Gabinete do Prefeito') {
-        try{ const r=await api('getEventos',{todos:'true'}); if(Array.isArray(r)) todosEventos=r; }catch(e){}
-      }
-      const cont1 = $('orgaoEventosHoje');
-      if(cont1){
-        const hoje = evtHoje();
-        cont1.innerHTML = hoje.length===0
-          ? '<div class="empty">Nenhum evento hoje</div>'
-          : hoje.map(e=>cardEvento(e)).join('');
-      }
-      const cont2 = $('todosEventosHoje');
-      if(cont2){
-        const todos = evtTodosHoje();
-        cont2.innerHTML = todos.length===0
-          ? '<div class="empty">Nenhum evento hoje</div>'
-          : todos.map(e=>cardEventoResumo(e)).join('');
-      }
-      if(calendar){ try{ calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); }catch(e){} }
-    }
-  }, 60000);
 }
 
 // ════════════════ LOGIN ════════════════
@@ -541,7 +417,7 @@ function htmlLogin() {
     <div class="login-card">
       <img src="Logo plataforma de Agenda.png" alt="Agenda" class="login-logo">
       <h1>Plataforma de Agenda</h1>
-      <p>Presidente Prudente · Secretarias e Conselhos</p>
+      <p>Presidente Prudente · Secretarias</p>
       <div id="erroLogin" class="erro"></div>
       <div id="okLogin" class="sucesso"></div>
       <form onsubmit="fazerLogin(event)">
@@ -558,6 +434,7 @@ function htmlLogin() {
       <div class="login-links">
         <a href="#" onclick="abrirSolicitacao();return false">👤 Criar Conta</a>
         <a href="#" onclick="abrirRecuperarSenha();return false">🔑 Recuperar Senha</a>
+        <a href="#" onclick="configurarUrl();return false" style="color:#ccc;font-size:11px">⚙️</a>
       </div>
     </div>
   </div>
@@ -591,7 +468,6 @@ function htmlModalSolicitacao() {
         <button class="modal-close" onclick="fecharModal('modalSolicitacao')">×</button></div>
       <div class="modal-body">
         <p style="color:#666;font-size:13px;margin-bottom:16px">Preencha os dados. Sua solicitação será analisada pelo administrador.</p>
-        <div id="avisoSolic" class="aviso"></div>
         <div id="erroSolic" class="erro"></div><div id="okSolic" class="sucesso"></div>
         <form id="formSolic" onsubmit="enviarSolicitacao(event)">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -621,8 +497,8 @@ function abrirSolicitacao() { abrirModal('modalSolicitacao'); }
 
 async function enviarSolicitacao(ev) {
   ev.preventDefault();
-  const aviso=$('avisoSolic'),err=$('erroSolic'),ok=$('okSolic');
-  aviso.style.display='none'; err.style.display='none'; ok.style.display='none';
+  const err=$('erroSolic'),ok=$('okSolic');
+  err.style.display='none'; ok.style.display='none';
   const senha=$('sSenha').value, senhaConf=$('sSenhaConf').value;
   if (senha !== senhaConf) {
     err.textContent='❌ As senhas não coincidem.'; err.style.display='block'; return;
@@ -637,18 +513,11 @@ async function enviarSolicitacao(ev) {
       orgao:$('sOrgao').value,
       senha
     });
-    ok.textContent='✅ Conta criada com sucesso! Você já pode fazer login com seus dados.';
+    ok.textContent='✅ Solicitação enviada! O administrador entrará em contato.';
     ok.style.display='block';
     $('formSolic').reset();
-    setTimeout(()=>fecharModal('modalSolicitacao'),4000);
-  } catch(e){
-    if(e.message&&e.message.includes('Limite')) {
-      aviso.textContent='⚠️ '+e.message;
-      aviso.style.display='block';
-    } else {
-      err.textContent='❌ '+e.message; err.style.display='block';
-    }
-  }
+    setTimeout(()=>fecharModal('modalSolicitacao'),3000);
+  } catch(e){ err.textContent='❌ '+e.message; err.style.display='block'; }
 }
 
 // ════════════════ MODAL RECUPERAR SENHA ════════════════
@@ -656,20 +525,16 @@ function htmlModalRecuperarSenha() {
   return `
   <div id="modalRecuperar" class="modal-bg" onclick="fecharModal('modalRecuperar')">
     <div class="modal-box" onclick="event.stopPropagation()">
-      <div class="modal-head"><h3>🔑 Redefinir Senha</h3>
+      <div class="modal-head"><h3>🔑 Recuperar Senha</h3>
         <button class="modal-close" onclick="fecharModal('modalRecuperar')">×</button></div>
       <div class="modal-body">
-        <p style="color:#666;font-size:13px;margin-bottom:16px">Informe seu login ou e-mail e escolha uma nova senha.</p>
+        <p style="color:#666;font-size:13px;margin-bottom:16px">Informe seu login ou e-mail. O administrador será notificado e redefinirá sua senha.</p>
         <div id="erroRecup" class="erro"></div><div id="okRecup" class="sucesso"></div>
         <form id="formRecup" onsubmit="enviarRecuperar(event)">
           <div class="form-group"><label>Login ou E-mail</label>
-            <input id="rLogin" type="text" required placeholder="seu.login ou email@..." autocapitalize="none" autocorrect="off"></div>
-          <div class="form-group"><label>Nova Senha</label>
-            <input id="rNovaSenha" type="password" required placeholder="Digite a nova senha" minlength="6"></div>
-          <div class="form-group"><label>Confirmar Nova Senha</label>
-            <input id="rConfirmarSenha" type="password" required placeholder="Repita a nova senha" minlength="6"></div>
+            <input id="rLogin" type="text" required placeholder="seu.login ou email@..."></div>
           <div class="btns-row">
-            <button type="submit" class="btn btn-azul">🔑 Redefinir Senha</button>
+            <button type="submit" class="btn btn-azul">🔑 Solicitar Recuperação</button>
             <button type="button" class="btn btn-cinza" onclick="fecharModal('modalRecuperar')">Cancelar</button>
           </div>
         </form>
@@ -684,17 +549,12 @@ async function enviarRecuperar(ev) {
   ev.preventDefault();
   const err=$('erroRecup'),ok=$('okRecup');
   err.style.display='none'; ok.style.display='none';
-  const novaSenha=$('rNovaSenha').value;
-  const confirmar=$('rConfirmarSenha').value;
-  if(novaSenha !== confirmar){
-    err.textContent='❌ As senhas não coincidem.'; err.style.display='block'; return;
-  }
   try {
-    await api('recuperarSenha',{ login:$('rLogin').value.trim(), novaSenha });
-    ok.textContent='✅ Senha redefinida com sucesso! Você já pode fazer login.';
+    await api('recuperarSenha',{ login:$('rLogin').value.trim() });
+    ok.textContent='✅ Solicitação registrada! O administrador entrará em contato para redefinir sua senha.';
     ok.style.display='block';
     $('formRecup').reset();
-    setTimeout(()=>fecharModal('modalRecuperar'),3000);
+    setTimeout(()=>fecharModal('modalRecuperar'),3500);
   } catch(e){ err.textContent='❌ '+e.message; err.style.display='block'; }
 }
 
@@ -860,15 +720,15 @@ function htmlPrefeito() {
               <input id="evtData" type="datetime-local" required oninput="verificarData()">
               <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Data retroativa</div>
             </div>
-            <div class="form-group"><label>Local *</label><input id="evtLocal" type="text" required placeholder="Ex: Sala de Reuniões"></div>
+            <div class="form-group"><label>Local</label><input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group"><label>Responsável *</label><input id="evtResp" type="text" required></div>
+            <div class="form-group"><label>Responsável</label><input id="evtResp" type="text"></div>
             <div class="form-group"><label>Telefone</label><input id="evtTel" type="tel" placeholder="(18) 99999-9999"></div>
           </div>
           <div class="form-group"><label>Descrição / Observações</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
           <div class="form-group">
-            <label>Anexo (imagem, PDF, doc — máx. 20MB)</label>
+            <label>Anexo (imagem, PDF, doc — máx. 10MB)</label>
             <input type="file" id="evtAnexo" accept="image/*,.pdf,.doc,.docx" onchange="mostrarNomeAnexo(this)" style="display:block;padding:6px 0;font-size:13px">
             <div id="nomeAnexo" style="font-size:12px;color:#28a745;margin-top:4px"></div>
             <div class="progress-bar-container" id="progressUpload"><div class="progress-bar-fill" id="progressFill"></div></div>
@@ -882,6 +742,43 @@ function htmlPrefeito() {
     </div>
   </main>
   ${htmlModalEvento()}${htmlModalForm()}${htmlModalDia()}`;
+}
+
+function evtTodosHoje() {
+  const h = new Date(); h.setHours(0,0,0,0);
+  return todosEventos.filter(e => {
+    const d = new Date(e.data_evento); d.setHours(0,0,0,0);
+    return d.getTime() === h.getTime();
+  }).sort((a,b) => new Date(a.data_evento)-new Date(b.data_evento));
+}
+
+function iniciarAutoRefresh() {
+  if (_autoRefreshId) { clearInterval(_autoRefreshId); _autoRefreshId = null; }
+  const tipo = usuario?.tipo;
+  if (tipo !== 'admin' && tipo !== 'orgao') return;
+  _autoRefreshId = setInterval(async function() {
+    if (isUsuarioSecom()) {
+      try { const r = await api('getEventos',{todos:'true'}); if (Array.isArray(r)) eventos=r; } catch(e) { return; }
+      const cs = $('secomEventosHoje');
+      if (cs) { const hj=evtHoje(); cs.innerHTML=hj.length===0?'<div class="empty">Nenhum evento hoje</div>':hj.map(e=>cardEvento(e,true)).join(''); }
+      if (calendar) { try { calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); } catch(e) {} }
+      return;
+    }
+    try { const r = await api('getEventos'); if (Array.isArray(r)) eventos=r; } catch(e) { return; }
+    if (tipo === 'admin') {
+      if (calendar) { try { calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); } catch(e) {} }
+      renderizarMetrica();
+    } else {
+      if (usuario.orgao !== 'Gabinete do Prefeito') {
+        try { const r = await api('getEventos',{todos:'true'}); if (Array.isArray(r)) todosEventos=r; } catch(e) {}
+      }
+      const cont1 = $('orgaoEventosHoje');
+      if (cont1) { const hj=evtHoje(); cont1.innerHTML=hj.length===0?'<div class="empty">Nenhum evento hoje</div>':hj.map(e=>cardEvento(e)).join(''); }
+      const cont2 = $('todosEventosHoje');
+      if (cont2) { const todos=evtTodosHoje(); cont2.innerHTML=todos.length===0?'<div class="empty">Nenhum evento hoje</div>':todos.map(e=>cardEventoResumo(e)).join(''); }
+      if (calendar) { try { calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); } catch(e) {} }
+    }
+  }, 60000);
 }
 
 // ════════════════ SECOM HTML (leitura de toda a agenda) ════════════════
@@ -940,13 +837,32 @@ function htmlSecom() {
   ${htmlModalEvento()}${htmlModalDia()}`;
 }
 
+function cardEventoResumo(e) {
+  const hora = fmtHora(e.data_evento) || '';
+  const sg = e.sigla_orgao || sigla(e.orgao) || '';
+  const pref = isPrefeito(e);
+  return `
+  <div class="evento-card${pref?' prefeito':''}" onclick="verEvento('${e.id}')">
+    <div class="evento-titulo">${e.titulo}
+      ${pref?'<span class="tag-prefeito">🏛️ PREFEITO</span>':''}
+    </div>
+    <div class="evento-meta">
+      ${hora?`<span>🕐 ${hora}</span>`:''}
+      ${sg?`<span class="tag-orgao">${sg}</span>`:''}
+      ${e.local?`<span>📍 ${e.local}</span>`:''}
+    </div>
+  </div>`;
+}
+
 // ════════════════ SECRETARIA HTML ════════════════
 function htmlSecretaria() {
   const meus=evtDoUsuario(), hoje=evtHoje();
-  const mes=(()=>{
-    const agora=new Date();
-    return meus.filter(e=>{const d=new Date(e.data_evento);return d.getMonth()===agora.getMonth()&&d.getFullYear()===agora.getFullYear();}).length;
+  const semana=(()=>{
+    const ini=new Date(); ini.setHours(0,0,0,0); ini.setDate(ini.getDate()-ini.getDay());
+    const fim=new Date(ini); fim.setDate(ini.getDate()+6); fim.setHours(23,59,59,999);
+    return meus.filter(e=>{const x=new Date(e.data_evento);return x>=ini&&x<=fim;}).length;
   })();
+  const orgaos=Object.values(ORGAOS_LIST).reduce((acc,l)=>acc+l.length,0);
   return `
   <button class="menu-toggle" onclick="toggleMenu()">☰</button>
   <div class="overlay" onclick="toggleMenu()"></div>
@@ -970,22 +886,16 @@ function htmlSecretaria() {
   <main class="main">
     <div id="inicio" class="view active">
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-info"><h3>${meus.length}</h3><p>Total de Eventos</p></div></div>
-        <div class="stat-card"><div class="stat-icon">📆</div><div class="stat-info"><h3>${mes}</h3><p>Este Mês</p></div></div>
-        <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div></div>
-        <div class="stat-card" onclick="mostrarView('novoEvento')"><div class="stat-icon">➕</div><div class="stat-info"><h3>Novo</h3><p>Criar Evento</p></div></div>
+        <div class="stat-card" onclick="mostrarView('meusEventos')"><div class="stat-icon">📅</div><div class="stat-info"><h3>${meus.length}</h3><p>Total de Eventos</p></div></div>
+        <div class="stat-card" onclick="mostrarEventosSemanaSec()"><div class="stat-icon">📆</div><div class="stat-info"><h3>${semana}</h3><p>Esta Semana</p></div></div>
+        <div class="stat-card" onclick="mostrarEventosHojeSec()"><div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div></div>
+        <div class="stat-card"><div class="stat-icon">🏛️</div><div class="stat-info"><h3>${orgaos}</h3><p>Órgãos</p></div></div>
       </div>
-      <div class="dashboard-dois-col">
-        <div class="secao">
-          <div class="secao-header"><h2>📌 Meus Eventos Hoje</h2>
-            <button class="btn btn-azul" onclick="mostrarView('novoEvento')">+ Novo</button>
-          </div>
-          <div id="orgaoEventosHoje">${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e)).join('')}</div>
+      <div class="secao">
+        <div class="secao-header"><h2>📌 Eventos de Hoje</h2>
+          <button class="btn btn-azul" onclick="mostrarView('novoEvento')">+ Novo Evento</button>
         </div>
-        <div class="secao">
-          <div class="secao-header"><h2>🏛️ Todos os Órgãos Hoje</h2></div>
-          <div id="todosEventosHoje">${evtTodosHoje().length===0?'<div class="empty">Nenhum evento hoje</div>':evtTodosHoje().map(e=>cardEventoResumo(e)).join('')}</div>
-        </div>
+        ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e)).join('')}
       </div>
     </div>
     <div id="calendario" class="view"><div class="secao"><div id="cal"></div></div></div>
@@ -1007,15 +917,15 @@ function htmlSecretaria() {
               <input id="evtData" type="datetime-local" required oninput="verificarData()">
               <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Não é permitido criar eventos com data retroativa</div>
             </div>
-            <div class="form-group"><label>Local *</label><input id="evtLocal" type="text" required placeholder="Ex: Sala de Reuniões"></div>
+            <div class="form-group"><label>Local</label><input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group"><label>Responsável *</label><input id="evtResp" type="text" required placeholder="Nome do responsável"></div>
+            <div class="form-group"><label>Responsável</label><input id="evtResp" type="text" placeholder="Nome do responsável"></div>
             <div class="form-group"><label>Telefone / Contato *</label><input id="evtTel" type="tel" required placeholder="(18) 99999-9999"></div>
           </div>
           <div class="form-group"><label>Descrição / Observações *</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
           <div class="form-group">
-            <label>Anexo (imagem, PDF, doc — máx. 20MB)</label>
+            <label>Anexo (imagem, PDF, doc — máx. 10MB)</label>
             <input type="file" id="evtAnexo" accept="image/*,.pdf,.doc,.docx" onchange="mostrarNomeAnexo(this)" style="display:block;padding:6px 0;font-size:13px">
             <div id="nomeAnexo" style="font-size:12px;color:#28a745;margin-top:4px"></div>
             <div class="progress-bar-container" id="progressUpload"><div class="progress-bar-fill" id="progressFill"></div></div>
@@ -1048,23 +958,6 @@ function cardEvento(e, mostrarOrgao=false) {
       ${e.local?`<span>📍 ${e.local}</span>`:''}
       ${e.responsavel?`<span>👤 ${e.responsavel}</span>`:''}
       ${usuario?.tipo==='admin'&&e.publicado_por?`<span style="color:#888;font-size:11px">✍️ ${e.publicado_por} · ${fmtDH(e.data_publicacao)}</span>`:''}
-    </div>
-  </div>`;
-}
-
-function cardEventoResumo(e) {
-  const hora = fmtHora(e.data_evento) || '';
-  const sg = e.sigla_orgao || sigla(e.orgao) || '';
-  const pref = isPrefeito(e);
-  return `
-  <div class="evento-card${pref?' prefeito':''}" onclick="verEvento('${e.id}')">
-    <div class="evento-titulo">${e.titulo}
-      ${pref?'<span class="tag-prefeito">🏛️ PREFEITO</span>':''}
-    </div>
-    <div class="evento-meta">
-      ${hora?`<span>🕐 ${hora}</span>`:''}
-      ${sg?`<span class="tag-orgao">${sg}</span>`:''}
-      ${e.local?`<span>📍 ${e.local}</span>`:''}
     </div>
   </div>`;
 }
@@ -1418,21 +1311,20 @@ function mostrarNomeAnexo(input) {
   if(input.files&&input.files[0]){
     const f=input.files[0];
     const mb=(f.size/1024/1024).toFixed(2);
-    if(f.size>20*1024*1024){div.textContent='❌ Arquivo muito grande (máx. 20MB)';div.style.color='#dc3545';input.value='';return;}
+    if(f.size>10*1024*1024){div.textContent='❌ Arquivo muito grande (máx. 10MB)';div.style.color='#dc3545';input.value='';return;}
     div.textContent=`📎 ${f.name} (${mb} MB)`;div.style.color='#28a745';
   } else { div.textContent=''; }
 }
 
 function verEvento(id) {
-  const e=eventos.find(x=>String(x.id)===String(id))||todosEventos.find(x=>String(x.id)===String(id)); if(!e) return;
+  const e=eventos.find(x=>String(x.id)===String(id)); if(!e) return;
   const pref=isPrefeito(e);
   $('modalEventoHead').className='modal-head'+(pref?' prefeito-head':'');
   $('modalEventoTitulo').textContent=e.titulo;
   const meuEvento = String(e.orgao||'').trim() === String(usuario?.orgao||'').trim();
   $('modalEventoBody').innerHTML=`
     ${pref?'<div style="text-align:center;margin-bottom:16px"><span class="tag-prefeito" style="font-size:13px">🏛️ Evento do Gabinete do Prefeito</span></div>':''}
-    <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtData(e.data_evento)}</div></div>
-    <div class="info-linha"><div class="info-label">⏰ Hora</div><div class="info-valor">${fmtHora(e.data_evento)}</div></div>
+    <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtDH(e.data_evento)}</div></div>
     <div class="info-linha"><div class="info-label">📍 Local</div><div class="info-valor">${e.local||'—'}</div></div>
     <div class="info-linha"><div class="info-label">🏢 Órgão</div><div class="info-valor">${(e.sigla_orgao||sigla(e.orgao))||'—'}</div></div>
     <div class="info-linha"><div class="info-label">👤 Responsável</div><div class="info-valor">${e.responsavel||'—'}</div></div>
@@ -1443,10 +1335,9 @@ function verEvento(id) {
       <a href="${e.anexo_url}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#004d99;color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;text-decoration:none">
         📥 Baixar / Visualizar ${e.anexo_nome?'('+e.anexo_nome+')':''}
       </a></div></div>`:''}`;
-  const podeEditar = meuEvento || usuario?.tipo === 'admin';
   $('modalEventoFooter').innerHTML=`
-    ${podeEditar?`<button class="btn btn-amarelo" onclick="abrirEdicao('${e.id}')">✏️ Editar</button>`:''}
-    ${podeEditar?`<button class="btn btn-vermelho" onclick="confirmarExcluir('${e.id}')">🗑️ Excluir</button>`:''}
+    ${meuEvento?`<button class="btn btn-amarelo" onclick="abrirEdicao('${e.id}')">✏️ Editar</button>`:''}
+    ${meuEvento?`<button class="btn btn-vermelho" onclick="confirmarExcluir('${e.id}')">🗑️ Excluir</button>`:''}
     <button class="btn btn-cinza" onclick="fecharModal('modalEvento')">Fechar</button>`;
   abrirModal('modalEvento');
 }
@@ -1472,7 +1363,7 @@ async function salvarEdicao(ev) {
 }
 
 async function confirmarExcluir(id) {
-  const e=eventos.find(x=>String(x.id)===String(id))||todosEventos.find(x=>String(x.id)===String(id));
+  const e=eventos.find(x=>String(x.id)===String(id));
   if(!confirm(`Excluir o evento "${e?.titulo}"?`)) return;
   try {
     await api('excluirEvento',{id}); fecharModal('modalEvento');
@@ -1490,7 +1381,7 @@ async function criarEvento(ev) {
   let arquivo_base64='',arquivo_nome='',arquivo_tipo='';
   if(fileInput&&fileInput.files&&fileInput.files[0]){
     const f=fileInput.files[0];
-    if(f.size>20*1024*1024){alert('❌ Arquivo muito grande. Máximo 20MB.');return;}
+    if(f.size>10*1024*1024){alert('❌ Arquivo muito grande. Máximo 10MB.');return;}
     arquivo_nome=f.name; arquivo_tipo=f.type;
     const prog=$('progressUpload'),fill=$('progressFill');
     if(prog){prog.style.display='block';if(fill)fill.style.width='30%';}
@@ -1534,15 +1425,14 @@ function eventosParaCalendario() {
   return evtDoUsuario().map(e=>({
     id:String(e.id),
     title:isMobile()
-      ?(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom()
+      ?(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'
           ?`${fmtHora(e.data_evento)}\n${e.sigla_orgao||sigla(e.orgao)}`
           :`${fmtHora(e.data_evento)}\n${e.titulo}`)
-      :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom()
-          ?`${fmtHora(e.data_evento)}\n${e.sigla_orgao||sigla(e.orgao)}: ${e.titulo}`
-          :`${fmtHora(e.data_evento)}\n${e.titulo}`),
+      :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'
+          ?`${e.sigla_orgao||sigla(e.orgao)}: ${e.titulo}`
+          :e.titulo),
     start:e.data_evento,
-    className:isPrefeito(e)?(isMobile()?'prefeito-event-mobile':'prefeito-event')
-      :usuario?.tipo==='admin'&&isSecom(e)?(isMobile()?'secom-event-mobile':'secom-event'):'',
+    className:isPrefeito(e)?(isMobile()?'prefeito-event-mobile':'prefeito-event'):'',
     extendedProps:{eventoId:e.id}
   }));
 }
@@ -1567,13 +1457,6 @@ function iniciarCalendario() {
     buttonText:{today:'Hoje',month:'Mês',week:'Semana',list:'Lista'},
     noEventsText:'Nenhum evento para exibir',
     events:eventosParaCalendario(),
-    eventContent:function(arg){
-      if(arg.view.type!=='listMonth') return;
-      var e=evtDoUsuario().find(function(ev){return String(ev.id)===arg.event.id;});
-      if(!e) return;
-      var partes=[fmtHora(e.data_evento),e.sigla_orgao||sigla(e.orgao)||'',e.titulo].filter(function(x){return !!x;});
-      return {html:'<span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">'+partes.join(' · ')+'</span>'};
-    },
     eventClick:info=>verEvento(info.event.extendedProps.eventoId),
     dateClick:info=>{
       const lista=evtDoUsuario().filter(e=>{
@@ -1614,6 +1497,25 @@ function mostrarEventosSemana() {
   mostrarView('listaEventos');
   const cont=$('listaEvtConteudo');
   if(cont) cont.innerHTML=renderTabelaAdmin(lista);
+  const busca=$('buscaEvt'); if(busca) busca.value='';
+}
+
+function mostrarEventosSemanaSec() {
+  const d=new Date(),ini=new Date(d); ini.setDate(d.getDate()-d.getDay()); ini.setHours(0,0,0,0);
+  const fim=new Date(ini); fim.setDate(ini.getDate()+6); fim.setHours(23,59,59,999);
+  const lista=evtDoUsuario().filter(e=>{const x=new Date(e.data_evento);return x>=ini&&x<=fim;});
+  mostrarView('meusEventos');
+  const cont=$('listaEvtConteudo');
+  if(cont) cont.innerHTML=renderListaEventos(lista);
+  const busca=$('buscaEvt'); if(busca) busca.value='';
+}
+
+function mostrarEventosHojeSec() {
+  const h=new Date(); h.setHours(0,0,0,0);
+  const lista=evtDoUsuario().filter(e=>{const d=new Date(e.data_evento); d.setHours(0,0,0,0); return d.getTime()===h.getTime();});
+  mostrarView('meusEventos');
+  const cont=$('listaEvtConteudo');
+  if(cont) cont.innerHTML=renderListaEventos(lista);
   const busca=$('buscaEvt'); if(busca) busca.value='';
 }
 
@@ -1698,11 +1600,7 @@ async function salvarUsuario(ev) {
     await api('criarUsuario',{login:$('uLogin').value,nome:$('uNome').value,
       email:$('uEmail').value,senha:$('uSenha').value,tipo,orgao});
     fecharModal('modalUsuario'); await carregarUsuarios(); alert('✅ Usuário criado!');
-  } catch(e){
-    if(e.message&&e.message.includes('Limite')) {
-      alert('⚠️ LIMITE DE USUÁRIOS ATINGIDO\n\n' + e.message + '\n\nPara cadastrar um novo usuário neste órgão, exclua um dos existentes primeiro.');
-    } else { alert('❌ '+e.message); }
-  }
+  } catch(e){alert('❌ '+e.message);}
 }
 
 async function resetarSenha(id, nome) {
@@ -1760,11 +1658,7 @@ async function aprovarSolicitacao(id) {
     alert(senhaGerada
       ? `✅ Usuário "${s.nome}" aprovado!\n\nSenha gerada automaticamente: ${senha}\nComunique ao usuário para alterar.`
       : `✅ Usuário "${s.nome}" aprovado!\n\nO usuário já definiu sua própria senha.`);
-  } catch(e){
-    if(e.message&&e.message.includes('Limite')) {
-      alert('⚠️ LIMITE DE USUÁRIOS ATINGIDO\n\n' + e.message + '\n\nO órgão "' + (s.orgao||'—') + '" já possui o número máximo de usuários cadastrados.\n\nExclua um usuário existente antes de aprovar esta solicitação.');
-    } else { alert('❌ '+e.message); }
-  }
+  } catch(e){alert('❌ '+e.message);}
 }
 
 async function resetarSenhaSolicitacao(id, login) {
