@@ -891,11 +891,17 @@ function htmlSecretaria() {
         <div class="stat-card" onclick="mostrarEventosHojeSec()"><div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div></div>
         <div class="stat-card"><div class="stat-icon">🏛️</div><div class="stat-info"><h3>${orgaos}</h3><p>Órgãos</p></div></div>
       </div>
-      <div class="secao">
-        <div class="secao-header"><h2>📌 Eventos de Hoje</h2>
-          <button class="btn btn-azul" onclick="mostrarView('novoEvento')">+ Novo Evento</button>
+      <div class="dashboard-dois-col">
+        <div class="secao">
+          <div class="secao-header"><h2>📌 Meus Eventos Hoje</h2>
+            <button class="btn btn-azul" onclick="mostrarView('novoEvento')">+ Novo</button>
+          </div>
+          <div id="orgaoEventosHoje">${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e)).join('')}</div>
         </div>
-        ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e)).join('')}
+        <div class="secao">
+          <div class="secao-header"><h2>🏛️ Todos os Órgãos Hoje</h2></div>
+          <div id="todosEventosHoje">${evtTodosHoje().length===0?'<div class="empty">Nenhum evento hoje</div>':evtTodosHoje().map(e=>cardEventoResumo(e)).join('')}</div>
+        </div>
       </div>
     </div>
     <div id="calendario" class="view"><div class="secao"><div id="cal"></div></div></div>
