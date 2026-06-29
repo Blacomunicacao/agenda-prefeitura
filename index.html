@@ -1327,7 +1327,7 @@ function verEvento(id) {
   const pref=isPrefeito(e);
   $('modalEventoHead').className='modal-head'+(pref?' prefeito-head':'');
   $('modalEventoTitulo').textContent=e.titulo;
-  const meuEvento = String(e.orgao||'').trim() === String(usuario?.orgao||'').trim();
+  const meuEvento = usuario?.tipo === 'admin' || String(e.orgao||'').trim() === String(usuario?.orgao||'').trim();
   $('modalEventoBody').innerHTML=`
     ${pref?'<div style="text-align:center;margin-bottom:16px"><span class="tag-prefeito" style="font-size:13px">🏛️ Evento do Gabinete do Prefeito</span></div>':''}
     <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtDH(e.data_evento)}</div></div>
