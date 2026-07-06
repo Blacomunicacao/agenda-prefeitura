@@ -528,13 +528,17 @@ function htmlModalRecuperarSenha() {
       <div class="modal-head"><h3>🔑 Recuperar Senha</h3>
         <button class="modal-close" onclick="fecharModal('modalRecuperar')">×</button></div>
       <div class="modal-body">
-        <p style="color:#666;font-size:13px;margin-bottom:16px">Informe seu login ou e-mail. O administrador será notificado e redefinirá sua senha.</p>
+        <p style="color:#666;font-size:13px;margin-bottom:16px">Informe seu login e defina uma nova senha. A alteração é imediata.</p>
         <div id="erroRecup" class="erro"></div><div id="okRecup" class="sucesso"></div>
         <form id="formRecup" onsubmit="enviarRecuperar(event)">
           <div class="form-group"><label>Login ou E-mail</label>
             <input id="rLogin" type="text" required placeholder="seu.login ou email@..."></div>
+          <div class="form-group"><label>Nova Senha</label>
+            <input id="rSenha" type="password" required placeholder="Digite a nova senha" minlength="4"></div>
+          <div class="form-group"><label>Confirmar Nova Senha</label>
+            <input id="rSenha2" type="password" required placeholder="Repita a nova senha"></div>
           <div class="btns-row">
-            <button type="submit" class="btn btn-azul">🔑 Solicitar Recuperação</button>
+            <button type="submit" class="btn btn-azul">🔑 Redefinir Senha</button>
             <button type="button" class="btn btn-cinza" onclick="fecharModal('modalRecuperar')">Cancelar</button>
           </div>
         </form>
@@ -549,12 +553,17 @@ async function enviarRecuperar(ev) {
   ev.preventDefault();
   const err=$('erroRecup'),ok=$('okRecup');
   err.style.display='none'; ok.style.display='none';
+  const login=$('rLogin').value.trim();
+  const senha=$('rSenha').value;
+  const senha2=$('rSenha2').value;
+  if(senha!==senha2){err.textContent='❌ As senhas não conferem.';err.style.display='block';return;}
+  if(senha.length<4){err.textContent='❌ Senha muito curta (mínimo 4 caracteres).';err.style.display='block';return;}
   try {
-    await api('recuperarSenha',{ login:$('rLogin').value.trim() });
-    ok.textContent='✅ Solicitação registrada! O administrador entrará em contato para redefinir sua senha.';
+    await api('recuperarSenha',{login,novaSenha:senha});
+    ok.textContent='✅ Senha redefinida com sucesso! Você já pode fazer login com a nova senha.';
     ok.style.display='block';
     $('formRecup').reset();
-    setTimeout(()=>fecharModal('modalRecuperar'),3500);
+    setTimeout(()=>fecharModal('modalRecuperar'),3000);
   } catch(e){ err.textContent='❌ '+e.message; err.style.display='block'; }
 }
 
