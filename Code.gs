@@ -446,31 +446,30 @@ function handleSolicitarAcesso(data) {
   return { success: true, message: 'Solicitação registrada com sucesso' };
 }
 
-// Recuperar Senha (publico)
+// Recuperar Senha (publico) — reset autônomo
 function handleRecuperarSenha(data) {
   const login = data.login;
+  const novaSenha = data.novaSenha;
   if (!login) return { error: 'Informe seu login ou e-mail' };
+  if (!novaSenha) return { error: 'Informe a nova senha' };
 
-  const rows = lerAba('usuarios').rows;
-  var user = null;
+  const aba = lerAba('usuarios');
+  const rows = aba.rows;
+  const headers = aba.headers;
+  const sheet = aba.sheet;
+  var idx = -1;
   for (var i = 0; i < rows.length; i++) {
-    if (rows[i].login === login || rows[i].email === login) { user = rows[i]; break; }
+    if (rows[i].login === login || rows[i].email === login) { idx = i; break; }
   }
-  if (!user) return { error: 'Usuário não encontrado. Verifique o login ou contate o administrador.' };
+  if (idx === -1) return { error: 'Usuário não encontrado. Verifique o login ou contate o administrador.' };
 
-  var sheet = getSheet('solicitacoes');
-  if (!sheet) {
-    sheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet('solicitacoes');
-    sheet.appendRow(['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao']);
-  }
+  const colSenha = headers.indexOf('senha') + 1;
+  if (colSenha < 1) return { error: 'Erro interno: coluna de senha não encontrada.' };
+  sheet.getRange(idx + 2, colSenha).setValue(novaSenha);
 
-  sheet.appendRow([
-    proximoId('solicitacoes'), user.nome, user.email, user.login,
-    '', user.orgao || '', 'Recuperacao de senha solicitada pelo usuario',
-    'pendente', 'recuperacao', new Date().toISOString()
-  ]);
+  registrarLog(rows[idx].email, 'recuperar_senha', 'Senha redefinida via autoatendimento');
 
-  return { success: true, message: 'Solicitação registrada. O administrador entrará em contato.' };
+  return { success: true };
 }
 
 // Gerenciar Solicitacoes (admin)
