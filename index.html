@@ -547,8 +547,8 @@ async function enviarSolicitacao(ev) {
   }
   try {
     await api('solicitarAcesso',{
-      nome:$('sNome').value, email:$('sEmail').value,
-      login:$('sLogin').value, telefone:$('sTel').value,
+      nome:$('sNome').value, email:$('sEmail').value.trim(),
+      login:$('sLogin').value.trim(), telefone:$('sTel').value,
       orgao:$('sOrgao').value,
       senha
     });
@@ -1727,8 +1727,8 @@ async function salvarUsuario(ev) {
   if(tipo==='orgao'&&!orgao){alert('Selecione o órgão/secretaria.');return;}
   if(/\s/.test($('uSenha').value)){alert('❌ Espaço não é permitido na senha. Use um caractere especial no lugar.');return;}
   try {
-    await api('criarUsuario',{login:$('uLogin').value,nome:$('uNome').value,
-      email:$('uEmail').value,senha:$('uSenha').value,tipo,orgao});
+    await api('criarUsuario',{login:$('uLogin').value.trim(),nome:$('uNome').value,
+      email:$('uEmail').value.trim(),senha:$('uSenha').value,tipo,orgao});
     fecharModal('modalUsuario'); await carregarUsuarios(); alert('✅ Usuário criado!');
   } catch(e){alert('❌ '+e.message);}
 }
@@ -1764,12 +1764,13 @@ async function carregarSolicitacoes() {
           <td>${s.tipoSolicitacao==='recuperacao'?'🔑 Recuperar Senha':'👤 Novo Acesso'}</td>
           <td style="font-size:11px">${fmtDH(s.data_solicitacao)}</td>
           <td><span style="color:${s.status==='pendente'?'#e67e00':'#28a745'};font-weight:600">${s.status}</span></td>
-          <td>${s.status==='pendente'?`<div class="btns-row">
-            ${s.tipoSolicitacao==='recuperacao'
+          <td><div class="btns-row">
+            ${s.status==='pendente'?(s.tipoSolicitacao==='recuperacao'
               ?`<button class="btn btn-amarelo" onclick="resetarSenhaSolicitacao('${s.id}','${s.login}')">🔑 Resetar</button>`
-              :`<button class="btn btn-verde" onclick="aprovarSolicitacao('${s.id}')">✅ Aprovar</button>`}
-            <button class="btn btn-vermelho" onclick="rejeitarSolicitacao('${s.id}')">❌</button>
-          </div>`:'—'}</td>
+              :`<button class="btn btn-verde" onclick="aprovarSolicitacao('${s.id}')">✅ Aprovar</button>`):''}
+            ${s.status==='pendente'?`<button class="btn btn-vermelho" onclick="rejeitarSolicitacao('${s.id}')">❌</button>`:''}
+            <button class="btn btn-cinza" onclick="excluirSolicitacaoUI('${s.id}')" title="Excluir definitivamente">🗑️</button>
+          </div></td>
         </tr>`).join('')}
       </tbody></table></div>`;
   } catch(e){cont.innerHTML='<div class="empty">Erro: '+e.message+'</div>';}
@@ -1831,6 +1832,14 @@ async function rejeitarSolicitacao(id) {
   try {
     await api('atualizarSolicitacao',{id,status:'rejeitado'});
     await carregarSolicitacoes(); alert('✅ Solicitação rejeitada.');
+  } catch(e){alert('❌ '+e.message);}
+}
+
+async function excluirSolicitacaoUI(id) {
+  if(!confirm('Excluir esta solicitação definitivamente? Essa ação não pode ser desfeita.')) return;
+  try {
+    await api('excluirSolicitacao',{id});
+    await carregarSolicitacoes();
   } catch(e){alert('❌ '+e.message);}
 }
 
