@@ -39,6 +39,7 @@ function handleRequest(e) {
       case 'recuperarSenha':      return responder(handleRecuperarSenha(p), output);
       case 'getSolicitacoes':     return responder(handleGetSolicitacoes(p), output);
       case 'atualizarSolicitacao':return responder(handleAtualizarSolicitacao(p), output);
+      case 'excluirSolicitacao': return responder(handleExcluirSolicitacao(p), output);
       case 'setup':               return responder(criarAbas(), output);
       case 'primeiroAdmin':       return responder(handlePrimeiroAdmin(p), output);
       default: return responder({ error: 'Acao nao encontrada: ' + action }, output);
@@ -163,7 +164,7 @@ function handleLogin(data) {
   var user = null;
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
-    if ((String(r.login).toLowerCase() === u || String(r.email).toLowerCase() === u) &&
+    if ((String(r.login).trim().toLowerCase() === u || String(r.email).trim().toLowerCase() === u) &&
         String(r.senha || '').trim() === String(senha || '').trim() &&
         String(r.ativo).toUpperCase() === 'TRUE') {
       user = r;
@@ -384,9 +385,9 @@ function handleCriarUsuario(data) {
   const admin = verificarToken(data.token);
   if (!admin || admin.tipo !== 'admin') return { error: 'Acesso negado' };
 
-  const login = data.login;
+  const login = String(data.login || '').trim();
   const nome = data.nome;
-  const email = data.email;
+  const email = String(data.email || '').trim();
   const senha = data.senha;
   const tipo = data.tipo;
   const orgao = data.orgao;
@@ -471,8 +472,8 @@ function handleExcluirUsuario(data) {
 // Solicitar Acesso (publico) — criacao de conta automatica, sem aprovacao do admin
 function handleSolicitarAcesso(data) {
   const nome = data.nome;
-  const email = data.email;
-  const login = data.login;
+  const email = String(data.email || '').trim();
+  const login = String(data.login || '').trim();
   const telefone = data.telefone;
   const orgao = data.orgao;
   const senha = data.senha;
@@ -570,6 +571,24 @@ function handleAtualizarSolicitacao(data) {
 
   registrarLog(admin.email, 'atualizar_solicitacao', 'ID ' + data.id + ' -> ' + data.status);
   return { success: true };
+}
+
+function handleExcluirSolicitacao(data) {
+  const admin = verificarToken(data.token);
+  if (!admin || admin.tipo !== 'admin') return { error: 'Acesso negado' };
+
+  const aba = lerAba('solicitacoes');
+  const rows = aba.rows;
+  const sheet = aba.sheet;
+  var idx = -1;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].id) === String(data.id)) { idx = i; break; }
+  }
+  if (idx === -1) return { error: 'Solicitação não encontrada' };
+
+  sheet.deleteRow(idx + 2);
+  registrarLog(admin.email, 'excluir_solicitacao', 'ID: ' + data.id);
+  return { success: true, message: 'Solicitação excluída' };
 }
 
 // Primeiro Admin
