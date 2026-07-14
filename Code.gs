@@ -350,6 +350,11 @@ function handleExcluirEvento(data) {
   return { success: true, message: 'Evento excluído' };
 }
 
+// Senha nao pode conter espaco (usuario deve usar caractere especial no lugar)
+function temEspaco(str) {
+  return /\s/.test(String(str || ''));
+}
+
 // Checa duplicidade de login/e-mail de forma normalizada (case/espaco) e cruzada:
 // o login novo nao pode coincidir com um login OU e-mail existente, e vice-versa.
 function normalizarIdentificador(v) {
@@ -387,6 +392,7 @@ function handleCriarUsuario(data) {
   const orgao = data.orgao;
 
   if (!login || !nome || !email || !senha || !tipo) return { error: 'Todos os campos são obrigatórios' };
+  if (temEspaco(senha)) return { error: 'Espaço não é permitido na senha. Use um caractere especial no lugar.' };
 
   const tiposValidos = ['admin', 'prefeito', 'orgao'];
   if (tiposValidos.indexOf(tipo) === -1) return { error: 'Tipo inválido. Use: admin, prefeito ou orgao' };
@@ -426,6 +432,7 @@ function handleCriarUsuario(data) {
 function handleResetarSenha(data) {
   const admin = verificarToken(data.token);
   if (!admin || admin.tipo !== 'admin') return { error: 'Acesso negado' };
+  if (temEspaco(data.novaSenha)) return { error: 'Espaço não é permitido na senha. Use um caractere especial no lugar.' };
 
   const aba = lerAba('usuarios');
   const rows = aba.rows;
@@ -470,6 +477,7 @@ function handleSolicitarAcesso(data) {
   const orgao = data.orgao;
   const senha = data.senha;
   if (!nome || !email || !login || !orgao || !senha) return { error: 'Nome, e-mail, login, orgao e senha sao obrigatorios' };
+  if (temEspaco(senha)) return { error: 'Espaço não é permitido na senha. Use um caractere especial no lugar.' };
 
   const aba = lerAba('usuarios');
   const rows = aba.rows;
@@ -513,6 +521,7 @@ function handleRecuperarSenha(data) {
   const novaSenha = data.novaSenha;
   if (!login) return { error: 'Informe seu login ou e-mail' };
   if (!novaSenha) return { error: 'Informe a nova senha' };
+  if (temEspaco(novaSenha)) return { error: 'Espaço não é permitido na senha. Use um caractere especial no lugar.' };
 
   const aba = lerAba('usuarios');
   const rows = aba.rows;
