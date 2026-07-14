@@ -444,7 +444,7 @@ function htmlLogin() {
       <div id="okLogin" class="sucesso"></div>
       <form onsubmit="fazerLogin(event)">
         <div class="form-group">
-          <label>Usuário, Nome ou E-mail</label>
+          <label>Usuário ou E-mail</label>
           <input id="lUser" type="text" required autocomplete="username" placeholder="seu.usuario" autocapitalize="none" autocorrect="off" spellcheck="false">
         </div>
         <div class="form-group">
@@ -497,7 +497,7 @@ function htmlModalSolicitacao() {
             <div class="form-group"><label>E-mail</label><input id="sEmail" type="email" required></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-            <div class="form-group"><label>Login desejado</label><input id="sLogin" type="text" required></div>
+            <div class="form-group"><label>Usuário</label><input id="sLogin" type="text" required></div>
             <div class="form-group"><label>Telefone</label><input id="sTel" type="tel" placeholder="(18) 99999-9999"></div>
           </div>
           <div class="form-group"><label>Órgão / Unidade</label>${orgaosSelectHtml('sOrgao')}</div>
@@ -550,11 +550,11 @@ function htmlModalRecuperarSenha() {
       <div class="modal-head"><h3>🔑 Recuperar Senha</h3>
         <button class="modal-close" onclick="fecharModal('modalRecuperar')">×</button></div>
       <div class="modal-body">
-        <p style="color:#666;font-size:13px;margin-bottom:16px">Informe seu login e defina uma nova senha. A alteração é imediata.</p>
+        <p style="color:#666;font-size:13px;margin-bottom:16px">Informe seu usuário ou e-mail e defina uma nova senha. A alteração é imediata.</p>
         <div id="erroRecup" class="erro"></div><div id="okRecup" class="sucesso"></div>
         <form id="formRecup" onsubmit="enviarRecuperar(event)">
-          <div class="form-group"><label>Login ou E-mail</label>
-            <input id="rLogin" type="text" required placeholder="seu.login ou email@..."></div>
+          <div class="form-group"><label>Usuário ou E-mail</label>
+            <input id="rLogin" type="text" required placeholder="seu.usuario ou email@..."></div>
           <div class="form-group"><label>Nova Senha</label>
             <input id="rSenha" type="password" required placeholder="Digite a nova senha" minlength="4"></div>
           <div class="form-group"><label>Confirmar Nova Senha</label>
