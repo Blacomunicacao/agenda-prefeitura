@@ -657,7 +657,10 @@ function htmlAdmin() {
     <div id="solicitacoes" class="view">
       <div class="secao">
         <div class="secao-header"><h2>📬 Solicitações Pendentes</h2>
-          <button class="btn btn-cinza" onclick="carregarSolicitacoes()">↻ Atualizar</button>
+          <div class="btns-row">
+            <button class="btn btn-verde" onclick="aprovarTodasPendentes()">✅ Aprovar Todas Pendentes</button>
+            <button class="btn btn-cinza" onclick="carregarSolicitacoes()">↻ Atualizar</button>
+          </div>
         </div>
         <div id="listaSolicitacoes">Carregando...</div>
       </div>
@@ -1720,6 +1723,29 @@ async function carregarSolicitacoes() {
         </tr>`).join('')}
       </tbody></table></div>`;
   } catch(e){cont.innerHTML='<div class="empty">Erro: '+e.message+'</div>';}
+}
+
+async function aprovarTodasPendentes() {
+  const pendentes = solicitacoesList.filter(s => s.status === 'pendente');
+  if (!pendentes.length) { alert('Não há solicitações pendentes.'); return; }
+  if (!confirm(`Aprovar todas as ${pendentes.length} solicitações pendentes?\n\nContas de "Novo Acesso" serão criadas com a senha que o usuário escolheu. Pedidos de "Recuperar Senha" serão marcados como resolvidos (o usuário já pode redefinir sozinho pelo botão "Recuperar Senha" da tela de login).`)) return;
+
+  let criadas = 0, resolvidas = 0, falhas = 0;
+  for (const s of pendentes) {
+    try {
+      if (s.tipoSolicitacao === 'recuperacao') {
+        await api('atualizarSolicitacao', { id: s.id, status: 'resolvido' });
+        resolvidas++;
+      } else {
+        const senha = s.senha || (s.login + '@PP');
+        await api('criarUsuario', { login: s.login, nome: s.nome, email: s.email, senha, tipo: 'orgao', orgao: s.orgao });
+        await api('atualizarSolicitacao', { id: s.id, status: 'aprovado' });
+        criadas++;
+      }
+    } catch (e) { falhas++; }
+  }
+  await carregarSolicitacoes(); await carregarUsuarios();
+  alert(`✅ Processamento concluído.\n\nContas criadas: ${criadas}\nRecuperações resolvidas: ${resolvidas}\nFalhas (login/e-mail já existente, etc.): ${falhas}`);
 }
 
 async function aprovarSolicitacao(id) {
