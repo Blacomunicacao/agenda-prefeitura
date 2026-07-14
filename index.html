@@ -306,7 +306,12 @@ const SIGLAS = {
   'Fundo Municipal de Defesa dos Interesses Difusos':'FMDID',
   'Fundo Social de Solidariedade de Presidente Prudente':'FUNDO',
   'Núcleo da Escola Federativa do Município de Presidente Prudente':'NEF',
-  'Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalho':'SESMT'
+  'Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalho':'SESMT',
+  // Secretarias Indiretas
+  'INOVA PRUDENTE':'INOVA',
+  'SASSOM':'SASSOM',
+  'PRUDENPREV':'PRUDENPREV',
+  'PRUDENCO':'PRUDENCO'
 };
 
 const ORGAOS_LIST = {
@@ -345,6 +350,12 @@ const ORGAOS_LIST = {
     'Fundo Social de Solidariedade de Presidente Prudente',
     'Núcleo da Escola Federativa do Município de Presidente Prudente',
     'Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalho'
+  ],
+  'Secretarias Indiretas':[
+    'INOVA PRUDENTE',
+    'SASSOM',
+    'PRUDENPREV',
+    'PRUDENCO'
   ]
 };
 
@@ -1054,7 +1065,7 @@ function htmlModalUsuario() {
         <button class="modal-close" onclick="fecharModal('modalUsuario')">×</button></div>
       <div class="modal-body">
         <p style="background:#fff3cd;color:#856404;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:16px">
-          ⚠️ Limite máximo de <strong>5 usuários</strong> por sessão (Administrador, Prefeito ou por Órgão).</p>
+          ⚠️ Limite máximo de <strong>5 usuários</strong> por sessão (Administrador, Prefeito ou por Órgão) — exceto Educação e Saúde, com limite de <strong>10</strong>.</p>
         <form id="formUsuario" onsubmit="salvarUsuario(event)">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div class="form-group"><label>Login</label><input id="uLogin" type="text" required autocomplete="off"></div>
