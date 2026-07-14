@@ -26,6 +26,10 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#333}
 .form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;border:1px solid #ddd;border-radius:10px;font-family:inherit;font-size:14px;outline:none;transition:border .2s}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#004d99}
+.senha-wrap{position:relative}
+.senha-wrap input{padding-right:42px!important}
+.senha-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;padding:6px;line-height:1;color:#666}
+.senha-toggle:hover{color:#003366}
 .form-group textarea{resize:vertical;min-height:80px}
 .btn-primary{width:100%;padding:13px;background:#004d99;color:#fff;border:none;border-radius:40px;font-size:15px;font-weight:600;cursor:pointer;transition:background .2s}
 .btn-primary:hover{background:#003366}
@@ -449,7 +453,10 @@ function htmlLogin() {
         </div>
         <div class="form-group">
           <label>Senha</label>
-          <input id="lSenha" type="password" required autocomplete="current-password" placeholder="••••••••">
+          <div class="senha-wrap">
+            <input id="lSenha" type="password" required autocomplete="current-password" placeholder="••••••••">
+            <button type="button" class="senha-toggle" onclick="toggleSenha('lSenha',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
+          </div>
         </div>
         <button type="submit" class="btn-primary">🔓 Entrar</button>
       </form>
@@ -502,8 +509,14 @@ function htmlModalSolicitacao() {
           </div>
           <div class="form-group"><label>Órgão / Unidade</label>${orgaosSelectHtml('sOrgao')}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-            <div class="form-group"><label>Senha</label><input id="sSenha" type="password" required placeholder="Mínimo 6 caracteres" minlength="6"></div>
-            <div class="form-group"><label>Confirmar Senha</label><input id="sSenhaConf" type="password" required placeholder="Repita a senha"></div>
+            <div class="form-group"><label>Senha</label><div class="senha-wrap">
+              <input id="sSenha" type="password" required placeholder="Mínimo 6 caracteres" minlength="6">
+              <button type="button" class="senha-toggle" onclick="toggleSenha('sSenha',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
+            </div></div>
+            <div class="form-group"><label>Confirmar Senha</label><div class="senha-wrap">
+              <input id="sSenhaConf" type="password" required placeholder="Repita a senha">
+              <button type="button" class="senha-toggle" onclick="toggleSenha('sSenhaConf',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
+            </div></div>
           </div>
           <div class="btns-row">
             <button type="submit" class="btn btn-azul">📨 Enviar Solicitação</button>
@@ -556,9 +569,15 @@ function htmlModalRecuperarSenha() {
           <div class="form-group"><label>Usuário ou E-mail</label>
             <input id="rLogin" type="text" required placeholder="seu.usuario ou email@..."></div>
           <div class="form-group"><label>Nova Senha</label>
-            <input id="rSenha" type="password" required placeholder="Digite a nova senha" minlength="4"></div>
+            <div class="senha-wrap">
+              <input id="rSenha" type="password" required placeholder="Digite a nova senha" minlength="4">
+              <button type="button" class="senha-toggle" onclick="toggleSenha('rSenha',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
+            </div></div>
           <div class="form-group"><label>Confirmar Nova Senha</label>
-            <input id="rSenha2" type="password" required placeholder="Repita a nova senha"></div>
+            <div class="senha-wrap">
+              <input id="rSenha2" type="password" required placeholder="Repita a nova senha">
+              <button type="button" class="senha-toggle" onclick="toggleSenha('rSenha2',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
+            </div></div>
           <div class="btns-row">
             <button type="submit" class="btn btn-azul">🔑 Redefinir Senha</button>
             <button type="button" class="btn btn-cinza" onclick="fecharModal('modalRecuperar')">Cancelar</button>
@@ -1812,6 +1831,14 @@ async function rejeitarSolicitacao(id) {
 // ════════════════ MODAIS / UTILITÁRIOS ════════════════
 function abrirModal(id){const el=$(id);if(el)el.classList.add('aberto');}
 function fecharModal(id){const el=$(id);if(el)el.classList.remove('aberto');}
+
+function toggleSenha(id, btn) {
+  const input = $(id); if (!input) return;
+  const oculto = input.type === 'password';
+  input.type = oculto ? 'text' : 'password';
+  btn.textContent = oculto ? '🙈' : '👁️';
+  btn.setAttribute('aria-label', oculto ? 'Ocultar senha' : 'Mostrar senha');
+}
 
 function exportarExcel() {
   const dados=evtDoUsuario().map(e=>({'Título':e.titulo,'Data':fmtDH(e.data_evento),'Local':e.local,
