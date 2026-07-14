@@ -176,12 +176,21 @@ function handleLogin(data) {
 }
 
 // Eventos
+// Corrige células que o Sheets converteu de texto p/ Date (mudando a hora digitada ao virar JSON/UTC)
+function normalizarDataEvento(v, tz) {
+  if (Object.prototype.toString.call(v) === '[object Date]') {
+    return Utilities.formatDate(v, tz, "yyyy-MM-dd'T'HH:mm");
+  }
+  return v;
+}
+
 function handleGetEventos(params) {
   const usuario = verificarToken(params.token);
   if (!usuario) return { error: 'Não autorizado' };
 
   const eventosRows = lerAba('eventos').rows;
   const usuariosRows = lerAba('usuarios').rows;
+  const tz = SpreadsheetApp.openById(SPREADSHEET_ID).getSpreadsheetTimeZone();
 
   var verTodos = params.todos === 'true' || params.todos === true;
   const filtrados = eventosRows.filter(function(e) {
@@ -206,12 +215,19 @@ function handleGetEventos(params) {
     }
     var ev = {};
     for (var k in e) { ev[k] = e[k]; }
+    ev.data_evento = normalizarDataEvento(e.data_evento, tz);
     ev.sigla_orgao = getSiglaOrgao(e.orgao); // coluna do organograma
     if (pubUser) {
       ev.publicado_por = pubUser.login; // coluna B da planilha de usuarios
     }
     return ev;
   });
+}
+
+// Impede o Sheets de auto-converter o texto digitado (ex: "2026-07-14T15:30") em Date,
+// o que mudava a hora exibida ao serializar em UTC. Coluna C = data_evento.
+function garantirTextoDataEvento(sheet) {
+  sheet.getRange('C2:C').setNumberFormat('@');
 }
 
 function handleCriarEvento(data) {
@@ -255,6 +271,7 @@ function handleCriarEvento(data) {
   const now = new Date().toISOString();
   const orgaoEvento = usuario.tipo === 'prefeito' ? 'Gabinete do Prefeito' : usuario.orgao;
 
+  garantirTextoDataEvento(sheet);
   sheet.appendRow([
     id, titulo, data_evento, local || '', responsavel || '',
     telefone || '', observacao, anexo_url, anexo_nome,
@@ -283,6 +300,7 @@ function handleAtualizarEvento(data) {
 
   if (usuario.tipo !== 'admin' && rows[idx].orgao !== usuario.orgao) return { error: 'Acesso negado' };
 
+  garantirTextoDataEvento(sheet);
   const rowNum = idx + 2;
   const campos = ['titulo', 'data_evento', 'local', 'responsavel', 'telefone', 'observacao'];
   for (var c = 0; c < campos.length; c++) {
@@ -415,35 +433,51 @@ function handleExcluirUsuario(data) {
   return { success: true, message: 'Usuário excluído' };
 }
 
-// Solicitar Acesso (publico)
+// Solicitar Acesso (publico) — criacao de conta automatica, sem aprovacao do admin
 function handleSolicitarAcesso(data) {
   const nome = data.nome;
   const email = data.email;
   const login = data.login;
   const telefone = data.telefone;
   const orgao = data.orgao;
-  const justificativa = data.justificativa;
-  const senha = data.senha || '';
-  if (!nome || !email || !login || !orgao) return { error: 'Nome, e-mail, login e orgao sao obrigatorios' };
+  const senha = data.senha;
+  if (!nome || !email || !login || !orgao || !senha) return { error: 'Nome, e-mail, login, orgao e senha sao obrigatorios' };
 
-  const rows = lerAba('usuarios').rows;
+  const aba = lerAba('usuarios');
+  const rows = aba.rows;
+  const sheet = aba.sheet;
   for (var i = 0; i < rows.length; i++) {
     if (rows[i].login === login || rows[i].email === email) return { error: 'Login ou e-mail já está em uso' };
   }
 
-  var sheet = getSheet('solicitacoes');
-  if (!sheet) {
-    sheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet('solicitacoes');
-    sheet.appendRow(['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao','senha']);
+  var count = 0;
+  for (var j = 0; j < rows.length; j++) {
+    if (rows[j].tipo === 'orgao' && rows[j].orgao === orgao) count++;
+  }
+  if (count >= LIMITE_POR_SESSAO) {
+    return { error: 'Limite de ' + LIMITE_POR_SESSAO + ' usuários atingido para ' + orgao };
   }
 
   sheet.appendRow([
-    proximoId('solicitacoes'), nome, email, login,
-    telefone || '', orgao, justificativa || '',
-    'pendente', 'acesso', new Date().toISOString(), senha
+    proximoId('usuarios'), login, nome, email, senha,
+    'orgao', orgao, 'FALSE', 'TRUE', new Date().toISOString()
   ]);
 
-  return { success: true, message: 'Solicitação registrada com sucesso' };
+  registrarLog(email, 'criar_conta_autoatendimento', login);
+
+  // Mantem historico em solicitacoes para auditoria (ja aprovado automaticamente)
+  var solicSheet = getSheet('solicitacoes');
+  if (!solicSheet) {
+    solicSheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet('solicitacoes');
+    solicSheet.appendRow(['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao','senha']);
+  }
+  solicSheet.appendRow([
+    proximoId('solicitacoes'), nome, email, login,
+    telefone || '', orgao, '',
+    'aprovado', 'acesso', new Date().toISOString(), ''
+  ]);
+
+  return { success: true, message: 'Conta criada com sucesso' };
 }
 
 // Recuperar Senha (publico) — reset autônomo
