@@ -4,6 +4,14 @@
 
 const SPREADSHEET_ID = '1lBUTNecr5eylEn7958UQz8rUFLlHIcFeKcAf0--Jswo';
 const LIMITE_POR_SESSAO = 5;
+// Excecoes de limite por orgao (demanda maior de usuarios). Demais orgaos usam LIMITE_POR_SESSAO.
+const LIMITES_ESPECIAIS = {
+  'Secretaria de Educação': 10,
+  'Secretaria de Saúde': 10
+};
+function limitePara(orgao) {
+  return LIMITES_ESPECIAIS[orgao] || LIMITE_POR_SESSAO;
+}
 
 function doGet(e)  { return handleRequest(e); }
 function doPost(e) { return handleRequest(e); }
@@ -67,7 +75,12 @@ var SIGLAS_ORGAOS = {
   'Fundo Municipal de Defesa dos Interesses Difusos':'FMDID',
   'Fundo Social de Solidariedade de Presidente Prudente':'FUNDO',
   'Núcleo da Escola Federativa do Município de Presidente Prudente':'NEF',
-  'Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalho':'SESMT'
+  'Serviço Especializado em Engenharia de Segurança e em Medicina do Trabalho':'SESMT',
+  // Secretarias Indiretas
+  'INOVA PRUDENTE':'INOVA',
+  'SASSOM':'SASSOM',
+  'PRUDENPREV':'PRUDENPREV',
+  'PRUDENCO':'PRUDENCO'
 };
 
 function getSiglaOrgao(orgao) {
@@ -391,9 +404,10 @@ function handleCriarUsuario(data) {
     else if (tipo === 'orgao' && rows[j].tipo === 'orgao' && rows[j].orgao === orgao) count++;
   }
 
-  if (count >= LIMITE_POR_SESSAO) {
+  const limite = tipo === 'orgao' ? limitePara(orgao) : LIMITE_POR_SESSAO;
+  if (count >= limite) {
     const label = tipo === 'admin' ? 'Administrador' : tipo === 'prefeito' ? 'Prefeito' : orgao;
-    return { error: 'Limite de ' + LIMITE_POR_SESSAO + ' usuários atingido para ' + label };
+    return { error: 'Limite de ' + limite + ' usuários atingido para ' + label };
   }
 
   const orgaoFinal = tipo === 'prefeito' ? 'Gabinete do Prefeito' : (tipo === 'admin' ? '' : orgao);
@@ -466,8 +480,9 @@ function handleSolicitarAcesso(data) {
   for (var j = 0; j < rows.length; j++) {
     if (rows[j].tipo === 'orgao' && rows[j].orgao === orgao) count++;
   }
-  if (count >= LIMITE_POR_SESSAO) {
-    return { error: 'Limite de ' + LIMITE_POR_SESSAO + ' usuários atingido para ' + orgao };
+  const limite = limitePara(orgao);
+  if (count >= limite) {
+    return { error: 'Limite de ' + limite + ' usuários atingido para ' + orgao };
   }
 
   sheet.appendRow([
