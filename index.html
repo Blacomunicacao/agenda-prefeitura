@@ -30,6 +30,7 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .senha-wrap input{padding-right:42px!important}
 .senha-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;padding:6px;line-height:1;color:#666}
 .senha-toggle:hover{color:#003366}
+.aviso-espaco-senha{display:none;color:#dc3545;font-size:11px;margin-top:5px}
 .form-group textarea{resize:vertical;min-height:80px}
 .btn-primary{width:100%;padding:13px;background:#004d99;color:#fff;border:none;border-radius:40px;font-size:15px;font-weight:600;cursor:pointer;transition:background .2s}
 .btn-primary:hover{background:#003366}
@@ -510,11 +511,11 @@ function htmlModalSolicitacao() {
           <div class="form-group"><label>Órgão / Unidade</label>${orgaosSelectHtml('sOrgao')}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div class="form-group"><label>Senha</label><div class="senha-wrap">
-              <input id="sSenha" type="password" required placeholder="Mínimo 6 caracteres" minlength="6">
+              <input id="sSenha" type="password" required placeholder="Mínimo 6 caracteres" minlength="6" oninput="bloquearEspacoSenha(this)">
               <button type="button" class="senha-toggle" onclick="toggleSenha('sSenha',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
             </div></div>
             <div class="form-group"><label>Confirmar Senha</label><div class="senha-wrap">
-              <input id="sSenhaConf" type="password" required placeholder="Repita a senha">
+              <input id="sSenhaConf" type="password" required placeholder="Repita a senha" oninput="bloquearEspacoSenha(this)">
               <button type="button" class="senha-toggle" onclick="toggleSenha('sSenhaConf',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
             </div></div>
           </div>
@@ -535,6 +536,9 @@ async function enviarSolicitacao(ev) {
   const err=$('erroSolic'),ok=$('okSolic');
   err.style.display='none'; ok.style.display='none';
   const senha=$('sSenha').value, senhaConf=$('sSenhaConf').value;
+  if (/\s/.test(senha)) {
+    err.textContent='❌ Espaço não é permitido na senha. Use um caractere especial no lugar.'; err.style.display='block'; return;
+  }
   if (senha !== senhaConf) {
     err.textContent='❌ As senhas não coincidem.'; err.style.display='block'; return;
   }
@@ -570,12 +574,12 @@ function htmlModalRecuperarSenha() {
             <input id="rLogin" type="text" required placeholder="seu.usuario ou email@..."></div>
           <div class="form-group"><label>Nova Senha</label>
             <div class="senha-wrap">
-              <input id="rSenha" type="password" required placeholder="Digite a nova senha" minlength="4">
+              <input id="rSenha" type="password" required placeholder="Digite a nova senha" minlength="4" oninput="bloquearEspacoSenha(this)">
               <button type="button" class="senha-toggle" onclick="toggleSenha('rSenha',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
             </div></div>
           <div class="form-group"><label>Confirmar Nova Senha</label>
             <div class="senha-wrap">
-              <input id="rSenha2" type="password" required placeholder="Repita a nova senha">
+              <input id="rSenha2" type="password" required placeholder="Repita a nova senha" oninput="bloquearEspacoSenha(this)">
               <button type="button" class="senha-toggle" onclick="toggleSenha('rSenha2',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
             </div></div>
           <div class="btns-row">
@@ -597,6 +601,7 @@ async function enviarRecuperar(ev) {
   const login=$('rLogin').value.trim();
   const senha=$('rSenha').value;
   const senha2=$('rSenha2').value;
+  if(/\s/.test(senha)){err.textContent='❌ Espaço não é permitido na senha. Use um caractere especial no lugar.';err.style.display='block';return;}
   if(senha!==senha2){err.textContent='❌ As senhas não conferem.';err.style.display='block';return;}
   if(senha.length<4){err.textContent='❌ Senha muito curta (mínimo 4 caracteres).';err.style.display='block';return;}
   try {
@@ -1105,7 +1110,7 @@ function htmlModalUsuario() {
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div class="form-group"><label>E-mail</label><input id="uEmail" type="email" required></div>
-            <div class="form-group"><label>Senha</label><input id="uSenha" type="text" required autocomplete="new-password"></div>
+            <div class="form-group"><label>Senha</label><input id="uSenha" type="text" required autocomplete="new-password" oninput="bloquearEspacoSenha(this)"></div>
           </div>
           <div class="form-group"><label>Tipo de Sessão</label>
             <select id="uTipo" required onchange="atualizarCampoOrgao()">
@@ -1720,6 +1725,7 @@ async function salvarUsuario(ev) {
   const tipo=$('uTipo').value;
   const orgao=tipo==='prefeito'?'Gabinete do Prefeito':tipo==='admin'?'':$('uOrgao').value;
   if(tipo==='orgao'&&!orgao){alert('Selecione o órgão/secretaria.');return;}
+  if(/\s/.test($('uSenha').value)){alert('❌ Espaço não é permitido na senha. Use um caractere especial no lugar.');return;}
   try {
     await api('criarUsuario',{login:$('uLogin').value,nome:$('uNome').value,
       email:$('uEmail').value,senha:$('uSenha').value,tipo,orgao});
@@ -1838,6 +1844,23 @@ function toggleSenha(id, btn) {
   input.type = oculto ? 'text' : 'password';
   btn.textContent = oculto ? '🙈' : '👁️';
   btn.setAttribute('aria-label', oculto ? 'Ocultar senha' : 'Mostrar senha');
+}
+
+function bloquearEspacoSenha(input) {
+  if (!/\s/.test(input.value)) return;
+  input.value = input.value.replace(/\s/g, '');
+  const grupo = input.closest('.form-group');
+  if (!grupo) return;
+  let aviso = grupo.querySelector('.aviso-espaco-senha');
+  if (!aviso) {
+    aviso = document.createElement('div');
+    aviso.className = 'aviso-espaco-senha';
+    aviso.textContent = '❌ Espaço não é permitido na senha. Use um caractere especial no lugar.';
+    grupo.appendChild(aviso);
+  }
+  aviso.style.display = 'block';
+  clearTimeout(aviso._timeout);
+  aviso._timeout = setTimeout(() => { aviso.style.display = 'none'; }, 3000);
 }
 
 function exportarExcel() {
