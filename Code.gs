@@ -337,6 +337,22 @@ function handleExcluirEvento(data) {
   return { success: true, message: 'Evento excluído' };
 }
 
+// Checa duplicidade de login/e-mail de forma normalizada (case/espaco) e cruzada:
+// o login novo nao pode coincidir com um login OU e-mail existente, e vice-versa.
+function normalizarIdentificador(v) {
+  return String(v || '').trim().toLowerCase();
+}
+function loginOuEmailEmUso(login, email, rows) {
+  const loginNorm = normalizarIdentificador(login);
+  const emailNorm = normalizarIdentificador(email);
+  for (var i = 0; i < rows.length; i++) {
+    const rLogin = normalizarIdentificador(rows[i].login);
+    const rEmail = normalizarIdentificador(rows[i].email);
+    if (rLogin === loginNorm || rEmail === loginNorm || rLogin === emailNorm || rEmail === emailNorm) return true;
+  }
+  return false;
+}
+
 // Usuarios
 function handleGetUsuarios(data) {
   const admin = verificarToken(data.token);
@@ -366,9 +382,7 @@ function handleCriarUsuario(data) {
   const aba = lerAba('usuarios');
   const rows = aba.rows;
   const sheet = aba.sheet;
-  for (var i = 0; i < rows.length; i++) {
-    if (rows[i].login === login || rows[i].email === email) return { error: 'Login ou e-mail já existe' };
-  }
+  if (loginOuEmailEmUso(login, email, rows)) return { error: 'Login ou e-mail já existe' };
 
   var count = 0;
   for (var j = 0; j < rows.length; j++) {
@@ -446,9 +460,7 @@ function handleSolicitarAcesso(data) {
   const aba = lerAba('usuarios');
   const rows = aba.rows;
   const sheet = aba.sheet;
-  for (var i = 0; i < rows.length; i++) {
-    if (rows[i].login === login || rows[i].email === email) return { error: 'Login ou e-mail já está em uso' };
-  }
+  if (loginOuEmailEmUso(login, email, rows)) return { error: 'Login ou e-mail já está em uso' };
 
   var count = 0;
   for (var j = 0; j < rows.length; j++) {
