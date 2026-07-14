@@ -467,7 +467,7 @@ function htmlModalSolicitacao() {
       <div class="modal-head"><h3>👤 Solicitar Acesso</h3>
         <button class="modal-close" onclick="fecharModal('modalSolicitacao')">×</button></div>
       <div class="modal-body">
-        <p style="color:#666;font-size:13px;margin-bottom:16px">Preencha os dados. Sua solicitação será analisada pelo administrador.</p>
+        <p style="color:#666;font-size:13px;margin-bottom:16px">Preencha os dados. O acesso é liberado imediatamente após o envio.</p>
         <div id="erroSolic" class="erro"></div><div id="okSolic" class="sucesso"></div>
         <form id="formSolic" onsubmit="enviarSolicitacao(event)">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -513,7 +513,7 @@ async function enviarSolicitacao(ev) {
       orgao:$('sOrgao').value,
       senha
     });
-    ok.textContent='✅ Solicitação enviada! O administrador entrará em contato.';
+    ok.textContent='✅ Conta criada com sucesso! Você já pode fazer login.';
     ok.style.display='block';
     $('formSolic').reset();
     setTimeout(()=>fecharModal('modalSolicitacao'),3000);
