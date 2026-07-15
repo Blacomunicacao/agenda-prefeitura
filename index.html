@@ -28,8 +28,8 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#004d99}
 .senha-wrap{position:relative}
 .senha-wrap input{padding-right:42px!important}
-.senha-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;padding:6px;line-height:1;color:#666}
-.senha-toggle:hover{color:#003366}
+.senha-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;line-height:1;display:flex;align-items:center;color:#ddd;transition:color .2s}
+.senha-toggle:hover{color:#aaa}
 .aviso-espaco-senha{display:none;color:#dc3545;font-size:11px;margin-top:5px}
 .form-group textarea{resize:vertical;min-height:80px}
 .btn-primary{width:100%;padding:13px;background:#004d99;color:#fff;border:none;border-radius:40px;font-size:15px;font-weight:600;cursor:pointer;transition:background .2s}
@@ -101,7 +101,7 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 /* ── Modal ── */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;padding:16px}
 .modal-bg.aberto{display:flex}
-.modal-box{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:88vh;overflow-y:auto;display:flex;flex-direction:column}
+.modal-box{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
 .modal-head{padding:18px 22px;background:#003366;color:#fff;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1}
 .modal-head.prefeito-head{background:#dc3545}
 .modal-head.fundosocial-head{background:#7b2cbf}
@@ -443,8 +443,8 @@ function htmlLogin() {
   <div class="login-page">
     <div class="login-card">
       <img src="Logo plataforma de Agenda.png" alt="Agenda" class="login-logo">
-      <h1>Plataforma de Agenda</h1>
-      <p>Presidente Prudente · Secretarias</p>
+      <h1>Plataforma Agenda</h1>
+      <p>Prefeitura Municipal de Presidente Prudente</p>
       <div id="erroLogin" class="erro"></div>
       <div id="okLogin" class="sucesso"></div>
       <form onsubmit="fazerLogin(event)">
@@ -456,7 +456,7 @@ function htmlLogin() {
           <label>Senha</label>
           <div class="senha-wrap">
             <input id="lSenha" type="password" required autocomplete="current-password" placeholder="••••••••">
-            <button type="button" class="senha-toggle" onclick="toggleSenha('lSenha',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
+            <button type="button" class="senha-toggle" onclick="toggleSenha('lSenha',this)" tabindex="-1" aria-label="Mostrar senha"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
         </div>
         <button type="submit" class="btn-primary">🔓 Entrar</button>
@@ -512,11 +512,11 @@ function htmlModalSolicitacao() {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div class="form-group"><label>Senha</label><div class="senha-wrap">
               <input id="sSenha" type="password" required placeholder="Mínimo 6 caracteres" minlength="6" oninput="bloquearEspacoSenha(this)">
-              <button type="button" class="senha-toggle" onclick="toggleSenha('sSenha',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
+              <button type="button" class="senha-toggle" onclick="toggleSenha('sSenha',this)" tabindex="-1" aria-label="Mostrar senha"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div></div>
             <div class="form-group"><label>Confirmar Senha</label><div class="senha-wrap">
               <input id="sSenhaConf" type="password" required placeholder="Repita a senha" oninput="bloquearEspacoSenha(this)">
-              <button type="button" class="senha-toggle" onclick="toggleSenha('sSenhaConf',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
+              <button type="button" class="senha-toggle" onclick="toggleSenha('sSenhaConf',this)" tabindex="-1" aria-label="Mostrar senha"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div></div>
           </div>
           <div class="btns-row">
@@ -529,7 +529,12 @@ function htmlModalSolicitacao() {
   </div>`;
 }
 
-function abrirSolicitacao() { abrirModal('modalSolicitacao'); }
+function abrirSolicitacao() {
+  $('formSolic').reset();
+  $('erroSolic').style.display='none'; $('erroSolic').textContent='';
+  $('okSolic').style.display='none'; $('okSolic').textContent='';
+  abrirModal('modalSolicitacao');
+}
 
 async function enviarSolicitacao(ev) {
   ev.preventDefault();
@@ -556,7 +561,11 @@ async function enviarSolicitacao(ev) {
     ok.style.display='block';
     $('formSolic').reset();
     setTimeout(()=>fecharModal('modalSolicitacao'),3000);
-  } catch(e){ err.textContent='❌ '+e.message; err.style.display='block'; }
+  } catch(e){
+    err.textContent='❌ '+e.message; err.style.display='block';
+    if (document.activeElement) document.activeElement.blur();
+    err.scrollIntoView({behavior:'smooth', block:'center'});
+  }
 }
 
 // ════════════════ MODAL RECUPERAR SENHA ════════════════
@@ -575,12 +584,12 @@ function htmlModalRecuperarSenha() {
           <div class="form-group"><label>Nova Senha</label>
             <div class="senha-wrap">
               <input id="rSenha" type="password" required placeholder="Digite a nova senha" minlength="4" oninput="bloquearEspacoSenha(this)">
-              <button type="button" class="senha-toggle" onclick="toggleSenha('rSenha',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
+              <button type="button" class="senha-toggle" onclick="toggleSenha('rSenha',this)" tabindex="-1" aria-label="Mostrar senha"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div></div>
           <div class="form-group"><label>Confirmar Nova Senha</label>
             <div class="senha-wrap">
               <input id="rSenha2" type="password" required placeholder="Repita a nova senha" oninput="bloquearEspacoSenha(this)">
-              <button type="button" class="senha-toggle" onclick="toggleSenha('rSenha2',this)" tabindex="-1" aria-label="Mostrar senha">👁️</button>
+              <button type="button" class="senha-toggle" onclick="toggleSenha('rSenha2',this)" tabindex="-1" aria-label="Mostrar senha"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div></div>
           <div class="btns-row">
             <button type="submit" class="btn btn-azul">🔑 Redefinir Senha</button>
@@ -1102,7 +1111,7 @@ function htmlModalUsuario() {
         <button class="modal-close" onclick="fecharModal('modalUsuario')">×</button></div>
       <div class="modal-body">
         <p style="background:#fff3cd;color:#856404;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:16px">
-          ⚠️ Limite máximo de <strong>5 usuários</strong> por sessão (Administrador, Prefeito ou por Órgão) — exceto Educação e Saúde, com limite de <strong>10</strong>.</p>
+          ⚠️ Limite máximo de <strong>5 usuários</strong> por sessão (Administrador, Prefeito ou por Órgão) — exceto Educação, Saúde e SECOM, com limite de <strong>10</strong>.</p>
         <form id="formUsuario" onsubmit="salvarUsuario(event)">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div class="form-group"><label>Login</label><input id="uLogin" type="text" required autocomplete="off"></div>
@@ -1847,11 +1856,13 @@ async function excluirSolicitacaoUI(id) {
 function abrirModal(id){const el=$(id);if(el)el.classList.add('aberto');}
 function fecharModal(id){const el=$(id);if(el)el.classList.remove('aberto');}
 
+const ICON_OLHO = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const ICON_OLHO_OFF = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a20.3 20.3 0 0 1-2.68 3.75M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>';
 function toggleSenha(id, btn) {
   const input = $(id); if (!input) return;
   const oculto = input.type === 'password';
   input.type = oculto ? 'text' : 'password';
-  btn.textContent = oculto ? '🙈' : '👁️';
+  btn.innerHTML = oculto ? ICON_OLHO_OFF : ICON_OLHO;
   btn.setAttribute('aria-label', oculto ? 'Ocultar senha' : 'Mostrar senha');
 }
 

@@ -7,7 +7,8 @@ const LIMITE_POR_SESSAO = 5;
 // Excecoes de limite por orgao (demanda maior de usuarios). Demais orgaos usam LIMITE_POR_SESSAO.
 const LIMITES_ESPECIAIS = {
   'Secretaria de Educação': 10,
-  'Secretaria de Saúde': 10
+  'Secretaria de Saúde': 10,
+  'Secretaria de Comunicação': 10
 };
 function limitePara(orgao) {
   return LIMITES_ESPECIAIS[orgao] || LIMITE_POR_SESSAO;
@@ -413,8 +414,7 @@ function handleCriarUsuario(data) {
 
   const limite = tipo === 'orgao' ? limitePara(orgao) : LIMITE_POR_SESSAO;
   if (count >= limite) {
-    const label = tipo === 'admin' ? 'Administrador' : tipo === 'prefeito' ? 'Prefeito' : orgao;
-    return { error: 'Limite de ' + limite + ' usuários atingido para ' + label };
+    return { error: 'Limite de ' + limite + ' usuários atingido. Entre em contato com a SECOM.' };
   }
 
   const orgaoFinal = tipo === 'prefeito' ? 'Gabinete do Prefeito' : (tipo === 'admin' ? '' : orgao);
@@ -491,7 +491,7 @@ function handleSolicitarAcesso(data) {
   }
   const limite = limitePara(orgao);
   if (count >= limite) {
-    return { error: 'Limite de ' + limite + ' usuários atingido para ' + orgao };
+    return { error: 'Limite de ' + limite + ' usuários atingido. Entre em contato com a SECOM.' };
   }
 
   sheet.appendRow([
