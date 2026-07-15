@@ -826,9 +826,8 @@ function iniciarAutoRefresh() {
   _autoRefreshId = setInterval(async function() {
     if (isUsuarioSecom()) {
       try { const r = await api('getEventos',{todos:'true'}); if (Array.isArray(r)) eventos=r; } catch(e) { return; }
-      const cs = $('secomEventosHoje');
-      if (cs) { const hj=evtHoje(); cs.innerHTML=hj.length===0?'<div class="empty">Nenhum evento hoje</div>':hj.map(e=>cardEvento(e,true)).join(''); }
       if (calendar) { try { calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); } catch(e) {} }
+      renderizarMetrica();
       return;
     }
     try { const r = await api('getEventos'); if (Array.isArray(r)) eventos=r; } catch(e) { return; }
@@ -857,6 +856,8 @@ function htmlSecom() {
     return eventos.filter(e=>{const x=new Date(e.data_evento);return x>=ini&&x<=fim;}).length;
   })();
   const orgaos=[...new Set(eventos.map(e=>e.orgao))].length;
+  const anexos=eventos.filter(e=>e.anexo_url||e.anexo_nome).length;
+  const media=(total/Math.max(1,orgaos)).toFixed(1);
   return `
   <button class="menu-toggle" onclick="toggleMenu()">☰</button>
   <div class="overlay" onclick="toggleMenu()"></div>
@@ -879,15 +880,32 @@ function htmlSecom() {
   <main class="main">
     <div id="inicio" class="view active">
       <div class="stats-grid">
-        <div class="stat-card" onclick="mostrarView('listaEventos')"><div class="stat-icon">📅</div><div class="stat-info"><h3>${total}</h3><p>Total de Eventos</p></div></div>
-        <div class="stat-card" onclick="mostrarEventosSemanaSecom()"><div class="stat-icon">📆</div><div class="stat-info"><h3>${semana}</h3><p>Esta Semana</p></div></div>
-        <div class="stat-card" onclick="mostrarEventosHojeSecom()"><div class="stat-icon">🔴</div><div class="stat-info"><h3>${hoje.length}</h3><p>Hoje</p></div></div>
-        <div class="stat-card" onclick="mostrarModalOrgaos()"><div class="stat-icon">🏢</div><div class="stat-info"><h3>${orgaos}</h3><p>Órgãos</p></div></div>
+        <div class="stat-card" onclick="mostrarView('listaEventos')">
+          <div class="stat-icon">📅</div><div class="stat-info"><h3>${total}</h3><p>Total de Eventos</p></div>
+        </div>
+        <div class="stat-card" onclick="mostrarEventosSemanaSecom()">
+          <div class="stat-icon">📆</div><div class="stat-info"><h3>${semana}</h3><p>Esta Semana</p></div>
+        </div>
+        <div class="stat-card" onclick="abrirModalAnexos()">
+          <div class="stat-icon">📎</div><div class="stat-info"><h3>${anexos}</h3><p>Anexos</p></div>
+        </div>
+        <div class="stat-card" onclick="abrirModalMetricaDetalhada()">
+          <div class="stat-icon">📈</div><div class="stat-info"><h3>${media}</h3><p>Métrica de Uso</p></div>
+        </div>
       </div>
-      <div class="secao">
-        <div class="secao-header"><h2>📌 Agenda de Hoje — Todos os Órgãos</h2></div>
-        <div id="secomEventosHoje">
-          ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>cardEvento(e,true)).join('')}
+      <div class="dashboard-dois-col">
+        <div id="metricaContainer"></div>
+        <div class="eventos-hoje-container">
+          <h3>📌 Eventos de Hoje (${hoje.length})</h3>
+          <div class="eventos-hoje-lista">
+            ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>`
+              <div class="evento-hoje-card${isPrefeito(e)?' prefeito':isFundoSocial(e)?' fundosocial':''}" onclick="verEvento('${e.id}')">
+                <div class="evento-hoje-titulo">${e.titulo}</div>
+                <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento)} · 🏢 ${(e.sigla_orgao||sigla(e.orgao))}</div>
+                ${e.local?`<div class="evento-hoje-info">📍 ${e.local}</div>`:''}
+                ${e.publicado_por?`<div class="evento-hoje-info" style="color:#888">✍️ ${e.publicado_por}</div>`:''}
+              </div>`).join('')}
+          </div>
         </div>
       </div>
     </div>
@@ -1306,6 +1324,8 @@ function inicializarApp() {
   if (usuario?.tipo==='admin') {
     carregarUsuarios();
     carregarSolicitacoes();
+  }
+  if (usuario?.tipo==='admin' || isUsuarioSecom()) {
     setTimeout(renderizarMetrica, 200);
   }
 }
@@ -1501,10 +1521,10 @@ function eventosParaCalendario() {
   return evtDoUsuario().map(e=>({
     id:String(e.id),
     title:isMobile()
-      ?(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'
+      ?(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom()
           ?`${fmtHora(e.data_evento)}\n${e.sigla_orgao||sigla(e.orgao)}`
           :`${fmtHora(e.data_evento)}\n${e.titulo}`)
-      :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'
+      :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom()
           ?`${e.sigla_orgao||sigla(e.orgao)}: ${e.titulo}`
           :e.titulo),
     start:e.data_evento,
