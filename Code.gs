@@ -804,6 +804,25 @@ function adicionarColunasRecorrencia() {
   Logger.log(mudou.length ? ('Corrigido: ' + mudou.join(', ')) : 'Colunas 17 e 18 ja estavam corretas.');
 }
 
+// Remove cabecalhos "recorrencia_tipo"/"recorrencia_grupo" duplicados que sobraram fora das colunas
+// 17/18 (bug da versao antiga de adicionarColunasRecorrencia, que usava getLastColumn() e colocou
+// esses nomes em colunas erradas, tipo 19/20). Header duplicado faz lerAba() sobrescrever o valor
+// certo da coluna 17/18 com o vazio da coluna errada. Execute manualmente uma vez.
+function limparColunasRecorrenciaDuplicadas() {
+  const sheet = getSheet('eventos');
+  if (!sheet) { Logger.log('Aba eventos nao encontrada'); return; }
+  const lastCol = sheet.getLastColumn();
+  var limpas = [];
+  for (var col = 19; col <= lastCol; col++) {
+    var valor = sheet.getRange(1, col).getValue();
+    if (valor === 'recorrencia_tipo' || valor === 'recorrencia_grupo') {
+      sheet.getRange(1, col).clearContent();
+      limpas.push('coluna ' + col + ' (' + valor + ')');
+    }
+  }
+  Logger.log(limpas.length ? ('Cabecalhos duplicados removidos: ' + limpas.join(', ')) : 'Nenhum cabecalho duplicado encontrado a partir da coluna 19.');
+}
+
 // Autorizar Drive (execute manualmente uma vez)
 function autorizarDrive() {
   const pastaNome = 'Agenda Prefeitura Anexos';
