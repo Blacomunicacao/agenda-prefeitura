@@ -790,18 +790,18 @@ function criarAbas() {
 function adicionarColunasRecorrencia() {
   const sheet = getSheet('eventos');
   if (!sheet) { Logger.log('Aba eventos nao encontrada'); return; }
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
-  const novas = ['recorrencia_tipo', 'recorrencia_grupo'];
-  var col = headers.length;
-  var adicionadas = [];
-  for (var i = 0; i < novas.length; i++) {
-    if (headers.indexOf(novas[i]) === -1) {
-      col++;
-      sheet.getRange(1, col).setValue(novas[i]);
-      adicionadas.push(novas[i]);
-    }
-  }
-  Logger.log(adicionadas.length ? ('Colunas adicionadas: ' + adicionadas.join(', ')) : 'Colunas ja existiam, nada a fazer.');
+  // Colunas fixas: tem que bater exatamente com a ordem em que handleCriarEvento/handleAtualizarRecorrencia
+  // escrevem via appendRow (sempre 18 valores, A ate R). Nao usar getLastColumn() aqui — se sobrar
+  // qualquer dado solto mais a direita na planilha, ele infla a contagem e desalinha as colunas novas
+  // do lugar onde os dados de recorrencia sao realmente gravados (foi o que causou o bug de 2026-07-18).
+  const COL_TIPO = 17, COL_GRUPO = 18;
+  const atualTipo = sheet.getRange(1, COL_TIPO).getValue();
+  const atualGrupo = sheet.getRange(1, COL_GRUPO).getValue();
+  Logger.log('Antes — coluna 17: "' + atualTipo + '" | coluna 18: "' + atualGrupo + '"');
+  var mudou = [];
+  if (atualTipo !== 'recorrencia_tipo') { sheet.getRange(1, COL_TIPO).setValue('recorrencia_tipo'); mudou.push('coluna 17 -> recorrencia_tipo'); }
+  if (atualGrupo !== 'recorrencia_grupo') { sheet.getRange(1, COL_GRUPO).setValue('recorrencia_grupo'); mudou.push('coluna 18 -> recorrencia_grupo'); }
+  Logger.log(mudou.length ? ('Corrigido: ' + mudou.join(', ')) : 'Colunas 17 e 18 ja estavam corretas.');
 }
 
 // Autorizar Drive (execute manualmente uma vez)
