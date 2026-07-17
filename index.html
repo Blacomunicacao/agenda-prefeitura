@@ -1525,13 +1525,17 @@ function verEvento(id) {
 function toggleRepeticaoEdicao() {
   const painel=$('editPainelRepeticao'); if(!painel) return;
   const vaiAtivar=painel.style.display==='none';
+  if (!vaiAtivar && $('editRecorrenciaGrupo').value) {
+    if (!confirm('Sua programação será apagada de hoje em diante. Gostaria realmente de fazer isso?')) return;
+  }
   painel.style.display=vaiAtivar?'block':'none';
   const grupoData=$('editGrupoData'), grupoHora=$('editGrupoHora');
   const dataInput=$('editDataSoDia'), hora=$('editHora'), btn=$('editBtnRepetirEvento');
   if(grupoData) grupoData.style.display=vaiAtivar?'none':'';
   if(grupoHora) grupoHora.style.display=vaiAtivar?'none':'';
   if(dataInput) dataInput.required=!vaiAtivar;
-  if(hora&&vaiAtivar) hora.value='';
+  if(hora) hora.value='';
+  if(!vaiAtivar&&dataInput) dataInput.value='';
   if(btn) btn.textContent=vaiAtivar?'❌ Cancelar repetição':'🔁 Repetir evento';
   if(vaiAtivar){
     const anoAtual=new Date().getFullYear();
@@ -1555,7 +1559,7 @@ function abrirEdicao(id) {
   const recorrente=isRecorrente(e)&&e.recorrencia_grupo;
   $('editRecorrenciaGrupo').value=recorrente?e.recorrencia_grupo:'';
   if(recorrente){
-    const irmaos=eventos.filter(x=>x.recorrencia_grupo===e.recorrencia_grupo);
+    const irmaos=eventos.filter(x=>String(x.recorrencia_grupo)===String(e.recorrencia_grupo));
     const dias=new Set(irmaos.map(x=>new Date(x.data_evento).getDay()));
     const datasIrmaos=irmaos.map(x=>(x.data_evento||'').substring(0,10)).filter(Boolean).sort();
     $('editRepTipo').value=e.recorrencia_tipo;
