@@ -128,9 +128,16 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .fundosocial-event-mobile{background:#7b2cbf!important;border-color:#5a1e94!important;color:#fff!important}
 .recorrente-event{background:#c3e6cb!important;border-color:#8fd19e!important;color:#155724!important}
 .recorrente-event-mobile{background:#c3e6cb!important;border-color:#8fd19e!important;color:#155724!important}
-.prefeito-event .fc-list-event-dot,.prefeito-event-mobile .fc-list-event-dot{border-color:#dc3545!important}
-.fundosocial-event .fc-list-event-dot,.fundosocial-event-mobile .fc-list-event-dot{border-color:#7b2cbf!important}
-.recorrente-event .fc-list-event-dot,.recorrente-event-mobile .fc-list-event-dot{border-color:#8fd19e!important}
+.prefeito-event .fc-list-event-dot,.prefeito-event-mobile .fc-list-event-dot,
+.prefeito-event .fc-daygrid-event-dot,.prefeito-event-mobile .fc-daygrid-event-dot{border-color:#dc3545!important}
+.fundosocial-event .fc-list-event-dot,.fundosocial-event-mobile .fc-list-event-dot,
+.fundosocial-event .fc-daygrid-event-dot,.fundosocial-event-mobile .fc-daygrid-event-dot{border-color:#7b2cbf!important}
+.recorrente-event .fc-list-event-dot,.recorrente-event-mobile .fc-list-event-dot,
+.recorrente-event .fc-daygrid-event-dot,.recorrente-event-mobile .fc-daygrid-event-dot{border-color:#8fd19e!important}
+/* Na visão de mês/semana (modo compacto "bolinha"), mantém a linha neutra — só a bolinha fica colorida, sem virar bloco */
+.fc-daygrid-dot-event.prefeito-event,.fc-daygrid-dot-event.prefeito-event-mobile,
+.fc-daygrid-dot-event.fundosocial-event,.fc-daygrid-dot-event.fundosocial-event-mobile,
+.fc-daygrid-dot-event.recorrente-event,.fc-daygrid-dot-event.recorrente-event-mobile{background:transparent!important;color:inherit!important}
 .fc-view-harness{height:calc(100vh - 200px)!important;min-height:500px}
 .fc-toolbar-title{font-size:18px!important}
 .fc-button{padding:6px 12px!important;font-size:14px!important}
@@ -1773,7 +1780,7 @@ function iniciarCalendario() {
     el.style.width = el.style.maxWidth = el.style.overflowX = '';
   }
   calendar=new FullCalendar.Calendar(el,{
-    locale:'pt-br', initialView:'dayGridMonth', eventDisplay:'block',
+    locale:'pt-br', initialView:'dayGridMonth',
     headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,dayGridWeek,listMonth'},
     buttonText:{today:'Hoje',month:'Mês',week:'Semana',list:'Lista'},
     noEventsText:'Nenhum evento para exibir',
