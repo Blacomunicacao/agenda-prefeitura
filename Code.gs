@@ -33,6 +33,7 @@ function handleRequest(e) {
       case 'atualizarEvento':     return responder(handleAtualizarEvento(p), output);
       case 'atualizarRecorrencia':return responder(handleAtualizarRecorrencia(p), output);
       case 'excluirEvento':       return responder(handleExcluirEvento(p), output);
+      case 'excluirSerieRecorrente': return responder(handleExcluirSerieRecorrente(p), output);
       case 'getUsuarios':         return responder(handleGetUsuarios(p), output);
       case 'criarUsuario':        return responder(handleCriarUsuario(p), output);
       case 'resetarSenha':        return responder(handleResetarSenha(p), output);
@@ -498,6 +499,40 @@ function handleExcluirEvento(data) {
   sheet.deleteRow(idx + 2);
   registrarLog(usuario.email, 'excluir_evento', 'ID: ' + data.id);
   return { success: true, message: 'Evento excluído' };
+}
+
+// Exclui toda uma serie recorrente — so as ocorrencias futuras (hoje em diante), preservando o historico passado
+function handleExcluirSerieRecorrente(data) {
+  const usuario = verificarToken(data.token);
+  if (!usuario) return { error: 'Não autorizado' };
+
+  const grupo = data.recorrencia_grupo;
+  if (!grupo) return { error: 'Grupo de recorrência não informado' };
+
+  const aba = lerAba('eventos');
+  const rows = aba.rows;
+  const sheet = aba.sheet;
+  var idxAlvo = [];
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].recorrencia_grupo) === String(grupo)) idxAlvo.push(i);
+  }
+  if (!idxAlvo.length) return { error: 'Nenhum evento encontrado para essa série' };
+
+  const referencia = rows[idxAlvo[0]];
+  if (usuario.tipo !== 'admin' && referencia.orgao !== usuario.orgao) return { error: 'Acesso negado' };
+
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  var idxRemover = idxAlvo.filter(function(i) {
+    var dv = String(rows[i].data_evento || '').substring(0, 10);
+    var d = new Date(dv + 'T00:00:00');
+    return d >= hoje;
+  });
+  if (!idxRemover.length) return { error: 'Não há ocorrências futuras nessa série para excluir.' };
+  idxRemover.sort(function(a, b) { return b - a; });
+  for (var k = 0; k < idxRemover.length; k++) sheet.deleteRow(idxRemover[k] + 2);
+
+  registrarLog(usuario.email, 'excluir_serie_recorrente', 'grupo ' + grupo + ' (' + idxRemover.length + ' ocorrência(s))');
+  return { success: true, total: idxRemover.length };
 }
 
 // Senha nao pode conter espaco (usuario deve usar caractere especial no lugar)
