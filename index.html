@@ -134,10 +134,6 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .fundosocial-event .fc-daygrid-event-dot,.fundosocial-event-mobile .fc-daygrid-event-dot{border-color:#7b2cbf!important}
 .recorrente-event .fc-list-event-dot,.recorrente-event-mobile .fc-list-event-dot,
 .recorrente-event .fc-daygrid-event-dot,.recorrente-event-mobile .fc-daygrid-event-dot{border-color:#8fd19e!important}
-/* Na visão de mês/semana (modo compacto "bolinha"), mantém a linha neutra — só a bolinha fica colorida, sem virar bloco */
-.fc-daygrid-dot-event.prefeito-event,.fc-daygrid-dot-event.prefeito-event-mobile,
-.fc-daygrid-dot-event.fundosocial-event,.fc-daygrid-dot-event.fundosocial-event-mobile,
-.fc-daygrid-dot-event.recorrente-event,.fc-daygrid-dot-event.recorrente-event-mobile{background:transparent!important;color:inherit!important}
 .fc-view-harness{height:calc(100vh - 200px)!important;min-height:500px}
 .fc-toolbar-title{font-size:18px!important}
 .fc-button{padding:6px 12px!important;font-size:14px!important}
@@ -1743,7 +1739,8 @@ async function recarregarEventos() {
 function eventosParaCalendario() {
   return evtDoUsuario().map(e=>{
     const elevado=usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom();
-    const rec=podeVerRecorrencia(e);
+    const pref=isPrefeito(e), fsoc=isFundoSocial(e), rec=podeVerRecorrencia(e);
+    const destacado=pref||fsoc||rec;
     const hora=fmtHora(e.data_evento);
     const tagRec=rec?(' 🔁 '+labelRecorrencia(e)):'';
     return {
@@ -1756,8 +1753,10 @@ function eventosParaCalendario() {
             ?`${hora?hora+' ':''}${e.sigla_orgao||sigla(e.orgao)}: ${e.titulo}${tagRec}`
             :`${e.titulo}${tagRec}`),
       start:e.data_evento,
-      className:isPrefeito(e)?(isMobile()?'prefeito-event-mobile':'prefeito-event')
-        :isFundoSocial(e)?(isMobile()?'fundosocial-event-mobile':'fundosocial-event')
+      // Bloco colorido so pros eventos especiais (Prefeito/Fundo Social/recorrente) — os demais ficam no modo compacto padrão
+      display:destacado?'block':'auto',
+      className:pref?(isMobile()?'prefeito-event-mobile':'prefeito-event')
+        :fsoc?(isMobile()?'fundosocial-event-mobile':'fundosocial-event')
         :rec?(isMobile()?'recorrente-event-mobile':'recorrente-event')
         :'',
       extendedProps:{eventoId:e.id}
