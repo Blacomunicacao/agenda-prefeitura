@@ -31,6 +31,7 @@ function handleRequest(e) {
       case 'getEventos':          return responder(handleGetEventos(p), output);
       case 'criarEvento':         return responder(handleCriarEvento(p), output);
       case 'atualizarEvento':     return responder(handleAtualizarEvento(p), output);
+      case 'atualizarRecorrencia':return responder(handleAtualizarRecorrencia(p), output);
       case 'excluirEvento':       return responder(handleExcluirEvento(p), output);
       case 'getUsuarios':         return responder(handleGetUsuarios(p), output);
       case 'criarUsuario':        return responder(handleCriarUsuario(p), output);
@@ -265,6 +266,25 @@ function gerarDatasRecorrencia(dataInicioStr, dataFimStr, dias, tz) {
   return { datas: datas };
 }
 
+// Valida os parametros de recorrencia e gera as datas (com hora fixa 00:00). Usado por criar e atualizar.
+function validarRecorrencia(rec, tz) {
+  if (rec.tipo !== 'semanal' && rec.tipo !== 'mensal') return { erro: 'Tipo de repetição inválido' };
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const inicioRec = new Date(rec.dataInicio + 'T00:00:00');
+  const fimRec = new Date(rec.dataFim + 'T00:00:00');
+  if (isNaN(inicioRec.getTime()) || isNaN(fimRec.getTime())) return { erro: 'Datas de repetição inválidas' };
+  if (fimRec < inicioRec) return { erro: 'A data de fim deve ser depois da data de início' };
+  if (inicioRec < hoje) return { erro: 'Não é permitido repetir a partir de uma data retroativa.' };
+  const anoAtual = new Date().getFullYear();
+  if (inicioRec.getFullYear() !== anoAtual || fimRec.getFullYear() !== anoAtual) {
+    return { erro: 'A repetição só pode ocorrer dentro do ano ' + anoAtual + '.' };
+  }
+  const geradas = gerarDatasRecorrencia(rec.dataInicio, rec.dataFim, rec.dias, tz);
+  if (geradas.erro) return { erro: geradas.erro };
+  if (!geradas.datas.length) return { erro: 'Nenhuma data foi gerada com os dias da semana selecionados nesse período.' };
+  return { datas: geradas.datas.map(function(d) { return d + 'T00:00'; }) };
+}
+
 function handleCriarEvento(data) {
   const usuario = verificarToken(data.token);
   if (!usuario) return { error: 'Não autorizado' };
@@ -288,21 +308,9 @@ function handleCriarEvento(data) {
 
   if (rec && rec.tipo && rec.dataInicio && rec.dataFim && rec.dias && rec.dias.length) {
     if (!data.arquivo_base64 || !data.arquivo_nome) return { error: 'Anexo obrigatório para eventos que se repetem (documento com a variação de local/horário).' };
-    if (rec.tipo !== 'semanal' && rec.tipo !== 'mensal') return { error: 'Tipo de repetição inválido' };
-    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-    const inicioRec = new Date(rec.dataInicio + 'T00:00:00');
-    const fimRec = new Date(rec.dataFim + 'T00:00:00');
-    if (isNaN(inicioRec.getTime()) || isNaN(fimRec.getTime())) return { error: 'Datas de repetição inválidas' };
-    if (fimRec < inicioRec) return { error: 'A data de fim deve ser depois da data de início' };
-    if (inicioRec < hoje) return { error: 'Não é permitido repetir a partir de uma data retroativa.' };
-    const anoAtual = new Date().getFullYear();
-    if (inicioRec.getFullYear() !== anoAtual || fimRec.getFullYear() !== anoAtual) {
-      return { error: 'A repetição só pode ocorrer dentro do ano ' + anoAtual + '.' };
-    }
-    const geradas = gerarDatasRecorrencia(rec.dataInicio, rec.dataFim, rec.dias, tz);
-    if (geradas.erro) return { error: geradas.erro };
-    if (!geradas.datas.length) return { error: 'Nenhuma data foi gerada com os dias da semana selecionados nesse período.' };
-    datasEvento = geradas.datas.map(function(d) { return d + 'T00:00'; });
+    const validado = validarRecorrencia(rec, tz);
+    if (validado.erro) return { error: validado.erro };
+    datasEvento = validado.datas;
     recorrenciaTipo = rec.tipo;
     recorrenciaGrupo = 'rec_' + new Date().getTime();
   } else {
@@ -385,6 +393,91 @@ function handleAtualizarEvento(data) {
 
   registrarLog(usuario.email, 'atualizar_evento', 'ID: ' + data.id);
   return { success: true, message: 'Evento atualizado' };
+}
+
+// Atualiza uma serie recorrente (ou converte um evento avulso em serie / uma serie em avulso).
+// So substitui ocorrencias futuras (hoje em diante); ocorrencias passadas ficam intocadas.
+function handleAtualizarRecorrencia(data) {
+  const usuario = verificarToken(data.token);
+  if (!usuario) return { error: 'Não autorizado' };
+
+  const aba = lerAba('eventos');
+  const rows = aba.rows;
+  const sheet = aba.sheet;
+
+  const grupo = data.recorrencia_grupo;
+  var idxAlvo = [];
+  if (grupo) {
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i].recorrencia_grupo) === String(grupo)) idxAlvo.push(i);
+    }
+  } else {
+    for (var j = 0; j < rows.length; j++) {
+      if (String(rows[j].id) === String(data.id)) { idxAlvo.push(j); break; }
+    }
+  }
+  if (!idxAlvo.length) return { error: 'Evento não encontrado' };
+
+  const referencia = rows[idxAlvo[0]];
+  if (usuario.tipo !== 'admin' && referencia.orgao !== usuario.orgao) return { error: 'Acesso negado' };
+
+  const titulo = data.titulo, local = data.local, responsavel = data.responsavel, telefone = data.telefone, observacao = data.observacao;
+  if (!titulo || !observacao) return { error: 'Título e observação são obrigatórios' };
+
+  const tz = SpreadsheetApp.openById(SPREADSHEET_ID).getSpreadsheetTimeZone();
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+
+  var datasEvento = [];
+  var recorrenciaTipo = '';
+  var recorrenciaGrupo = grupo || '';
+  const rec = data.recorrencia;
+
+  if (rec && rec.tipo && rec.dataInicio && rec.dataFim && rec.dias && rec.dias.length) {
+    const validado = validarRecorrencia(rec, tz);
+    if (validado.erro) return { error: validado.erro };
+    datasEvento = validado.datas;
+    recorrenciaTipo = rec.tipo;
+    if (!recorrenciaGrupo) recorrenciaGrupo = 'rec_' + new Date().getTime();
+  } else {
+    if (!data.data_evento) return { error: 'Data é obrigatória' };
+    if (new Date(data.data_evento) < new Date()) return { error: 'Não é permitido usar data ou hora retroativa.' };
+    datasEvento = [data.data_evento];
+    recorrenciaTipo = '';
+    recorrenciaGrupo = '';
+  }
+
+  const anexo_url = referencia.anexo_url || '';
+  const anexo_nome = referencia.anexo_nome || '';
+  const orgaoEvento = referencia.orgao;
+  const isPref = referencia.is_prefeito;
+  const publicadoPor = referencia.publicado_por;
+  const publicadoEmail = referencia.email_publicado;
+  const now = new Date().toISOString();
+
+  // Remove so as ocorrencias futuras (hoje em diante); as passadas ficam como historico.
+  var idxRemover = idxAlvo.filter(function(i) {
+    var dv = String(rows[i].data_evento || '').substring(0, 10);
+    var d = new Date(dv + 'T00:00:00');
+    return d >= hoje;
+  });
+  idxRemover.sort(function(a, b) { return b - a; });
+  for (var k = 0; k < idxRemover.length; k++) sheet.deleteRow(idxRemover[k] + 2);
+
+  garantirTextoDataEvento(sheet);
+  var idsGerados = [];
+  for (var m = 0; m < datasEvento.length; m++) {
+    const id = proximoId('eventos');
+    sheet.appendRow([
+      id, titulo, datasEvento[m], local || '', responsavel || '',
+      telefone || '', observacao, anexo_url, anexo_nome,
+      orgaoEvento, isPref, publicadoPor, publicadoEmail, now, now, 'ativo',
+      recorrenciaTipo, recorrenciaGrupo
+    ]);
+    idsGerados.push(id);
+  }
+
+  registrarLog(usuario.email, 'atualizar_recorrencia', titulo + ' (' + idsGerados.length + ' ocorrência(s) futura(s))');
+  return { success: true, total: idsGerados.length, ids: idsGerados };
 }
 
 function handleExcluirEvento(data) {
