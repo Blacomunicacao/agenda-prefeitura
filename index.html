@@ -96,12 +96,12 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .evento-card.fundosocial{border-left-color:#7b2cbf;background:#f8f2fc}
 .evento-card.fundosocial .evento-titulo{color:#7b2cbf}
 .evento-card.recorrente{border-left-color:#8fd19e;background:#eefaf0}
-.evento-card.recorrente .evento-titulo{color:#1f7a37}
+.evento-card.recorrente .evento-titulo{color:#000}
 .evento-meta{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:#555}
 .evento-meta span{display:flex;align-items:center;gap:4px}
 .tag-prefeito{background:#dc3545;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px}
 .tag-fundosocial{background:#7b2cbf;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px}
-.tag-recorrente{background:#8fd19e;color:#0f3d1c;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px}
+.tag-recorrente{background:#8fd19e;color:#000;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px}
 .tag-orgao{background:#e8f0fe;color:#003366;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
 
 /* ── Modal ── */
@@ -126,8 +126,8 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .prefeito-event-mobile{background:#dc3545!important;border-color:#b02a37!important;color:#fff!important}
 .fundosocial-event{background:#7b2cbf!important;border-color:#5a1e94!important;color:#fff!important}
 .fundosocial-event-mobile{background:#7b2cbf!important;border-color:#5a1e94!important;color:#fff!important}
-.recorrente-event{background:#c3e6cb!important;border-color:#8fd19e!important;color:#155724!important}
-.recorrente-event-mobile{background:#c3e6cb!important;border-color:#8fd19e!important;color:#155724!important}
+.recorrente-event{background:#c3e6cb!important;border-color:#8fd19e!important;color:#000!important}
+.recorrente-event-mobile{background:#c3e6cb!important;border-color:#8fd19e!important;color:#000!important}
 .prefeito-event .fc-list-event-dot,.prefeito-event-mobile .fc-list-event-dot,
 .prefeito-event .fc-daygrid-event-dot,.prefeito-event-mobile .fc-daygrid-event-dot{border-color:#dc3545!important}
 .fundosocial-event .fc-list-event-dot,.fundosocial-event-mobile .fc-list-event-dot,
@@ -171,7 +171,7 @@ tr.recorrente-row:hover td{background:#d9f2df}
 .evento-hoje-titulo{font-weight:700;margin-bottom:6px;color:#003366;font-size:14px}
 .evento-hoje-card.prefeito .evento-hoje-titulo{color:#dc3545}
 .evento-hoje-card.fundosocial .evento-hoje-titulo{color:#7b2cbf}
-.evento-hoje-card.recorrente .evento-hoje-titulo{color:#1f7a37}
+.evento-hoje-card.recorrente .evento-hoje-titulo{color:#000}
 .evento-hoje-info{font-size:12px;color:#666;margin-bottom:2px}
 
 /* ── Progress bar upload ── */
@@ -258,6 +258,7 @@ const API_URL = localStorage.getItem('apiUrl') ||
 let token    = localStorage.getItem('token');
 let usuario  = JSON.parse(localStorage.getItem('usuario') || 'null');
 let eventos  = [];
+let _salvandoEvento = false; // trava contra clique duplo em "Salvar" (ja causou eventos duplicados antes)
 let todosEventos = [];
 let calendar = null;
 let _autoRefreshId = null;
@@ -1598,8 +1599,10 @@ function abrirEdicao(id) {
 
 async function salvarEdicao(ev) {
   ev.preventDefault();
+  if (_salvandoEvento) return; // evita clique duplo salvar/regerar a serie duas vezes
   const painel=$('editPainelRepeticao');
   const repetindo=painel&&painel.style.display!=='none';
+  const btnSalvar=ev.target.querySelector('button[type="submit"]');
 
   if (repetindo) {
     const dias=Array.from(document.querySelectorAll('.editRepDia:checked')).map(el=>Number(el.value));
@@ -1612,6 +1615,7 @@ async function salvarEdicao(ev) {
       alert('❌ A repetição só pode ocorrer dentro do ano '+anoAtual+'.'); return;
     }
     const recorrencia={tipo:$('editRepTipo').value, dias, dataInicio:repInicio, dataFim:repFim};
+    _salvandoEvento=true; if(btnSalvar) btnSalvar.disabled=true;
     try {
       const res=await apiPost('atualizarRecorrencia',{
         id:$('editId').value, recorrencia_grupo:$('editRecorrenciaGrupo').value,
@@ -1622,12 +1626,14 @@ async function salvarEdicao(ev) {
       fecharModal('modalForm'); await recarregarEventos();
       alert(`✅ Série atualizada! ${res.total} ocorrência(s) futura(s) gerada(s).`);
     } catch(e){ alert('❌ '+e.message); }
+    finally { _salvandoEvento=false; if(btnSalvar) btnSalvar.disabled=false; }
     return;
   }
 
   const dataSoDia=$('editDataSoDia').value, hora=$('editHora').value;
   if (!dataSoDia) { alert('❌ Informe a data do evento.'); return; }
   const data_evento=dataSoDia+'T'+(hora||'00:00');
+  _salvandoEvento=true; if(btnSalvar) btnSalvar.disabled=true;
   try {
     if ($('editRecorrenciaGrupo').value) {
       await apiPost('atualizarRecorrencia',{
@@ -1643,6 +1649,7 @@ async function salvarEdicao(ev) {
     }
     fecharModal('modalForm'); await recarregarEventos(); alert('✅ Evento atualizado!');
   } catch(e){ alert('❌ '+e.message); }
+  finally { _salvandoEvento=false; if(btnSalvar) btnSalvar.disabled=false; }
 }
 
 async function confirmarExcluir(id) {
@@ -1656,6 +1663,7 @@ async function confirmarExcluir(id) {
 
 async function criarEvento(ev) {
   ev.preventDefault();
+  if (_salvandoEvento) return; // evita clique duplo criar o evento (ou a serie recorrente) duas vezes
   const painel=$('painelRepeticao');
   const repetindo=painel&&painel.style.display!=='none';
   const dataSoDia=$('evtDataSoDia').value;
@@ -1700,6 +1708,9 @@ async function criarEvento(ev) {
     if(fill)fill.style.width='100%';
     setTimeout(()=>{if(prog)prog.style.display='none';if(fill)fill.style.width='0%';},500);
   }
+  _salvandoEvento=true;
+  const btnSalvar=ev.target.querySelector('button[type="submit"]');
+  if(btnSalvar) btnSalvar.disabled=true;
   try {
     const payload={titulo:$('evtTitulo').value,
       local:$('evtLocal')?.value||'',responsavel:$('evtResp')?.value||'',
@@ -1720,6 +1731,7 @@ async function criarEvento(ev) {
     alert(res&&res.total>1?`✅ ${res.total} eventos criados (repetição)!`:'✅ Evento criado com sucesso!');
     mostrarView(usuario?.tipo==='prefeito'?'agendaPref':'meusEventos');
   } catch(e){ alert('❌ '+e.message); }
+  finally { _salvandoEvento=false; if(btnSalvar) btnSalvar.disabled=false; }
 }
 
 async function recarregarEventos() {
