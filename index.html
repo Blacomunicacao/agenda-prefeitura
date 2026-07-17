@@ -83,6 +83,9 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .btn-outline{background:transparent;border:1px solid #004d99;color:#004d99}.btn-outline:hover{background:#004d99;color:#fff}
 .btn-pdf{background:#dc3545;color:#fff}.btn-pdf:hover{background:#b02a37}
 .btns-row{display:flex;gap:10px;flex-wrap:wrap}
+.dias-semana-grid{display:flex;gap:10px;flex-wrap:wrap;padding:9px 0}
+.dias-semana-grid label{display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;user-select:none}
+.dias-semana-grid input{cursor:pointer}
 
 /* ── Eventos lista ── */
 .evento-card{background:#fff;border-radius:14px;padding:18px;border-left:5px solid #004d99;box-shadow:0 2px 6px rgba(0,0,0,.06);cursor:pointer;transition:all .2s;margin-bottom:12px}
@@ -120,6 +123,8 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .prefeito-event-mobile{background:#dc3545!important;border-color:#b02a37!important;color:#fff!important}
 .fundosocial-event{background:#7b2cbf!important;border-color:#5a1e94!important;color:#fff!important}
 .fundosocial-event-mobile{background:#7b2cbf!important;border-color:#5a1e94!important;color:#fff!important}
+.recorrente-event{background:#c3e6cb!important;border-color:#8fd19e!important;color:#155724!important}
+.recorrente-event-mobile{background:#c3e6cb!important;border-color:#8fd19e!important;color:#155724!important}
 .fc-view-harness{height:calc(100vh - 200px)!important;min-height:500px}
 .fc-toolbar-title{font-size:18px!important}
 .fc-button{padding:6px 12px!important;font-size:14px!important}
@@ -276,13 +281,15 @@ async function apiPost(action, data = {}) {
 }
 
 const fmtData = s => s ? new Date(s).toLocaleDateString('pt-BR') : '-';
-const fmtHora = s => s ? new Date(s).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
-const fmtDH   = s => s ? new Date(s).toLocaleString('pt-BR') : '-';
+const fmtHora = s => { if(!s) return ''; const t=new Date(s).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); return t==='00:00'?'':t; };
+const fmtDH   = s => { if(!s) return '-'; const d=new Date(s); return fmtHora(s)===''?d.toLocaleDateString('pt-BR'):d.toLocaleString('pt-BR'); };
 const isMobile = () => window.innerWidth <= 768;
 // Normaliza string para busca sem distinção de acentos/ç
 const normBusca = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 const isPrefeito     = e => e.orgao === 'Gabinete do Prefeito';
 const isFundoSocial  = e => e.orgao === 'Fundo Social de Solidariedade de Presidente Prudente';
+const isRecorrente   = e => e.recorrencia_tipo === 'semanal' || e.recorrencia_tipo === 'mensal';
+const labelRecorrencia = e => e.recorrencia_tipo==='semanal'?'Semanal':e.recorrencia_tipo==='mensal'?'Mensal':'';
 const isSecom        = e => (e.sigla_orgao || sigla(e.orgao)) === 'SECOM';
 const isUsuarioSecom = () => usuario && sigla(usuario.orgao) === 'SECOM';
 const $ = id => document.getElementById(id);
@@ -374,6 +381,48 @@ const ORGAOS_LIST = {
     'PRUDENCO'
   ]
 };
+
+const DIAS_SEMANA = [
+  {v:1,label:'Seg'}, {v:2,label:'Ter'}, {v:3,label:'Qua'}, {v:4,label:'Qui'},
+  {v:5,label:'Sex'}, {v:6,label:'Sáb'}, {v:0,label:'Dom'}
+];
+
+function htmlCamposDataHoraEvento() {
+  return `
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+    <div class="form-group" id="grupoDataEvento"><label>Data</label>
+      <input id="evtDataSoDia" type="date" required oninput="verificarData()">
+      <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Data retroativa</div>
+    </div>
+    <div class="form-group" id="grupoHoraEvento"><label>Hora</label>
+      <input id="evtHora" type="time" required oninput="verificarData()">
+    </div>
+    <div class="form-group"><label>Local</label><input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões"></div>
+  </div>
+  <div class="form-group">
+    <button type="button" class="btn btn-outline" id="btnRepetirEvento" onclick="toggleRepeticao()">🔁 Repetir evento</button>
+  </div>
+  <div id="painelRepeticao" style="display:none;background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px">
+      <div class="form-group"><label>Repetir</label>
+        <select id="repTipo">
+          <option value="semanal">Semanal</option>
+          <option value="mensal">Mensal</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Dias da semana</label>
+        <div class="dias-semana-grid">
+          ${DIAS_SEMANA.map(d=>`<label><input type="checkbox" value="${d.v}" class="repDia"> ${d.label}</label>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group"><label>Início</label><input id="repInicio" type="date"></div>
+      <div class="form-group"><label>Fim</label><input id="repFim" type="date"></div>
+    </div>
+    <div style="font-size:12px;color:#666">ℹ️ A repetição não permite escolher hora — os eventos gerados ficam sem horário definido. Só é possível repetir dentro do ano atual.</div>
+  </div>`;
+}
 
 function orgaosSelectHtml(id, required=true) {
   return `<select id="${id}" ${required?'required':''}>
@@ -782,21 +831,15 @@ function htmlPrefeito() {
         <h2 style="margin-bottom:20px;color:#7b0000">➕ Novo Evento do Prefeito</h2>
         <form onsubmit="criarEvento(event)">
           <div class="form-group"><label>Título</label><input id="evtTitulo" type="text" required placeholder="Nome do evento"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group"><label>Data e Hora</label>
-              <input id="evtData" type="datetime-local" required oninput="verificarData()">
-              <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Data retroativa</div>
-            </div>
-            <div class="form-group"><label>Local</label><input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões"></div>
-          </div>
+          ${htmlCamposDataHoraEvento()}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             <div class="form-group"><label>Responsável</label><input id="evtResp" type="text"></div>
             <div class="form-group"><label>Telefone</label><input id="evtTel" type="tel" placeholder="(18) 99999-9999"></div>
           </div>
           <div class="form-group"><label>Descrição / Observações</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
           <div class="form-group">
-            <label>Anexo (imagem, PDF, doc — máx. 10MB)</label>
-            <input type="file" id="evtAnexo" accept="image/*,.pdf,.doc,.docx" onchange="mostrarNomeAnexo(this)" style="display:block;padding:6px 0;font-size:13px">
+            <label>Anexo (vários formatos aceitos — máx. 10MB)</label>
+            <input type="file" id="evtAnexo" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.csv" onchange="mostrarNomeAnexo(this)" style="display:block;padding:6px 0;font-size:13px">
             <div id="nomeAnexo" style="font-size:12px;color:#28a745;margin-top:4px"></div>
             <div class="progress-bar-container" id="progressUpload"><div class="progress-bar-fill" id="progressFill"></div></div>
           </div>
@@ -1004,21 +1047,15 @@ function htmlSecretaria() {
         <h2 style="margin-bottom:20px">➕ Novo Evento</h2>
         <form onsubmit="criarEvento(event)">
           <div class="form-group"><label>Título *</label><input id="evtTitulo" type="text" required placeholder="Nome do evento"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group"><label>Data e Hora *</label>
-              <input id="evtData" type="datetime-local" required oninput="verificarData()">
-              <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Não é permitido criar eventos com data retroativa</div>
-            </div>
-            <div class="form-group"><label>Local</label><input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões"></div>
-          </div>
+          ${htmlCamposDataHoraEvento()}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             <div class="form-group"><label>Responsável</label><input id="evtResp" type="text" placeholder="Nome do responsável"></div>
             <div class="form-group"><label>Telefone / Contato *</label><input id="evtTel" type="tel" required placeholder="(18) 99999-9999"></div>
           </div>
           <div class="form-group"><label>Descrição / Observações *</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
           <div class="form-group">
-            <label>Anexo (imagem, PDF, doc — máx. 10MB)</label>
-            <input type="file" id="evtAnexo" accept="image/*,.pdf,.doc,.docx" onchange="mostrarNomeAnexo(this)" style="display:block;padding:6px 0;font-size:13px">
+            <label>Anexo (vários formatos aceitos — máx. 10MB)</label>
+            <input type="file" id="evtAnexo" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.csv" onchange="mostrarNomeAnexo(this)" style="display:block;padding:6px 0;font-size:13px">
             <div id="nomeAnexo" style="font-size:12px;color:#28a745;margin-top:4px"></div>
             <div class="progress-bar-container" id="progressUpload"><div class="progress-bar-fill" id="progressFill"></div></div>
           </div>
@@ -1101,8 +1138,9 @@ function htmlModalForm() {
       <div class="modal-body">
         <form id="formEditar" onsubmit="salvarEdicao(event)">
           <div class="form-group"><label>Título</label><input id="editTitulo" type="text" required></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-            <div class="form-group"><label>Data e Hora</label><input id="editData" type="datetime-local" required></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+            <div class="form-group"><label>Data</label><input id="editDataSoDia" type="date" required></div>
+            <div class="form-group"><label>Hora</label><input id="editHora" type="time"></div>
             <div class="form-group"><label>Local</label><input id="editLocal" type="text"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -1396,9 +1434,31 @@ function filtrarEventosPref() {
 }
 
 function verificarData() {
-  const input=$('evtData'),aviso=$('avisoRetroativo');
-  if(!input||!aviso) return;
-  aviso.style.display=new Date(input.value)<new Date()?'block':'none';
+  const dataInput=$('evtDataSoDia'),aviso=$('avisoRetroativo');
+  if(!dataInput||!aviso) return;
+  const horaInput=$('evtHora');
+  const hora=horaInput?horaInput.value:'';
+  const val=dataInput.value?(hora?dataInput.value+'T'+hora:dataInput.value):'';
+  aviso.style.display=val&&new Date(val)<new Date()?'block':'none';
+}
+
+function toggleRepeticao() {
+  const painel=$('painelRepeticao'); if(!painel) return;
+  const vaiAtivar=painel.style.display==='none';
+  painel.style.display=vaiAtivar?'block':'none';
+  const grupoData=$('grupoDataEvento'), grupoHora=$('grupoHoraEvento');
+  const dataInput=$('evtDataSoDia'), hora=$('evtHora'), btn=$('btnRepetirEvento'), aviso=$('avisoRetroativo');
+  if(grupoData) grupoData.style.display=vaiAtivar?'none':'';
+  if(grupoHora) grupoHora.style.display=vaiAtivar?'none':'';
+  if(dataInput){ dataInput.required=!vaiAtivar; if(vaiAtivar) dataInput.value=''; }
+  if(hora){ hora.required=!vaiAtivar; if(vaiAtivar) hora.value=''; }
+  if(aviso&&vaiAtivar) aviso.style.display='none';
+  if(btn) btn.textContent=vaiAtivar?'❌ Cancelar repetição':'🔁 Repetir evento';
+  if(vaiAtivar){
+    const anoAtual=new Date().getFullYear();
+    const min=anoAtual+'-01-01', max=anoAtual+'-12-31';
+    ['repInicio','repFim'].forEach(id=>{ const el=$(id); if(el){ el.min=min; el.max=max; } });
+  }
 }
 
 function mostrarNomeAnexo(input) {
@@ -1441,8 +1501,11 @@ function verEvento(id) {
 function abrirEdicao(id) {
   const e=eventos.find(x=>String(x.id)===String(id)); if(!e) return;
   fecharModal('modalEvento');
+  const dt=e.data_evento||'';
+  const horaAtual=dt.length>10?dt.substring(11,16):'';
   $('editId').value=e.id; $('editTitulo').value=e.titulo||'';
-  $('editData').value=e.data_evento?e.data_evento.substring(0,16):'';
+  $('editDataSoDia').value=dt.substring(0,10);
+  $('editHora').value=horaAtual==='00:00'?'':horaAtual;
   $('editLocal').value=e.local||''; $('editResp').value=e.responsavel||'';
   $('editTel').value=e.telefone||''; $('editObs').value=e.observacao||'';
   abrirModal('modalForm');
@@ -1450,9 +1513,12 @@ function abrirEdicao(id) {
 
 async function salvarEdicao(ev) {
   ev.preventDefault();
+  const dataSoDia=$('editDataSoDia').value, hora=$('editHora').value;
+  if (!dataSoDia) { alert('❌ Informe a data do evento.'); return; }
+  const data_evento=dataSoDia+'T'+(hora||'00:00');
   try {
     await api('atualizarEvento',{id:$('editId').value,titulo:$('editTitulo').value,
-      data_evento:$('editData').value,local:$('editLocal').value,
+      data_evento,local:$('editLocal').value,
       responsavel:$('editResp').value,telefone:$('editTel').value,observacao:$('editObs').value});
     fecharModal('modalForm'); await recarregarEventos(); alert('✅ Evento atualizado!');
   } catch(e){ alert('❌ '+e.message); }
@@ -1469,10 +1535,32 @@ async function confirmarExcluir(id) {
 
 async function criarEvento(ev) {
   ev.preventDefault();
-  const dataVal=$('evtData').value;
-  if(dataVal){
-    if(new Date(dataVal)<new Date()){alert('❌ Não é permitido criar eventos com data ou hora retroativa.');return;}
+  const painel=$('painelRepeticao');
+  const repetindo=painel&&painel.style.display!=='none';
+  const dataSoDia=$('evtDataSoDia').value;
+  let recorrencia=null, dataVal='';
+
+  if (repetindo) {
+    const dias=Array.from(document.querySelectorAll('.repDia:checked')).map(el=>Number(el.value));
+    const repInicio=$('repInicio').value, repFim=$('repFim').value;
+    if (!dias.length) { alert('❌ Selecione ao menos um dia da semana para repetir.'); return; }
+    if (!repInicio||!repFim) { alert('❌ Informe a data de início e fim da repetição.'); return; }
+    if (repFim<repInicio) { alert('❌ A data de fim deve ser depois da data de início.'); return; }
+    const anoAtual=new Date().getFullYear();
+    if (Number(repInicio.substring(0,4))!==anoAtual || Number(repFim.substring(0,4))!==anoAtual) {
+      alert('❌ A repetição só pode ocorrer dentro do ano '+anoAtual+'.'); return;
+    }
+    const hoje=new Date(); hoje.setHours(0,0,0,0);
+    if (new Date(repInicio+'T00:00:00')<hoje) { alert('❌ Não é permitido repetir a partir de uma data retroativa.'); return; }
+    recorrencia={tipo:$('repTipo').value, dias, dataInicio:repInicio, dataFim:repFim};
+  } else {
+    if (!dataSoDia) { alert('❌ Informe a data do evento.'); return; }
+    const hora=$('evtHora').value;
+    if (!hora) { alert('❌ Informe a hora do evento.'); return; }
+    dataVal=dataSoDia+'T'+hora;
+    if (new Date(dataVal)<new Date()) { alert('❌ Não é permitido criar eventos com data ou hora retroativa.'); return; }
   }
+
   const fileInput=$('evtAnexo');
   let arquivo_base64='',arquivo_nome='',arquivo_tipo='';
   if(fileInput&&fileInput.files&&fileInput.files[0]){
@@ -1490,15 +1578,23 @@ async function criarEvento(ev) {
     setTimeout(()=>{if(prog)prog.style.display='none';if(fill)fill.style.width='0%';},500);
   }
   try {
-    const payload={titulo:$('evtTitulo').value,data_evento:dataVal,
+    const payload={titulo:$('evtTitulo').value,
       local:$('evtLocal')?.value||'',responsavel:$('evtResp')?.value||'',
       telefone:$('evtTel')?.value||'',observacao:$('evtObs').value,
       arquivo_base64,arquivo_nome,arquivo_tipo};
-    if(arquivo_base64) await apiPost('criarEvento',payload);
-    else await api('criarEvento',payload);
+    if (recorrencia) payload.recorrencia=recorrencia;
+    else payload.data_evento=dataVal;
+
+    const res=(arquivo_base64||recorrencia)?await apiPost('criarEvento',payload):await api('criarEvento',payload);
     ev.target.reset(); if($('nomeAnexo'))$('nomeAnexo').textContent='';
+    if(painel) painel.style.display='none';
+    if($('grupoDataEvento')) $('grupoDataEvento').style.display='';
+    if($('grupoHoraEvento')) $('grupoHoraEvento').style.display='';
+    if($('evtDataSoDia')) $('evtDataSoDia').required=true;
+    if($('evtHora')) $('evtHora').required=true;
+    if($('btnRepetirEvento')) $('btnRepetirEvento').textContent='🔁 Repetir evento';
     await recarregarEventos();
-    alert('✅ Evento criado com sucesso!');
+    alert(res&&res.total>1?`✅ ${res.total} eventos criados (repetição)!`:'✅ Evento criado com sucesso!');
     mostrarView(usuario?.tipo==='prefeito'?'agendaPref':'meusEventos');
   } catch(e){ alert('❌ '+e.message); }
 }
@@ -1518,19 +1614,28 @@ async function recarregarEventos() {
 }
 
 function eventosParaCalendario() {
-  return evtDoUsuario().map(e=>({
-    id:String(e.id),
-    title:isMobile()
-      ?(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom()
-          ?`${fmtHora(e.data_evento)}\n${e.sigla_orgao||sigla(e.orgao)}`
-          :`${fmtHora(e.data_evento)}\n${e.titulo}`)
-      :(usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom()
-          ?`${e.sigla_orgao||sigla(e.orgao)}: ${e.titulo}`
-          :e.titulo),
-    start:e.data_evento,
-    className:isPrefeito(e)?(isMobile()?'prefeito-event-mobile':'prefeito-event'):isFundoSocial(e)?(isMobile()?'fundosocial-event-mobile':'fundosocial-event'):'',
-    extendedProps:{eventoId:e.id}
-  }));
+  return evtDoUsuario().map(e=>{
+    const elevado=usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom();
+    const rec=isRecorrente(e);
+    const hora=fmtHora(e.data_evento);
+    const tagRec=rec?(' 🔁 '+labelRecorrencia(e)):'';
+    return {
+      id:String(e.id),
+      title:isMobile()
+        ?(elevado
+            ?`${hora}\n${e.sigla_orgao||sigla(e.orgao)}${rec?' 🔁':''}`
+            :`${hora}\n${e.titulo}${rec?' 🔁':''}`)
+        :(elevado
+            ?`${hora?hora+' ':''}${e.sigla_orgao||sigla(e.orgao)}: ${e.titulo}${tagRec}`
+            :`${e.titulo}${tagRec}`),
+      start:e.data_evento,
+      className:isPrefeito(e)?(isMobile()?'prefeito-event-mobile':'prefeito-event')
+        :isFundoSocial(e)?(isMobile()?'fundosocial-event-mobile':'fundosocial-event')
+        :rec?(isMobile()?'recorrente-event-mobile':'recorrente-event')
+        :'',
+      extendedProps:{eventoId:e.id}
+    };
+  });
 }
 
 function iniciarCalendario() {
