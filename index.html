@@ -1138,9 +1138,32 @@ function htmlModalForm() {
       <div class="modal-body">
         <form id="formEditar" onsubmit="salvarEdicao(event)">
           <div class="form-group"><label>Título</label><input id="editTitulo" type="text" required></div>
+          <div class="form-group">
+            <button type="button" class="btn btn-outline" id="editBtnRepetirEvento" onclick="toggleRepeticaoEdicao()">🔁 Repetir evento</button>
+          </div>
+          <div id="editPainelRepeticao" style="display:none;background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px">
+              <div class="form-group"><label>Repetir</label>
+                <select id="editRepTipo">
+                  <option value="semanal">Semanal</option>
+                  <option value="mensal">Mensal</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Dias da semana</label>
+                <div class="dias-semana-grid">
+                  ${DIAS_SEMANA.map(d=>`<label><input type="checkbox" value="${d.v}" class="editRepDia"> ${d.label}</label>`).join('')}
+                </div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div class="form-group"><label>Início</label><input id="editRepInicio" type="date"></div>
+              <div class="form-group"><label>Fim</label><input id="editRepFim" type="date"></div>
+            </div>
+            <div style="font-size:12px;color:#666">⚠️ Ao salvar, as ocorrências futuras (de hoje em diante) desta série são substituídas pelos novos dias/período. Ocorrências passadas não são alteradas.</div>
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
-            <div class="form-group"><label>Data</label><input id="editDataSoDia" type="date" required></div>
-            <div class="form-group"><label>Hora</label><input id="editHora" type="time"></div>
+            <div class="form-group" id="editGrupoData"><label>Data</label><input id="editDataSoDia" type="date" required></div>
+            <div class="form-group" id="editGrupoHora"><label>Hora</label><input id="editHora" type="time"></div>
             <div class="form-group"><label>Local</label><input id="editLocal" type="text"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -1149,6 +1172,7 @@ function htmlModalForm() {
           </div>
           <div class="form-group"><label>Descrição</label><textarea id="editObs"></textarea></div>
           <input type="hidden" id="editId">
+          <input type="hidden" id="editRecorrenciaGrupo">
           <div class="btns-row">
             <button type="submit" class="btn btn-azul">💾 Salvar</button>
             <button type="button" class="btn btn-cinza" onclick="fecharModal('modalForm')">Cancelar</button>
@@ -1498,6 +1522,24 @@ function verEvento(id) {
   abrirModal('modalEvento');
 }
 
+function toggleRepeticaoEdicao() {
+  const painel=$('editPainelRepeticao'); if(!painel) return;
+  const vaiAtivar=painel.style.display==='none';
+  painel.style.display=vaiAtivar?'block':'none';
+  const grupoData=$('editGrupoData'), grupoHora=$('editGrupoHora');
+  const dataInput=$('editDataSoDia'), hora=$('editHora'), btn=$('editBtnRepetirEvento');
+  if(grupoData) grupoData.style.display=vaiAtivar?'none':'';
+  if(grupoHora) grupoHora.style.display=vaiAtivar?'none':'';
+  if(dataInput) dataInput.required=!vaiAtivar;
+  if(hora&&vaiAtivar) hora.value='';
+  if(btn) btn.textContent=vaiAtivar?'❌ Cancelar repetição':'🔁 Repetir evento';
+  if(vaiAtivar){
+    const anoAtual=new Date().getFullYear();
+    const min=anoAtual+'-01-01', max=anoAtual+'-12-31';
+    ['editRepInicio','editRepFim'].forEach(id=>{ const el=$(id); if(el){ el.min=min; el.max=max; } });
+  }
+}
+
 function abrirEdicao(id) {
   const e=eventos.find(x=>String(x.id)===String(id)); if(!e) return;
   fecharModal('modalEvento');
@@ -1508,18 +1550,76 @@ function abrirEdicao(id) {
   $('editHora').value=horaAtual==='00:00'?'':horaAtual;
   $('editLocal').value=e.local||''; $('editResp').value=e.responsavel||'';
   $('editTel').value=e.telefone||''; $('editObs').value=e.observacao||'';
+
+  const painel=$('editPainelRepeticao');
+  const recorrente=isRecorrente(e)&&e.recorrencia_grupo;
+  $('editRecorrenciaGrupo').value=recorrente?e.recorrencia_grupo:'';
+  if(recorrente){
+    const irmaos=eventos.filter(x=>x.recorrencia_grupo===e.recorrencia_grupo);
+    const dias=new Set(irmaos.map(x=>new Date(x.data_evento).getDay()));
+    const datasIrmaos=irmaos.map(x=>(x.data_evento||'').substring(0,10)).filter(Boolean).sort();
+    $('editRepTipo').value=e.recorrencia_tipo;
+    document.querySelectorAll('.editRepDia').forEach(cb=>{ cb.checked=dias.has(Number(cb.value)); });
+    $('editRepInicio').value=datasIrmaos[0]||'';
+    $('editRepFim').value=datasIrmaos[datasIrmaos.length-1]||'';
+    painel.style.display='block';
+    $('editGrupoData').style.display='none'; $('editGrupoHora').style.display='none';
+    $('editDataSoDia').required=false;
+    $('editBtnRepetirEvento').textContent='❌ Cancelar repetição';
+  } else {
+    painel.style.display='none';
+    $('editGrupoData').style.display=''; $('editGrupoHora').style.display='';
+    $('editDataSoDia').required=true;
+    $('editBtnRepetirEvento').textContent='🔁 Repetir evento';
+  }
   abrirModal('modalForm');
 }
 
 async function salvarEdicao(ev) {
   ev.preventDefault();
+  const painel=$('editPainelRepeticao');
+  const repetindo=painel&&painel.style.display!=='none';
+
+  if (repetindo) {
+    const dias=Array.from(document.querySelectorAll('.editRepDia:checked')).map(el=>Number(el.value));
+    const repInicio=$('editRepInicio').value, repFim=$('editRepFim').value;
+    if (!dias.length) { alert('❌ Selecione ao menos um dia da semana para repetir.'); return; }
+    if (!repInicio||!repFim) { alert('❌ Informe a data de início e fim da repetição.'); return; }
+    if (repFim<repInicio) { alert('❌ A data de fim deve ser depois da data de início.'); return; }
+    const anoAtual=new Date().getFullYear();
+    if (Number(repInicio.substring(0,4))!==anoAtual || Number(repFim.substring(0,4))!==anoAtual) {
+      alert('❌ A repetição só pode ocorrer dentro do ano '+anoAtual+'.'); return;
+    }
+    const recorrencia={tipo:$('editRepTipo').value, dias, dataInicio:repInicio, dataFim:repFim};
+    try {
+      const res=await apiPost('atualizarRecorrencia',{
+        id:$('editId').value, recorrencia_grupo:$('editRecorrenciaGrupo').value,
+        titulo:$('editTitulo').value, local:$('editLocal').value,
+        responsavel:$('editResp').value, telefone:$('editTel').value, observacao:$('editObs').value,
+        recorrencia
+      });
+      fecharModal('modalForm'); await recarregarEventos();
+      alert(`✅ Série atualizada! ${res.total} ocorrência(s) futura(s) gerada(s).`);
+    } catch(e){ alert('❌ '+e.message); }
+    return;
+  }
+
   const dataSoDia=$('editDataSoDia').value, hora=$('editHora').value;
   if (!dataSoDia) { alert('❌ Informe a data do evento.'); return; }
   const data_evento=dataSoDia+'T'+(hora||'00:00');
   try {
-    await api('atualizarEvento',{id:$('editId').value,titulo:$('editTitulo').value,
-      data_evento,local:$('editLocal').value,
-      responsavel:$('editResp').value,telefone:$('editTel').value,observacao:$('editObs').value});
+    if ($('editRecorrenciaGrupo').value) {
+      await apiPost('atualizarRecorrencia',{
+        id:$('editId').value, recorrencia_grupo:$('editRecorrenciaGrupo').value,
+        titulo:$('editTitulo').value, local:$('editLocal').value,
+        responsavel:$('editResp').value, telefone:$('editTel').value, observacao:$('editObs').value,
+        data_evento
+      });
+    } else {
+      await api('atualizarEvento',{id:$('editId').value,titulo:$('editTitulo').value,
+        data_evento,local:$('editLocal').value,
+        responsavel:$('editResp').value,telefone:$('editTel').value,observacao:$('editObs').value});
+    }
     fecharModal('modalForm'); await recarregarEventos(); alert('✅ Evento atualizado!');
   } catch(e){ alert('❌ '+e.message); }
 }
