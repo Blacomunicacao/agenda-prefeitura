@@ -456,11 +456,14 @@ function handleAtualizarRecorrencia(data) {
   const now = new Date().toISOString();
 
   // Remove so as ocorrencias futuras (hoje em diante); as passadas ficam como historico.
+  Logger.log('grupo=' + grupo + ' | idxAlvo.length=' + idxAlvo.length + ' | hoje=' + hoje.toISOString());
   var idxRemover = idxAlvo.filter(function(i) {
     var dv = String(rows[i].data_evento || '').substring(0, 10);
     var d = new Date(dv + 'T00:00:00');
+    Logger.log('  linha id=' + rows[i].id + ' data_evento="' + rows[i].data_evento + '" dv="' + dv + '" d=' + d + ' >= hoje? ' + (d >= hoje));
     return d >= hoje;
   });
+  Logger.log('idxRemover.length=' + idxRemover.length);
   idxRemover.sort(function(a, b) { return b - a; });
   for (var k = 0; k < idxRemover.length; k++) sheet.deleteRow(idxRemover[k] + 2);
 
