@@ -8,7 +8,7 @@ const LIMITE_POR_SESSAO = 5;
 const LIMITES_ESPECIAIS = {
   'Secretaria de Educação': 10,
   'Secretaria de Saúde': 10,
-  'Secretaria de Comunicação': 10
+  'Secretaria de Comunicação': 20
 };
 function limitePara(orgao) {
   return LIMITES_ESPECIAIS[orgao] || LIMITE_POR_SESSAO;
@@ -245,24 +245,71 @@ function garantirTextoDataEvento(sheet) {
   sheet.getRange('C2:C').setNumberFormat('@');
 }
 
+// Gera as datas (yyyy-MM-dd) dos dias da semana selecionados, dentro do intervalo [inicio,fim]
+function gerarDatasRecorrencia(dataInicioStr, dataFimStr, dias, tz) {
+  const LIMITE_OCORRENCIAS = 150;
+  const diasSet = {};
+  for (var i = 0; i < dias.length; i++) diasSet[Number(dias[i])] = true;
+
+  const inicio = new Date(dataInicioStr + 'T00:00:00');
+  const fim = new Date(dataFimStr + 'T00:00:00');
+  var cursor = new Date(inicio);
+  var datas = [];
+  while (cursor <= fim) {
+    if (diasSet[cursor.getDay()]) {
+      datas.push(Utilities.formatDate(cursor, tz, 'yyyy-MM-dd'));
+      if (datas.length > LIMITE_OCORRENCIAS) return { erro: 'Limite de ' + LIMITE_OCORRENCIAS + ' ocorrências excedido. Reduza o período ou os dias selecionados.' };
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return { datas: datas };
+}
+
 function handleCriarEvento(data) {
   const usuario = verificarToken(data.token);
   if (!usuario) return { error: 'Não autorizado' };
 
   const titulo = data.titulo;
-  const data_evento = data.data_evento;
   const local = data.local;
   const responsavel = data.responsavel;
   const telefone = data.telefone;
   const observacao = data.observacao;
-
-  if (!titulo || !data_evento || !observacao) return { error: 'Título, data e observação são obrigatórios' };
-
-  const dataEvt = new Date(data_evento);
-  if (dataEvt < new Date()) return { error: 'Não é permitido criar eventos com data ou hora retroativa.' };
+  if (!titulo || !observacao) return { error: 'Título e observação são obrigatórios' };
 
   const sheet = getSheet('eventos');
   if (!sheet) return { error: 'Aba eventos não encontrada' };
+  const tz = SpreadsheetApp.openById(SPREADSHEET_ID).getSpreadsheetTimeZone();
+
+  // Define as datas a gerar: uma unica (evento normal) ou varias (recorrencia)
+  var datasEvento = [];
+  var recorrenciaTipo = '';
+  var recorrenciaGrupo = '';
+  const rec = data.recorrencia;
+
+  if (rec && rec.tipo && rec.dataInicio && rec.dataFim && rec.dias && rec.dias.length) {
+    if (rec.tipo !== 'semanal' && rec.tipo !== 'mensal') return { error: 'Tipo de repetição inválido' };
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const inicioRec = new Date(rec.dataInicio + 'T00:00:00');
+    const fimRec = new Date(rec.dataFim + 'T00:00:00');
+    if (isNaN(inicioRec.getTime()) || isNaN(fimRec.getTime())) return { error: 'Datas de repetição inválidas' };
+    if (fimRec < inicioRec) return { error: 'A data de fim deve ser depois da data de início' };
+    if (inicioRec < hoje) return { error: 'Não é permitido repetir a partir de uma data retroativa.' };
+    const anoAtual = new Date().getFullYear();
+    if (inicioRec.getFullYear() !== anoAtual || fimRec.getFullYear() !== anoAtual) {
+      return { error: 'A repetição só pode ocorrer dentro do ano ' + anoAtual + '.' };
+    }
+    const geradas = gerarDatasRecorrencia(rec.dataInicio, rec.dataFim, rec.dias, tz);
+    if (geradas.erro) return { error: geradas.erro };
+    if (!geradas.datas.length) return { error: 'Nenhuma data foi gerada com os dias da semana selecionados nesse período.' };
+    datasEvento = geradas.datas.map(function(d) { return d + 'T00:00'; });
+    recorrenciaTipo = rec.tipo;
+    recorrenciaGrupo = 'rec_' + new Date().getTime();
+  } else {
+    const data_evento = data.data_evento;
+    if (!data_evento) return { error: 'Data é obrigatória' };
+    if (new Date(data_evento) < new Date()) return { error: 'Não é permitido criar eventos com data ou hora retroativa.' };
+    datasEvento = [data_evento];
+  }
 
   var anexo_url = '', anexo_nome = '';
   if (data.arquivo_base64 && data.arquivo_nome) {
@@ -282,21 +329,28 @@ function handleCriarEvento(data) {
     }
   }
 
-  const id = proximoId('eventos');
   const now = new Date().toISOString();
   const orgaoEvento = usuario.tipo === 'prefeito' ? 'Gabinete do Prefeito' : usuario.orgao;
+  const isPref = (usuario.tipo === 'prefeito' || usuario.is_prefeito) ? 'TRUE' : 'FALSE';
 
   garantirTextoDataEvento(sheet);
-  sheet.appendRow([
-    id, titulo, data_evento, local || '', responsavel || '',
-    telefone || '', observacao, anexo_url, anexo_nome,
-    orgaoEvento,
-    (usuario.tipo === 'prefeito' || usuario.is_prefeito) ? 'TRUE' : 'FALSE',
-    usuario.login, usuario.email, now, now, 'ativo'
-  ]);
+  var idsGerados = [];
+  for (var i = 0; i < datasEvento.length; i++) {
+    const id = proximoId('eventos');
+    sheet.appendRow([
+      id, titulo, datasEvento[i], local || '', responsavel || '',
+      telefone || '', observacao, anexo_url, anexo_nome,
+      orgaoEvento, isPref, usuario.login, usuario.email, now, now, 'ativo',
+      recorrenciaTipo, recorrenciaGrupo
+    ]);
+    idsGerados.push(id);
+  }
 
-  registrarLog(usuario.email, 'criar_evento', titulo);
-  return { success: true, id: id, message: 'Evento criado com sucesso' };
+  registrarLog(usuario.email, 'criar_evento', titulo + (idsGerados.length > 1 ? (' (recorrência x' + idsGerados.length + ')') : ''));
+  return {
+    success: true, id: idsGerados[0], ids: idsGerados, total: idsGerados.length,
+    message: idsGerados.length > 1 ? (idsGerados.length + ' eventos criados (repetição)') : 'Evento criado com sucesso'
+  };
 }
 
 function handleAtualizarEvento(data) {
@@ -619,7 +673,7 @@ function criarAbas() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const config = {
     usuarios:     ['id','login','nome','email','senha','tipo','orgao','is_prefeito','ativo','data_criacao'],
-    eventos:      ['id','titulo','data_evento','local','responsavel','telefone','observacao','anexo_url','anexo_nome','orgao','is_prefeito','publicado_por','email_publicado','data_publicacao','data_atualizacao','status'],
+    eventos:      ['id','titulo','data_evento','local','responsavel','telefone','observacao','anexo_url','anexo_nome','orgao','is_prefeito','publicado_por','email_publicado','data_publicacao','data_atualizacao','status','recorrencia_tipo','recorrencia_grupo'],
     logs:         ['id','data','usuario','acao','detalhes'],
     solicitacoes: ['id','nome','email','login','telefone','orgao','justificativa','status','tipoSolicitacao','data_solicitacao','senha']
   };
@@ -636,6 +690,24 @@ function criarAbas() {
     }
   }
   return { success: true, abas: resultado };
+}
+
+// Adiciona colunas de recorrencia na aba eventos, se ainda nao existirem (execute manualmente uma vez)
+function adicionarColunasRecorrencia() {
+  const sheet = getSheet('eventos');
+  if (!sheet) { Logger.log('Aba eventos nao encontrada'); return; }
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
+  const novas = ['recorrencia_tipo', 'recorrencia_grupo'];
+  var col = headers.length;
+  var adicionadas = [];
+  for (var i = 0; i < novas.length; i++) {
+    if (headers.indexOf(novas[i]) === -1) {
+      col++;
+      sheet.getRange(1, col).setValue(novas[i]);
+      adicionadas.push(novas[i]);
+    }
+  }
+  Logger.log(adicionadas.length ? ('Colunas adicionadas: ' + adicionadas.join(', ')) : 'Colunas ja existiam, nada a fazer.');
 }
 
 // Autorizar Drive (execute manualmente uma vez)
