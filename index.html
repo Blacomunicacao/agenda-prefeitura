@@ -389,16 +389,6 @@ const DIAS_SEMANA = [
 
 function htmlCamposDataHoraEvento() {
   return `
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-    <div class="form-group" id="grupoDataEvento"><label>Data</label>
-      <input id="evtDataSoDia" type="date" required oninput="verificarData()">
-      <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Data retroativa</div>
-    </div>
-    <div class="form-group" id="grupoHoraEvento"><label>Hora</label>
-      <input id="evtHora" type="time" required oninput="verificarData()">
-    </div>
-    <div class="form-group"><label>Local</label><input id="evtLocal" type="text" placeholder="Ex: Sala de Reuniões"></div>
-  </div>
   <div class="form-group">
     <button type="button" class="btn btn-outline" id="btnRepetirEvento" onclick="toggleRepeticao()">🔁 Repetir evento</button>
   </div>
@@ -420,7 +410,17 @@ function htmlCamposDataHoraEvento() {
       <div class="form-group"><label>Início</label><input id="repInicio" type="date"></div>
       <div class="form-group"><label>Fim</label><input id="repFim" type="date"></div>
     </div>
-    <div style="font-size:12px;color:#666">ℹ️ A repetição não permite escolher hora — os eventos gerados ficam sem horário definido. Só é possível repetir dentro do ano atual.</div>
+    <div style="font-size:12px;color:#666">ℹ️ A repetição não permite escolher hora devido a possibilidade da flexibilidade do local e horário do evento. Anexe um documento complementar com a variação dessas informações do seu evento. O anexo é obrigatório nesse caso.</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+    <div class="form-group" id="grupoDataEvento"><label>Data</label>
+      <input id="evtDataSoDia" type="date" required oninput="verificarData()">
+      <div id="avisoRetroativo" class="alerta-retroativo">⚠️ Data retroativa</div>
+    </div>
+    <div class="form-group" id="grupoHoraEvento"><label>Hora</label>
+      <input id="evtHora" type="time" required oninput="verificarData()">
+    </div>
+    <div class="form-group"><label>Local</label><input id="evtLocal" type="text" required placeholder="Ex: Sala de Reuniões"></div>
   </div>`;
 }
 
@@ -833,8 +833,8 @@ function htmlPrefeito() {
           <div class="form-group"><label>Título</label><input id="evtTitulo" type="text" required placeholder="Nome do evento"></div>
           ${htmlCamposDataHoraEvento()}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group"><label>Responsável</label><input id="evtResp" type="text"></div>
-            <div class="form-group"><label>Telefone</label><input id="evtTel" type="tel" placeholder="(18) 99999-9999"></div>
+            <div class="form-group"><label>Responsável</label><input id="evtResp" type="text" required></div>
+            <div class="form-group"><label>Telefone</label><input id="evtTel" type="tel" required placeholder="(18) 99999-9999"></div>
           </div>
           <div class="form-group"><label>Descrição / Observações</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
           <div class="form-group">
@@ -1049,7 +1049,7 @@ function htmlSecretaria() {
           <div class="form-group"><label>Título *</label><input id="evtTitulo" type="text" required placeholder="Nome do evento"></div>
           ${htmlCamposDataHoraEvento()}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group"><label>Responsável</label><input id="evtResp" type="text" placeholder="Nome do responsável"></div>
+            <div class="form-group"><label>Responsável *</label><input id="evtResp" type="text" required placeholder="Nome do responsável"></div>
             <div class="form-group"><label>Telefone / Contato *</label><input id="evtTel" type="tel" required placeholder="(18) 99999-9999"></div>
           </div>
           <div class="form-group"><label>Descrição / Observações *</label><textarea id="evtObs" required placeholder="Descreva o evento..."></textarea></div>
@@ -1552,6 +1552,8 @@ async function criarEvento(ev) {
     }
     const hoje=new Date(); hoje.setHours(0,0,0,0);
     if (new Date(repInicio+'T00:00:00')<hoje) { alert('❌ Não é permitido repetir a partir de uma data retroativa.'); return; }
+    const fileInputCheck=$('evtAnexo');
+    if (!fileInputCheck||!fileInputCheck.files||!fileInputCheck.files[0]) { alert('❌ Anexe um documento com a variação de local/horário — obrigatório para eventos que se repetem.'); return; }
     recorrencia={tipo:$('repTipo').value, dias, dataInicio:repInicio, dataFim:repFim};
   } else {
     if (!dataSoDia) { alert('❌ Informe a data do evento.'); return; }
