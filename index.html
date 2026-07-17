@@ -786,7 +786,7 @@ function htmlAdmin() {
       </div>
     </div>
   </main>
-  ${htmlModalEvento()}${htmlModalForm()}${htmlModalUsuario()}${htmlModalAnexos()}${htmlModalDia()}`;
+  ${htmlModalEvento()}${htmlModalForm()}${htmlModalExcluirRecorrente()}${htmlModalUsuario()}${htmlModalAnexos()}${htmlModalDia()}`;
 }
 
 // ════════════════ PREFEITO HTML ════════════════
@@ -867,7 +867,7 @@ function htmlPrefeito() {
       </div>
     </div>
   </main>
-  ${htmlModalEvento()}${htmlModalForm()}${htmlModalDia()}`;
+  ${htmlModalEvento()}${htmlModalForm()}${htmlModalExcluirRecorrente()}${htmlModalDia()}`;
 }
 
 function evtTodosHoje() {
@@ -1084,7 +1084,7 @@ function htmlSecretaria() {
       </div>
     </div>
   </main>
-  ${htmlModalEvento()}${htmlModalForm()}${htmlModalDia()}`;
+  ${htmlModalEvento()}${htmlModalForm()}${htmlModalExcluirRecorrente()}${htmlModalDia()}`;
 }
 
 // ════════════════ COMPONENTES ════════════════
@@ -1196,6 +1196,24 @@ function htmlModalForm() {
             <button type="button" class="btn btn-cinza" onclick="fecharModal('modalForm')">Cancelar</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>`;
+}
+
+function htmlModalExcluirRecorrente() {
+  return `
+  <div id="modalExcluirRecorrente" class="modal-bg" onclick="fecharModal('modalExcluirRecorrente')">
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:420px">
+      <div class="modal-head"><h3>🗑️ Excluir evento recorrente</h3>
+        <button class="modal-close" onclick="fecharModal('modalExcluirRecorrente')">×</button></div>
+      <div class="modal-body">
+        <p style="color:#666;font-size:14px;margin-bottom:16px">Este evento faz parte de uma série recorrente. O que você deseja excluir?</p>
+        <div class="btns-row" style="flex-direction:column">
+          <button class="btn btn-amarelo" style="width:100%" onclick="excluirApenasEstaData()">📅 Excluir apenas esta data</button>
+          <button class="btn btn-vermelho" style="width:100%" onclick="excluirSerieCompleta()">🔁 Excluir toda a série (futuras)</button>
+          <button class="btn btn-cinza" style="width:100%" onclick="fecharModal('modalExcluirRecorrente')">Cancelar</button>
+        </div>
       </div>
     </div>
   </div>`;
@@ -1652,12 +1670,40 @@ async function salvarEdicao(ev) {
   finally { _salvandoEvento=false; if(btnSalvar) btnSalvar.disabled=false; }
 }
 
+let _excluirRecorrenteAlvo = null;
+
 async function confirmarExcluir(id) {
   const e=eventos.find(x=>String(x.id)===String(id));
+  if(!e) return;
+  if (e.recorrencia_grupo) {
+    _excluirRecorrenteAlvo = { id: e.id, grupo: e.recorrencia_grupo, titulo: e.titulo };
+    fecharModal('modalEvento');
+    abrirModal('modalExcluirRecorrente');
+    return;
+  }
   if(!confirm(`Excluir o evento "${e?.titulo}"?`)) return;
   try {
     await api('excluirEvento',{id}); fecharModal('modalEvento');
     await recarregarEventos(); alert('✅ Evento excluído!');
+  } catch(ex){ alert('❌ '+ex.message); }
+}
+
+async function excluirApenasEstaData() {
+  const alvo=_excluirRecorrenteAlvo; if(!alvo) return;
+  fecharModal('modalExcluirRecorrente');
+  try {
+    await api('excluirEvento',{id:alvo.id});
+    await recarregarEventos(); alert('✅ Data excluída da série!');
+  } catch(ex){ alert('❌ '+ex.message); }
+}
+
+async function excluirSerieCompleta() {
+  const alvo=_excluirRecorrenteAlvo; if(!alvo) return;
+  if(!confirm(`Excluir TODAS as ocorrências futuras da série "${alvo.titulo}"? Ocorrências passadas não são afetadas. Essa ação não pode ser desfeita.`)) return;
+  fecharModal('modalExcluirRecorrente');
+  try {
+    const res=await api('excluirSerieRecorrente',{recorrencia_grupo:alvo.grupo});
+    await recarregarEventos(); alert(`✅ Série excluída! ${res.total} ocorrência(s) futura(s) removida(s).`);
   } catch(ex){ alert('❌ '+ex.message); }
 }
 
