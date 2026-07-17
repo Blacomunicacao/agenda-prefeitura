@@ -287,6 +287,7 @@ function handleCriarEvento(data) {
   const rec = data.recorrencia;
 
   if (rec && rec.tipo && rec.dataInicio && rec.dataFim && rec.dias && rec.dias.length) {
+    if (!data.arquivo_base64 || !data.arquivo_nome) return { error: 'Anexo obrigatório para eventos que se repetem (documento com a variação de local/horário).' };
     if (rec.tipo !== 'semanal' && rec.tipo !== 'mensal') return { error: 'Tipo de repetição inválido' };
     const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
     const inicioRec = new Date(rec.dataInicio + 'T00:00:00');
