@@ -95,10 +95,13 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 .evento-card.prefeito .evento-titulo{color:#dc3545}
 .evento-card.fundosocial{border-left-color:#7b2cbf;background:#f8f2fc}
 .evento-card.fundosocial .evento-titulo{color:#7b2cbf}
+.evento-card.recorrente{border-left-color:#8fd19e;background:#eefaf0}
+.evento-card.recorrente .evento-titulo{color:#1f7a37}
 .evento-meta{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:#555}
 .evento-meta span{display:flex;align-items:center;gap:4px}
 .tag-prefeito{background:#dc3545;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px}
 .tag-fundosocial{background:#7b2cbf;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px}
+.tag-recorrente{background:#8fd19e;color:#0f3d1c;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px}
 .tag-orgao{background:#e8f0fe;color:#003366;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
 
 /* ── Modal ── */
@@ -144,6 +147,8 @@ tr.pref-row td{background:#fff5f5}
 tr.pref-row:hover td{background:#ffe8e8}
 tr.fundosocial-row td{background:#f8f2fc}
 tr.fundosocial-row:hover td{background:#efe0fa}
+tr.recorrente-row td{background:#eefaf0}
+tr.recorrente-row:hover td{background:#d9f2df}
 
 /* ── Badge notificação ── */
 .badge{background:#dc3545;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700;margin-left:4px}
@@ -159,9 +164,11 @@ tr.fundosocial-row:hover td{background:#efe0fa}
 .evento-hoje-card:hover{background:#e8f0fe}
 .evento-hoje-card.prefeito{border-left-color:#dc3545;background:#fff5f5}
 .evento-hoje-card.fundosocial{border-left-color:#7b2cbf;background:#f8f2fc}
+.evento-hoje-card.recorrente{border-left-color:#8fd19e;background:#eefaf0}
 .evento-hoje-titulo{font-weight:700;margin-bottom:6px;color:#003366;font-size:14px}
 .evento-hoje-card.prefeito .evento-hoje-titulo{color:#dc3545}
 .evento-hoje-card.fundosocial .evento-hoje-titulo{color:#7b2cbf}
+.evento-hoje-card.recorrente .evento-hoje-titulo{color:#1f7a37}
 .evento-hoje-info{font-size:12px;color:#666;margin-bottom:2px}
 
 /* ── Progress bar upload ── */
@@ -293,6 +300,8 @@ const isPrefeito     = e => e.orgao === 'Gabinete do Prefeito';
 const isFundoSocial  = e => e.orgao === 'Fundo Social de Solidariedade de Presidente Prudente';
 const isRecorrente   = e => e.recorrencia_tipo === 'semanal' || e.recorrencia_tipo === 'mensal';
 const labelRecorrencia = e => e.recorrencia_tipo==='semanal'?'Semanal':e.recorrencia_tipo==='mensal'?'Mensal':'';
+// So mostra o destaque de recorrencia p/ quem lancou o evento (mesmo orgao) ou pra ADM/SECOM (veem tudo)
+const podeVerRecorrencia = e => isRecorrente(e) && (usuario?.tipo==='admin' || isUsuarioSecom() || (usuario && e.orgao===usuario.orgao));
 const isSecom        = e => (e.sigla_orgao || sigla(e.orgao)) === 'SECOM';
 const isUsuarioSecom = () => usuario && sigla(usuario.orgao) === 'SECOM';
 const $ = id => document.getElementById(id);
@@ -734,7 +743,7 @@ function htmlAdmin() {
           <h3>📌 Eventos de Hoje (${hoje.length})</h3>
           <div class="eventos-hoje-lista">
             ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>`
-              <div class="evento-hoje-card${isPrefeito(e)?' prefeito':isFundoSocial(e)?' fundosocial':''}" onclick="verEvento('${e.id}')">
+              <div class="evento-hoje-card${isPrefeito(e)?' prefeito':isFundoSocial(e)?' fundosocial':podeVerRecorrencia(e)?' recorrente':''}" onclick="verEvento('${e.id}')">
                 <div class="evento-hoje-titulo">${e.titulo}</div>
                 <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento)} · 🏢 ${(e.sigla_orgao||sigla(e.orgao))}</div>
                 ${e.local?`<div class="evento-hoje-info">📍 ${e.local}</div>`:''}
@@ -945,7 +954,7 @@ function htmlSecom() {
           <h3>📌 Eventos de Hoje (${hoje.length})</h3>
           <div class="eventos-hoje-lista">
             ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>`
-              <div class="evento-hoje-card${isPrefeito(e)?' prefeito':isFundoSocial(e)?' fundosocial':''}" onclick="verEvento('${e.id}')">
+              <div class="evento-hoje-card${isPrefeito(e)?' prefeito':isFundoSocial(e)?' fundosocial':podeVerRecorrencia(e)?' recorrente':''}" onclick="verEvento('${e.id}')">
                 <div class="evento-hoje-titulo">${e.titulo}</div>
                 <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento)} · 🏢 ${(e.sigla_orgao||sigla(e.orgao))}</div>
                 ${e.local?`<div class="evento-hoje-info">📍 ${e.local}</div>`:''}
@@ -973,10 +982,11 @@ function cardEventoResumo(e) {
   const sg = e.sigla_orgao || sigla(e.orgao) || '';
   const pref = isPrefeito(e);
   const fsoc = isFundoSocial(e);
+  const rec = podeVerRecorrencia(e);
   return `
-  <div class="evento-card${pref?' prefeito':fsoc?' fundosocial':''}" onclick="verEvento('${e.id}')">
+  <div class="evento-card${pref?' prefeito':fsoc?' fundosocial':rec?' recorrente':''}" onclick="verEvento('${e.id}')">
     <div class="evento-titulo">${e.titulo}
-      ${pref?'<span class="tag-prefeito">🏛️ PREFEITO</span>':fsoc?'<span class="tag-fundosocial">🤝 FUNDO SOCIAL</span>':''}
+      ${pref?'<span class="tag-prefeito">🏛️ PREFEITO</span>':fsoc?'<span class="tag-fundosocial">🤝 FUNDO SOCIAL</span>':rec?`<span class="tag-recorrente">🔁 ${labelRecorrencia(e)}</span>`:''}
     </div>
     <div class="evento-meta">
       ${hora?`<span>🕐 ${hora}</span>`:''}
@@ -1077,11 +1087,12 @@ function htmlSecretaria() {
 function cardEvento(e, mostrarOrgao=false) {
   const pref=isPrefeito(e);
   const fsoc=isFundoSocial(e);
+  const rec=podeVerRecorrencia(e);
   const temAnexo=!!(e.anexo_url||e.anexo_nome);
   return `
-  <div class="evento-card${pref?' prefeito':fsoc?' fundosocial':''}" onclick="verEvento('${e.id}')">
+  <div class="evento-card${pref?' prefeito':fsoc?' fundosocial':rec?' recorrente':''}" onclick="verEvento('${e.id}')">
     <div class="evento-titulo">${e.titulo}
-      ${pref?'<span class="tag-prefeito">🏛️ PREFEITO</span>':fsoc?'<span class="tag-fundosocial">🤝 FUNDO SOCIAL</span>':''}
+      ${pref?'<span class="tag-prefeito">🏛️ PREFEITO</span>':fsoc?'<span class="tag-fundosocial">🤝 FUNDO SOCIAL</span>':rec?`<span class="tag-recorrente">🔁 ${labelRecorrencia(e)}</span>`:''}
       ${mostrarOrgao?`<span class="tag-orgao">${(e.sigla_orgao||sigla(e.orgao))}</span>`:''}
       ${temAnexo?'<span style="font-size:12px;margin-left:6px">📎</span>':''}
     </div>
@@ -1107,8 +1118,8 @@ function renderTabelaAdmin(lista) {
   return `<div class="tabela-wrap"><table>
     <thead><tr><th>Órgão</th><th>Evento</th><th>Data/Hora</th><th>Publicado por</th><th>Publicado em</th><th>Anexo</th></tr></thead>
     <tbody>${sorted.map(e=>`
-      <tr class="${isPrefeito(e)?'pref-row':isFundoSocial(e)?'fundosocial-row':''}" onclick="verEvento('${e.id}')" style="cursor:pointer">
-        <td>${(e.sigla_orgao||sigla(e.orgao))||'—'}${isPrefeito(e)?'  ⭐':isFundoSocial(e)?'  🤝':''}</td>
+      <tr class="${isPrefeito(e)?'pref-row':isFundoSocial(e)?'fundosocial-row':podeVerRecorrencia(e)?'recorrente-row':''}" onclick="verEvento('${e.id}')" style="cursor:pointer">
+        <td>${(e.sigla_orgao||sigla(e.orgao))||'—'}${isPrefeito(e)?'  ⭐':isFundoSocial(e)?'  🤝':podeVerRecorrencia(e)?'  🔁':''}</td>
         <td>${e.titulo}</td>
         <td>${fmtData(e.data_evento)} ${fmtHora(e.data_evento)}</td>
         <td>${e.publicado_por||'—'}</td>
@@ -1725,7 +1736,7 @@ async function recarregarEventos() {
 function eventosParaCalendario() {
   return evtDoUsuario().map(e=>{
     const elevado=usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom();
-    const rec=isRecorrente(e);
+    const rec=podeVerRecorrencia(e);
     const hora=fmtHora(e.data_evento);
     const tagRec=rec?(' 🔁 '+labelRecorrencia(e)):'';
     return {
