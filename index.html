@@ -213,6 +213,8 @@ tr.recorrente-row:hover td{background:#d9f2df}
   /* Formulários */
   [style*="grid-template-columns:1fr 1fr"]{display:block!important}
   [style*="grid-template-columns:1fr 1fr"]>.form-group{margin-bottom:12px}
+  [style*="grid-template-columns:1fr 2fr"]{display:block!important}
+  [style*="grid-template-columns:1fr 2fr"]>.form-group{margin-bottom:12px}
 
   /* Tabela */
   table{min-width:600px}
@@ -1720,31 +1722,31 @@ async function criarEvento(ev) {
   if (repetindo) {
     const dias=Array.from(document.querySelectorAll('.repDia:checked')).map(el=>Number(el.value));
     const repInicio=$('repInicio').value, repFim=$('repFim').value;
-    if (!dias.length) { alert('❌ Selecione ao menos um dia da semana para repetir.'); return; }
-    if (!repInicio||!repFim) { alert('❌ Informe a data de início e fim da repetição.'); return; }
-    if (repFim<repInicio) { alert('❌ A data de fim deve ser depois da data de início.'); return; }
+    if (!dias.length) { avisar('❌ Selecione ao menos um dia da semana para repetir.'); return; }
+    if (!repInicio||!repFim) { avisar('❌ Informe a data de início e fim da repetição.'); return; }
+    if (repFim<repInicio) { avisar('❌ A data de fim deve ser depois da data de início.'); return; }
     const anoAtual=new Date().getFullYear();
     if (Number(repInicio.substring(0,4))!==anoAtual || Number(repFim.substring(0,4))!==anoAtual) {
-      alert('❌ A repetição só pode ocorrer dentro do ano '+anoAtual+'.'); return;
+      avisar('❌ A repetição só pode ocorrer dentro do ano '+anoAtual+'.'); return;
     }
     const hoje=new Date(); hoje.setHours(0,0,0,0);
-    if (new Date(repInicio+'T00:00:00')<hoje) { alert('❌ Não é permitido repetir a partir de uma data retroativa.'); return; }
+    if (new Date(repInicio+'T00:00:00')<hoje) { avisar('❌ Não é permitido repetir a partir de uma data retroativa.'); return; }
     const fileInputCheck=$('evtAnexo');
-    if (!fileInputCheck||!fileInputCheck.files||!fileInputCheck.files[0]) { alert('❌ Anexe um documento com a variação de local/horário — obrigatório para eventos que se repetem.'); return; }
+    if (!fileInputCheck||!fileInputCheck.files||!fileInputCheck.files[0]) { avisar('❌ Anexe um documento com a variação de local/horário — obrigatório para eventos que se repetem.'); return; }
     recorrencia={tipo:$('repTipo').value, dias, dataInicio:repInicio, dataFim:repFim};
   } else {
-    if (!dataSoDia) { alert('❌ Informe a data do evento.'); return; }
+    if (!dataSoDia) { avisar('❌ Informe a data do evento.'); return; }
     const hora=$('evtHora').value;
-    if (!hora) { alert('❌ Informe a hora do evento.'); return; }
+    if (!hora) { avisar('❌ Informe a hora do evento.'); return; }
     dataVal=dataSoDia+'T'+hora;
-    if (new Date(dataVal)<new Date()) { alert('❌ Não é permitido criar eventos com data ou hora retroativa.'); return; }
+    if (new Date(dataVal)<new Date()) { avisar('❌ Não é permitido criar eventos com data ou hora retroativa.'); return; }
   }
 
   const fileInput=$('evtAnexo');
   let arquivo_base64='',arquivo_nome='',arquivo_tipo='';
   if(fileInput&&fileInput.files&&fileInput.files[0]){
     const f=fileInput.files[0];
-    if(f.size>10*1024*1024){alert('❌ Arquivo muito grande. Máximo 10MB.');return;}
+    if(f.size>10*1024*1024){avisar('❌ Arquivo muito grande. Máximo 10MB.');return;}
     arquivo_nome=f.name; arquivo_tipo=f.type;
     const prog=$('progressUpload'),fill=$('progressFill');
     if(prog){prog.style.display='block';if(fill)fill.style.width='30%';}
@@ -2164,6 +2166,11 @@ async function excluirSolicitacaoUI(id) {
 }
 
 // ════════════════ MODAIS / UTILITÁRIOS ════════════════
+// Tira o foco do campo (fecha teclado virtual no mobile) antes de mostrar o alerta nativo —
+// evita o alert() travar a tela em alguns navegadores mobile quando disparado logo apos
+// interacao com input/teclado/seletor de arquivo.
+function avisar(msg){ if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); setTimeout(()=>alert(msg),50); }
+
 function abrirModal(id){const el=$(id);if(el)el.classList.add('aberto');}
 function fecharModal(id){const el=$(id);if(el)el.classList.remove('aberto');}
 
