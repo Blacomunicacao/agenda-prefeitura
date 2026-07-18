@@ -234,6 +234,13 @@ tr.recorrente-row:hover td{background:#d9f2df}
      fluido por natureza, então deixamos ele ocupar 100% da largura e só reduzimos fonte/espaçamento
      das células pra caber as 7 colunas sem cortar nem forçar rolagem. */
   #calendario .secao{padding:0;border-radius:0;box-shadow:none}
+  /* O FullCalendar sincroniza as tabelas de cabeçalho e corpo aplicando largura em PX via JS
+     direto no <col> de cada coluna — isso ignora nosso CSS de fonte/espaçamento e é a causa
+     real do calendário ficar mais largo que a tela no mobile. Força a tabela a 100% e cada
+     coluna a dividir esse espaço igualmente, sobrescrevendo os px que o FullCalendar calculou. */
+  #cal .fc-scrollgrid,
+  #cal .fc-scrollgrid table{table-layout:fixed!important;width:100%!important}
+  #cal colgroup col{width:auto!important}
   .fc-view-harness{height:auto!important;min-height:280px!important}
   .fc-toolbar{flex-direction:column!important;gap:4px!important;align-items:center!important}
   .fc-toolbar-chunk{text-align:center!important}
