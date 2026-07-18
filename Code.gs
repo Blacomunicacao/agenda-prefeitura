@@ -456,10 +456,13 @@ function handleAtualizarRecorrencia(data) {
   const now = new Date().toISOString();
 
   // Remove so as ocorrencias futuras (hoje em diante); as passadas ficam como historico.
+  // Usa normalizarDataEvento pois linhas antigas (gravadas antes de um deploy correto) podem ter
+  // data_evento como objeto Date em vez de texto — String(Date).substring(0,10) gera lixo tipo
+  // "Sat Jul 18" em vez de "2026-07-18", quebrando a comparacao silenciosamente (sempre "nao e futuro").
   var debug = [];
   debug.push('grupo=' + grupo + ' idxAlvo.length=' + idxAlvo.length + ' hoje=' + hoje.toISOString());
   var idxRemover = idxAlvo.filter(function(i) {
-    var dv = String(rows[i].data_evento || '').substring(0, 10);
+    var dv = String(normalizarDataEvento(rows[i].data_evento, tz) || '').substring(0, 10);
     var d = new Date(dv + 'T00:00:00');
     debug.push('id=' + rows[i].id + ' data_evento=' + JSON.stringify(rows[i].data_evento) + ' dv=' + dv + ' futuro=' + (d >= hoje));
     return d >= hoje;
@@ -529,11 +532,12 @@ function handleExcluirSerieRecorrente(data) {
   const referencia = rows[idxAlvo[0]];
   if (usuario.tipo !== 'admin' && referencia.orgao !== usuario.orgao) return { error: 'Acesso negado' };
 
+  const tz = SpreadsheetApp.openById(SPREADSHEET_ID).getSpreadsheetTimeZone();
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
   var debug = [];
   debug.push('grupo=' + grupo + ' idxAlvo.length=' + idxAlvo.length);
   var idxRemover = idxAlvo.filter(function(i) {
-    var dv = String(rows[i].data_evento || '').substring(0, 10);
+    var dv = String(normalizarDataEvento(rows[i].data_evento, tz) || '').substring(0, 10);
     var d = new Date(dv + 'T00:00:00');
     debug.push('id=' + rows[i].id + ' grupo=' + rows[i].recorrencia_grupo + ' data_evento=' + JSON.stringify(rows[i].data_evento) + ' futuro=' + (d >= hoje));
     return d >= hoje;
