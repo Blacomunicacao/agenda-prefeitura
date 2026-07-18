@@ -2202,14 +2202,6 @@ let _lastMobile = isMobile();
 window.addEventListener('resize', () => {
   if (!calendar) return;
   const nowMobile = isMobile();
-  // Ao girar o celular, reaplica largura exata e recalcula
-  if (nowMobile) {
-    const el = $('cal');
-    if (el) {
-      el.style.width    = Math.ceil(window.innerWidth / 0.7) + 'px';
-      el.style.maxWidth = 'none';
-    }
-  }
   if (nowMobile !== _lastMobile) {
     _lastMobile = nowMobile;
     calendar.removeAllEvents();
