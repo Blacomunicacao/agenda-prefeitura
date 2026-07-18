@@ -456,16 +456,20 @@ function handleAtualizarRecorrencia(data) {
   const now = new Date().toISOString();
 
   // Remove so as ocorrencias futuras (hoje em diante); as passadas ficam como historico.
-  Logger.log('grupo=' + grupo + ' | idxAlvo.length=' + idxAlvo.length + ' | hoje=' + hoje.toISOString());
+  var debug = [];
+  debug.push('grupo=' + grupo + ' idxAlvo.length=' + idxAlvo.length + ' hoje=' + hoje.toISOString());
   var idxRemover = idxAlvo.filter(function(i) {
     var dv = String(rows[i].data_evento || '').substring(0, 10);
     var d = new Date(dv + 'T00:00:00');
-    Logger.log('  linha id=' + rows[i].id + ' data_evento="' + rows[i].data_evento + '" dv="' + dv + '" d=' + d + ' >= hoje? ' + (d >= hoje));
+    debug.push('id=' + rows[i].id + ' data_evento=' + JSON.stringify(rows[i].data_evento) + ' dv=' + dv + ' futuro=' + (d >= hoje));
     return d >= hoje;
   });
-  Logger.log('idxRemover.length=' + idxRemover.length);
+  debug.push('idxRemover.length=' + idxRemover.length);
   idxRemover.sort(function(a, b) { return b - a; });
-  for (var k = 0; k < idxRemover.length; k++) sheet.deleteRow(idxRemover[k] + 2);
+  for (var k = 0; k < idxRemover.length; k++) {
+    debug.push('deletando linha da planilha numero ' + (idxRemover[k] + 2));
+    sheet.deleteRow(idxRemover[k] + 2);
+  }
 
   garantirTextoDataEvento(sheet);
   var idsGerados = [];
@@ -479,9 +483,10 @@ function handleAtualizarRecorrencia(data) {
     ]);
     idsGerados.push(id);
   }
+  debug.push('idsGerados=' + idsGerados.join(','));
 
   registrarLog(usuario.email, 'atualizar_recorrencia', titulo + ' (' + idsGerados.length + ' ocorrência(s) futura(s))');
-  return { success: true, total: idsGerados.length, ids: idsGerados };
+  return { success: true, total: idsGerados.length, ids: idsGerados, debug: debug };
 }
 
 function handleExcluirEvento(data) {
@@ -525,17 +530,20 @@ function handleExcluirSerieRecorrente(data) {
   if (usuario.tipo !== 'admin' && referencia.orgao !== usuario.orgao) return { error: 'Acesso negado' };
 
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  var debug = [];
+  debug.push('grupo=' + grupo + ' idxAlvo.length=' + idxAlvo.length);
   var idxRemover = idxAlvo.filter(function(i) {
     var dv = String(rows[i].data_evento || '').substring(0, 10);
     var d = new Date(dv + 'T00:00:00');
+    debug.push('id=' + rows[i].id + ' grupo=' + rows[i].recorrencia_grupo + ' data_evento=' + JSON.stringify(rows[i].data_evento) + ' futuro=' + (d >= hoje));
     return d >= hoje;
   });
-  if (!idxRemover.length) return { error: 'Não há ocorrências futuras nessa série para excluir.' };
+  if (!idxRemover.length) return { error: 'Não há ocorrências futuras nessa série para excluir.', debug: debug };
   idxRemover.sort(function(a, b) { return b - a; });
   for (var k = 0; k < idxRemover.length; k++) sheet.deleteRow(idxRemover[k] + 2);
 
   registrarLog(usuario.email, 'excluir_serie_recorrente', 'grupo ' + grupo + ' (' + idxRemover.length + ' ocorrência(s))');
-  return { success: true, total: idxRemover.length };
+  return { success: true, total: idxRemover.length, debug: debug };
 }
 
 // Senha nao pode conter espaco (usuario deve usar caractere especial no lugar)
