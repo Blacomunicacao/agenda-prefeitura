@@ -230,9 +230,11 @@ tr.recorrente-row:hover td{background:#d9f2df}
   /* Dashboard grid vira 1 coluna */
   .dashboard-dois-col{grid-template-columns:1fr!important}
 
-  /* Calendário mobile: zoom 70% → todas as 7 colunas visíveis */
+  /* Calendário mobile: escala 65% → todas as 7 colunas visíveis.
+     Usa transform (nao zoom) porque a propriedade CSS zoom conflita com o pinch-zoom
+     nativo do navegador em vários celulares, fazendo texto sumir durante o gesto. */
   #calendario .secao{padding:0;border-radius:0;box-shadow:none;overflow:hidden}
-  #cal{zoom:0.65;transform-origin:top left;overflow:hidden}
+  #cal{transform:scale(0.65);transform-origin:top left}
   .fc-view-harness{height:auto!important;min-height:280px!important}
   .fc-toolbar{flex-direction:column!important;gap:4px!important;align-items:center!important}
   .fc-toolbar-chunk{text-align:center!important}
@@ -1826,19 +1828,29 @@ function eventosParaCalendario() {
   });
 }
 
+// transform:scale() nao redimensiona a caixa do elemento (diferente de zoom) — o wrapper
+// precisa da altura real pos-escala setada manualmente, senao sobra espaço em branco embaixo/do lado.
+function ajustarAlturaCalendarioMobile() {
+  if (!isMobile()) return;
+  const el=$('cal'); const wrap=el&&el.closest('.secao');
+  if (!el||!wrap) return;
+  requestAnimationFrame(() => { wrap.style.height = Math.ceil(el.scrollHeight*0.65) + 'px'; });
+}
+
 function iniciarCalendario() {
   const el=$('cal'); if(!el) return;
   if (isMobile()) {
     const main=document.querySelector('.main');
     if(main){ main.style.paddingLeft='0'; main.style.paddingRight='0'; }
-    // O CSS aplica zoom:0.7 em #cal, então a largura de render deve ser
-    // vw / 0.7 para que após o zoom o visual ocupe exatamente a tela inteira
+    // O CSS aplica transform:scale(0.65) em #cal, então a largura de render deve ser
+    // vw / 0.65 para que após a escala o visual ocupe exatamente a tela inteira
     const vw = window.innerWidth;
     el.style.width    = Math.ceil(vw / 0.65) + 'px';
     el.style.maxWidth = 'none';
     el.style.overflowX = 'hidden';
   } else {
     el.style.width = el.style.maxWidth = el.style.overflowX = '';
+    const wrap = el.closest('.secao'); if (wrap) wrap.style.height = '';
   }
   calendar=new FullCalendar.Calendar(el,{
     locale:'pt-br', initialView:'dayGridMonth',
@@ -1854,12 +1866,13 @@ function iniciarCalendario() {
       }).sort((a,b)=>new Date(a.data_evento)-new Date(b.data_evento));
       if(lista.length) abrirModalEventosDoDia(info.dateStr, lista);
     },
+    datesSet:()=>ajustarAlturaCalendarioMobile(),
     height:'auto'
   });
   calendar.render();
   if (isMobile()) {
     // Garante que o FC recalcula com a largura correta após o render
-    requestAnimationFrame(() => calendar.updateSize());
+    requestAnimationFrame(() => { calendar.updateSize(); ajustarAlturaCalendarioMobile(); });
   }
 }
 
