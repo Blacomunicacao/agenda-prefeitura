@@ -144,16 +144,16 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:
 
 /* ── Tabela ── */
 .tabela-wrap{overflow-x:auto;border-radius:12px}
-table{width:100%;border-collapse:collapse;min-width:700px}
-th,td{padding:11px 12px;text-align:left;font-size:13px;border-bottom:1px solid #f0f0f0}
-th{background:#f8f9fa;font-weight:600;color:#003366;white-space:nowrap}
-tr:hover td{background:#f8f9fa}
-tr.pref-row td{background:#fff5f5}
-tr.pref-row:hover td{background:#ffe8e8}
-tr.fundosocial-row td{background:#f8f2fc}
-tr.fundosocial-row:hover td{background:#efe0fa}
-tr.recorrente-row td{background:#eefaf0}
-tr.recorrente-row:hover td{background:#d9f2df}
+.tabela-wrap table{width:100%;border-collapse:collapse;min-width:700px}
+.tabela-wrap th,.tabela-wrap td{padding:11px 12px;text-align:left;font-size:13px;border-bottom:1px solid #f0f0f0}
+.tabela-wrap th{background:#f8f9fa;font-weight:600;color:#003366;white-space:nowrap}
+.tabela-wrap tr:hover td{background:#f8f9fa}
+.tabela-wrap tr.pref-row td{background:#fff5f5}
+.tabela-wrap tr.pref-row:hover td{background:#ffe8e8}
+.tabela-wrap tr.fundosocial-row td{background:#f8f2fc}
+.tabela-wrap tr.fundosocial-row:hover td{background:#efe0fa}
+.tabela-wrap tr.recorrente-row td{background:#eefaf0}
+.tabela-wrap tr.recorrente-row:hover td{background:#d9f2df}
 
 /* ── Badge notificação ── */
 .badge{background:#dc3545;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700;margin-left:4px}
@@ -217,7 +217,7 @@ tr.recorrente-row:hover td{background:#d9f2df}
   [style*="grid-template-columns:1fr 2fr"]>.form-group{margin-bottom:12px}
 
   /* Tabela */
-  table{min-width:600px}
+  .tabela-wrap table{min-width:600px}
 
   /* Modal — sobe da base da tela */
   .modal-bg{align-items:flex-end;padding:0}
@@ -234,13 +234,6 @@ tr.recorrente-row:hover td{background:#d9f2df}
      fluido por natureza, então deixamos ele ocupar 100% da largura e só reduzimos fonte/espaçamento
      das células pra caber as 7 colunas sem cortar nem forçar rolagem. */
   #calendario .secao{padding:0;border-radius:0;box-shadow:none}
-  /* O FullCalendar sincroniza as tabelas de cabeçalho e corpo aplicando largura em PX via JS
-     direto no <col> de cada coluna — isso ignora nosso CSS de fonte/espaçamento e é a causa
-     real do calendário ficar mais largo que a tela no mobile. Força a tabela a 100% e cada
-     coluna a dividir esse espaço igualmente, sobrescrevendo os px que o FullCalendar calculou. */
-  #cal .fc-scrollgrid,
-  #cal .fc-scrollgrid table{table-layout:fixed!important;width:100%!important}
-  #cal colgroup col{width:auto!important}
   .fc-view-harness{height:auto!important;min-height:280px!important}
   .fc-toolbar{flex-direction:column!important;gap:4px!important;align-items:center!important}
   .fc-toolbar-chunk{text-align:center!important}
