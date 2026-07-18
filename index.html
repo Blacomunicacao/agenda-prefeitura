@@ -271,7 +271,7 @@ async function api(action, data = {}) {
     const p = new URLSearchParams({ action, token: token || '', ...data });
     const res = await fetch(`${API_URL}?${p}`);
     const json = await res.json();
-    if (json && json.error) { const err=new Error(json.error); err.debug=json.debug; throw err; }
+    if (json && json.error) throw new Error(json.error);
     return json;
   } catch (e) {
     if (e.message && e.message.includes('autorizado')) logout();
@@ -288,7 +288,7 @@ async function apiPost(action, data = {}) {
       body: JSON.stringify({ ...data, token: token || '' })
     });
     const json = await res.json();
-    if (json && json.error) { const err=new Error(json.error); err.debug=json.debug; throw err; }
+    if (json && json.error) throw new Error(json.error);
     return json;
   } catch (e) {
     if (e.message && e.message.includes('autorizado')) logout();
@@ -1645,8 +1645,7 @@ async function salvarEdicao(ev) {
       });
       fecharModal('modalForm'); await recarregarEventos();
       alert(`✅ Série atualizada! ${res.total} ocorrência(s) futura(s) gerada(s).`);
-      if (res.debug) alert('DEBUG (manda print disso pro suporte):\n\n' + res.debug.join('\n'));
-    } catch(e){ alert('❌ '+e.message); if(e.debug) alert('DEBUG (manda print disso pro suporte):\n\n' + e.debug.join('\n')); }
+    } catch(e){ alert('❌ '+e.message); }
     finally { _salvandoEvento=false; if(btnSalvar) btnSalvar.disabled=false; }
     return;
   }
@@ -1707,8 +1706,7 @@ async function excluirSerieCompleta() {
   try {
     const res=await api('excluirSerieRecorrente',{recorrencia_grupo:alvo.grupo});
     await recarregarEventos(); alert(`✅ Série excluída! ${res.total} ocorrência(s) futura(s) removida(s).`);
-    if (res.debug) alert('DEBUG (manda print disso pro suporte):\n\n' + res.debug.join('\n'));
-  } catch(ex){ alert('❌ '+ex.message); if(ex.debug) alert('DEBUG (manda print disso pro suporte):\n\n' + ex.debug.join('\n')); }
+  } catch(ex){ alert('❌ '+ex.message); }
 }
 
 async function criarEvento(ev) {
