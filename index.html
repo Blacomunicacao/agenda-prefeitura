@@ -304,8 +304,10 @@ async function apiPost(action, data = {}) {
 }
 
 const fmtData = s => s ? new Date(s).toLocaleDateString('pt-BR') : '-';
-const fmtHora = s => { if(!s) return ''; const t=new Date(s).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); return t==='00:00'?'':t; };
-const fmtDH   = s => { if(!s) return '-'; const d=new Date(s); return fmtHora(s)===''?d.toLocaleDateString('pt-BR'):d.toLocaleString('pt-BR'); };
+// mostrarMeiaNoite=true exibe "00:00" normalmente (evento sem recorrencia sempre tem hora digitada, hora obrigatoria no form);
+// sem esse parametro mantem oculto (usado p/ eventos recorrentes, que nao tem horario real, so T00:00 de preenchimento)
+const fmtHora = (s, mostrarMeiaNoite) => { if(!s) return ''; const t=new Date(s).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); return (t==='00:00' && !mostrarMeiaNoite)?'':t; };
+const fmtDH   = (s, mostrarMeiaNoite) => { if(!s) return '-'; const d=new Date(s); return fmtHora(s,mostrarMeiaNoite)===''?d.toLocaleDateString('pt-BR'):d.toLocaleString('pt-BR'); };
 const isMobile = () => window.innerWidth <= 768;
 // Normaliza string para busca sem distinção de acentos/ç
 const normBusca = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -758,7 +760,7 @@ function htmlAdmin() {
             ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>`
               <div class="evento-hoje-card${isPrefeito(e)?' prefeito':isFundoSocial(e)?' fundosocial':podeVerRecorrencia(e)?' recorrente':''}" onclick="verEvento('${e.id}')">
                 <div class="evento-hoje-titulo">${e.titulo}</div>
-                <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento)} · 🏢 ${(e.sigla_orgao||sigla(e.orgao))}</div>
+                <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento,!isRecorrente(e))} · 🏢 ${(e.sigla_orgao||sigla(e.orgao))}</div>
                 ${e.local?`<div class="evento-hoje-info">📍 ${e.local}</div>`:''}
                 ${e.publicado_por?`<div class="evento-hoje-info" style="color:#888">✍️ ${e.publicado_por}</div>`:''}
               </div>`).join('')}
@@ -969,7 +971,7 @@ function htmlSecom() {
             ${hoje.length===0?'<div class="empty">Nenhum evento hoje</div>':hoje.map(e=>`
               <div class="evento-hoje-card${isPrefeito(e)?' prefeito':isFundoSocial(e)?' fundosocial':podeVerRecorrencia(e)?' recorrente':''}" onclick="verEvento('${e.id}')">
                 <div class="evento-hoje-titulo">${e.titulo}</div>
-                <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento)} · 🏢 ${(e.sigla_orgao||sigla(e.orgao))}</div>
+                <div class="evento-hoje-info">⏰ ${fmtHora(e.data_evento,!isRecorrente(e))} · 🏢 ${(e.sigla_orgao||sigla(e.orgao))}</div>
                 ${e.local?`<div class="evento-hoje-info">📍 ${e.local}</div>`:''}
                 ${e.publicado_por?`<div class="evento-hoje-info" style="color:#888">✍️ ${e.publicado_por}</div>`:''}
               </div>`).join('')}
@@ -991,7 +993,7 @@ function htmlSecom() {
 }
 
 function cardEventoResumo(e) {
-  const hora = fmtHora(e.data_evento) || '';
+  const hora = fmtHora(e.data_evento,!isRecorrente(e)) || '';
   const sg = e.sigla_orgao || sigla(e.orgao) || '';
   const pref = isPrefeito(e);
   const fsoc = isFundoSocial(e);
@@ -1111,7 +1113,7 @@ function cardEvento(e, mostrarOrgao=false) {
     </div>
     <div class="evento-meta">
       <span>📅 ${fmtData(e.data_evento)}</span>
-      ${fmtHora(e.data_evento)?`<span>🕐 ${fmtHora(e.data_evento)}</span>`:''}
+      ${fmtHora(e.data_evento,!isRecorrente(e))?`<span>🕐 ${fmtHora(e.data_evento,!isRecorrente(e))}</span>`:''}
       ${e.local?`<span>📍 ${e.local}</span>`:''}
       ${e.responsavel?`<span>👤 ${e.responsavel}</span>`:''}
       ${usuario?.tipo==='admin'&&e.publicado_por?`<span style="color:#888;font-size:11px">✍️ ${e.publicado_por} · ${fmtDH(e.data_publicacao)}</span>`:''}
@@ -1134,7 +1136,7 @@ function renderTabelaAdmin(lista) {
       <tr class="${isPrefeito(e)?'pref-row':isFundoSocial(e)?'fundosocial-row':podeVerRecorrencia(e)?'recorrente-row':''}" onclick="verEvento('${e.id}')" style="cursor:pointer">
         <td>${(e.sigla_orgao||sigla(e.orgao))||'—'}${isPrefeito(e)?'  ⭐':isFundoSocial(e)?'  🤝':podeVerRecorrencia(e)?'  🔁':''}</td>
         <td>${e.titulo}</td>
-        <td>${fmtData(e.data_evento)} ${fmtHora(e.data_evento)}</td>
+        <td>${fmtData(e.data_evento)} ${fmtHora(e.data_evento,!isRecorrente(e))}</td>
         <td>${e.publicado_por||'—'}</td>
         <td style="font-size:11px">${fmtDH(e.data_publicacao)}</td>
         <td>${(e.anexo_url||e.anexo_nome)?'<span style="color:#004d99">📎</span>':'—'}</td>
@@ -1549,7 +1551,7 @@ function verEvento(id) {
   const meuEvento = usuario?.tipo === 'admin' || String(e.orgao||'').trim() === String(usuario?.orgao||'').trim();
   $('modalEventoBody').innerHTML=`
     ${pref?'<div style="text-align:center;margin-bottom:16px"><span class="tag-prefeito" style="font-size:13px">🏛️ Evento do Gabinete do Prefeito</span></div>':fsoc?'<div style="text-align:center;margin-bottom:16px"><span class="tag-fundosocial" style="font-size:13px">🤝 Evento do Fundo Social de Solidariedade</span></div>':''}
-    <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtDH(e.data_evento)}</div></div>
+    <div class="info-linha"><div class="info-label">📅 Data</div><div class="info-valor">${fmtDH(e.data_evento,!isRecorrente(e))}</div></div>
     <div class="info-linha"><div class="info-label">📍 Local</div><div class="info-valor">${e.local||'—'}</div></div>
     <div class="info-linha"><div class="info-label">🏢 Órgão</div><div class="info-valor">${(e.sigla_orgao||sigla(e.orgao))||'—'}</div></div>
     <div class="info-linha"><div class="info-label">👤 Responsável</div><div class="info-valor">${e.responsavel||'—'}</div></div>
@@ -1808,7 +1810,7 @@ function eventosParaCalendario() {
     const elevado=usuario?.tipo==='admin'||usuario?.tipo==='prefeito'||isUsuarioSecom();
     const pref=isPrefeito(e), fsoc=isFundoSocial(e), rec=podeVerRecorrencia(e);
     const destacado=pref||fsoc||rec;
-    const hora=fmtHora(e.data_evento);
+    const hora=fmtHora(e.data_evento,!isRecorrente(e));
     const tagRec=rec?(' 🔁 '+labelRecorrencia(e)):'';
     return {
       id:String(e.id),
@@ -1860,7 +1862,7 @@ function abrirModalEventosDoDia(dataStr, lista) {
     <div style="padding:14px;border-bottom:1px solid #f0f0f0;cursor:pointer;${isPrefeito(e)?'background:#fff5f5;border-left:3px solid #dc3545;':isFundoSocial(e)?'background:#f8f2fc;border-left:3px solid #7b2cbf;':''}"
          onclick="fecharModal('modalDia');verEvento('${e.id}')">
       <div style="font-weight:700;color:${isPrefeito(e)?'#dc3545':isFundoSocial(e)?'#7b2cbf':'#003366'};margin-bottom:6px">${e.titulo}</div>
-      <div style="font-size:12px;color:#666">⏰ ${fmtHora(e.data_evento)}</div>
+      <div style="font-size:12px;color:#666">⏰ ${fmtHora(e.data_evento,!isRecorrente(e))}</div>
       ${e.orgao?`<div style="font-size:12px;color:#666">🏢 ${(e.sigla_orgao||sigla(e.orgao))}</div>`:''}
       ${e.local?`<div style="font-size:12px;color:#666">📍 ${e.local}</div>`:''}
       ${e.publicado_por&&usuario?.tipo==='admin'?`<div style="font-size:11px;color:#888">✍️ ${e.publicado_por}</div>`:''}
@@ -1969,7 +1971,7 @@ function abrirModalAnexos() {
       <div style="padding:14px;border-bottom:1px solid #f0f0f0">
         <div style="font-weight:700;color:#003366;margin-bottom:4px">🏢 ${(e.sigla_orgao||sigla(e.orgao))||'—'}</div>
         <div style="font-weight:600;margin-bottom:6px">${e.titulo}</div>
-        <div style="font-size:12px;color:#666;margin-bottom:4px">📅 ${fmtData(e.data_evento)} ${fmtHora(e.data_evento)}</div>
+        <div style="font-size:12px;color:#666;margin-bottom:4px">📅 ${fmtData(e.data_evento)} ${fmtHora(e.data_evento,!isRecorrente(e))}</div>
         <div style="font-size:12px;color:#666;margin-bottom:8px">📎 ${e.anexo_nome||'Anexo'}</div>
         ${e.anexo_url?`<a href="${e.anexo_url}" target="_blank"
           style="display:inline-flex;align-items:center;gap:6px;background:#004d99;color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;text-decoration:none">
@@ -2191,7 +2193,7 @@ function bloquearEspacoSenha(input) {
 }
 
 function exportarExcel() {
-  const dados=evtDoUsuario().map(e=>({'Título':e.titulo,'Data':fmtDH(e.data_evento),'Local':e.local,
+  const dados=evtDoUsuario().map(e=>({'Título':e.titulo,'Data':fmtDH(e.data_evento,!isRecorrente(e)),'Local':e.local,
     'Órgão':(e.sigla_orgao||sigla(e.orgao)),'Responsável':e.responsavel,'Telefone':e.telefone,'Descrição':e.observacao,'Publicado por':e.publicado_por}));
   const ws=XLSX.utils.json_to_sheet(dados),wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Eventos');
