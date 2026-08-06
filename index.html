@@ -894,25 +894,34 @@ function iniciarAutoRefresh() {
   const tipo = usuario?.tipo;
   if (tipo !== 'admin' && tipo !== 'orgao') return;
   _autoRefreshId = setInterval(async function() {
-    if (isUsuarioSecom()) {
-      try { const r = await api('getEventos',{todos:'true'}); if (Array.isArray(r)) eventos=r; } catch(e) { return; }
-      if (calendar) { try { calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); } catch(e) {} }
-      renderizarMetrica();
-      return;
-    }
-    try { const r = await api('getEventos'); if (Array.isArray(r)) eventos=r; } catch(e) { return; }
-    if (tipo === 'admin') {
-      if (calendar) { try { calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); } catch(e) {} }
-      renderizarMetrica();
-    } else {
-      if (usuario.orgao !== 'Gabinete do Prefeito') {
-        try { const r = await api('getEventos',{todos:'true'}); if (Array.isArray(r)) todosEventos=r; } catch(e) {}
+    // Com height:'auto' o FullCalendar encolhe ao remover eventos e cresce de novo ao
+    // adicionar — nesse intervalo a página fica mais baixa que o scroll atual e o
+    // navegador "clampa" a rolagem pro topo. Guarda a posição e restaura depois do reflow.
+    const scrollY = window.scrollY;
+    const restaurarScroll = () => requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(window.scrollX, scrollY)));
+    try {
+      if (isUsuarioSecom()) {
+        try { const r = await api('getEventos',{todos:'true'}); if (Array.isArray(r)) eventos=r; } catch(e) { return; }
+        if (calendar) { try { calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); } catch(e) {} }
+        renderizarMetrica();
+        return;
       }
-      const cont1 = $('orgaoEventosHoje');
-      if (cont1) { const hj=evtHoje(); cont1.innerHTML=hj.length===0?'<div class="empty">Nenhum evento hoje</div>':hj.map(e=>cardEvento(e)).join(''); }
-      const cont2 = $('todosEventosHoje');
-      if (cont2) { const todos=evtTodosHoje(); cont2.innerHTML=todos.length===0?'<div class="empty">Nenhum evento hoje</div>':todos.map(e=>cardEventoResumo(e)).join(''); }
-      if (calendar) { try { calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); } catch(e) {} }
+      try { const r = await api('getEventos'); if (Array.isArray(r)) eventos=r; } catch(e) { return; }
+      if (tipo === 'admin') {
+        if (calendar) { try { calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); } catch(e) {} }
+        renderizarMetrica();
+      } else {
+        if (usuario.orgao !== 'Gabinete do Prefeito') {
+          try { const r = await api('getEventos',{todos:'true'}); if (Array.isArray(r)) todosEventos=r; } catch(e) {}
+        }
+        const cont1 = $('orgaoEventosHoje');
+        if (cont1) { const hj=evtHoje(); cont1.innerHTML=hj.length===0?'<div class="empty">Nenhum evento hoje</div>':hj.map(e=>cardEvento(e)).join(''); }
+        const cont2 = $('todosEventosHoje');
+        if (cont2) { const todos=evtTodosHoje(); cont2.innerHTML=todos.length===0?'<div class="empty">Nenhum evento hoje</div>':todos.map(e=>cardEventoResumo(e)).join(''); }
+        if (calendar) { try { calendar.removeAllEvents(); calendar.addEventSource(eventosParaCalendario()); } catch(e) {} }
+      }
+    } finally {
+      restaurarScroll();
     }
   }, 60000);
 }
