@@ -11,7 +11,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a2a3a;overflow-x:hidden}
@@ -2103,12 +2102,27 @@ function carregarImagemComoDataURL(src, ladoMaximoPx) {
   });
 }
 
-// Capa institucional — página 1 do relatório. Mesmo azul/marinho da identidade visual
-// do app (não a paleta genérica) e assinatura SECOM/ASCOM.
-function desenharCapaPDF(pdf, logoDataUrl, totalEventos, top5) {
+function arrayBufferParaBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+  return btoa(binary);
+}
+
+// A Inter é a fonte da plataforma (body{font-family:'Inter'}) — embutida no PDF pra
+// manter a mesma identidade visual do app, não a Helvetica genérica padrão do jsPDF.
+async function carregarFonteBase64(url) {
+  try { return arrayBufferParaBase64(await (await fetch(url)).arrayBuffer()); }
+  catch (e) { return null; }
+}
+
+// Capa institucional — página 1 do relatório. Mesma tipografia e o mesmo azul/marinho
+// da identidade visual do app (não uma paleta/fonte genérica) e assinatura SECOM/ASCOM.
+function desenharCapaPDF(pdf, logoDataUrl, totalEventos, top5, FONTE) {
   const pageW = 210;
-  const NAVY_DEEP = [0,35,71], ACCENT = [0,77,153];
-  const INK = [28,37,48], INK_SOFT = [91,102,114], LINE = [215,222,229], CHIP = [232,244,248];
+  const NAVY_DEEP = [0,51,102], ACCENT = [0,77,153];
+  const INK = [26,42,58], INK_SOFT = [91,102,114], LINE = [215,222,229], CHIP = [232,244,248];
 
   pdf.setFillColor(...NAVY_DEEP); pdf.rect(0,0,pageW,4,'F');
   pdf.setFillColor(...ACCENT); pdf.rect(0,4,pageW,1.2,'F');
@@ -2120,10 +2134,10 @@ function desenharCapaPDF(pdf, logoDataUrl, totalEventos, top5) {
     y += s + 12;
   } else { y += 8; }
 
-  pdf.setFont('times','bold'); pdf.setFontSize(25); pdf.setTextColor(...NAVY_DEEP);
+  pdf.setFont(FONTE,'bold'); pdf.setFontSize(22); pdf.setTextColor(...NAVY_DEEP);
   pdf.text('Plataforma de Agenda', pageW/2, y, {align:'center'});
   y += 8;
-  pdf.setFont('helvetica','bold'); pdf.setFontSize(11); pdf.setTextColor(...ACCENT);
+  pdf.setFont(FONTE,'bold'); pdf.setFontSize(10.5); pdf.setTextColor(...ACCENT);
   pdf.text('R E L A T Ó R I O   G E R E N C I A L   D E   U S O', pageW/2, y, {align:'center'});
   y += 14;
 
@@ -2131,20 +2145,20 @@ function desenharCapaPDF(pdf, logoDataUrl, totalEventos, top5) {
   pdf.line(pageW/2-24, y, pageW/2+24, y);
   y += 12;
 
-  pdf.setFont('times','normal'); pdf.setFontSize(14); pdf.setTextColor(...NAVY_DEEP);
+  pdf.setFont(FONTE,'normal'); pdf.setFontSize(13); pdf.setTextColor(...NAVY_DEEP);
   pdf.text('Prefeitura Municipal de Presidente Prudente', pageW/2, y, {align:'center'});
   y += 18;
 
   const cardW = 80, cardH = 26, cardX = (pageW-cardW)/2;
   pdf.setFillColor(...CHIP);
   pdf.roundedRect(cardX, y, cardW, cardH, 3, 3, 'F');
-  pdf.setFont('times','bold'); pdf.setFontSize(22); pdf.setTextColor(...NAVY_DEEP);
+  pdf.setFont(FONTE,'bold'); pdf.setFontSize(20); pdf.setTextColor(...NAVY_DEEP);
   pdf.text(String(totalEventos), pageW/2, y+15, {align:'center'});
-  pdf.setFont('helvetica','bold'); pdf.setFontSize(8.5); pdf.setTextColor(...INK_SOFT);
+  pdf.setFont(FONTE,'bold'); pdf.setFontSize(8.5); pdf.setTextColor(...INK_SOFT);
   pdf.text('TOTAL DE EVENTOS', pageW/2, y+21.5, {align:'center'});
   y += cardH + 16;
 
-  pdf.setFont('times','bold'); pdf.setFontSize(13); pdf.setTextColor(...NAVY_DEEP);
+  pdf.setFont(FONTE,'bold'); pdf.setFontSize(13); pdf.setTextColor(...NAVY_DEEP);
   pdf.text('Top 5 — Órgãos Mais Ativos', pageW/2, y, {align:'center'});
   y += 10;
 
@@ -2154,7 +2168,7 @@ function desenharCapaPDF(pdf, logoDataUrl, totalEventos, top5) {
     const barH = 7, gap = 5.5;
     top5.forEach((r,i) => {
       const by = y + i*(barH+gap);
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...INK_SOFT);
+      pdf.setFont(FONTE,'bold'); pdf.setFontSize(9); pdf.setTextColor(...INK_SOFT);
       pdf.text(String(i+1), chartX, by+barH-1.8);
       pdf.setTextColor(...INK);
       pdf.text(r.siglaOrgao || r.sigla, chartX+6, by+barH-1.8);
@@ -2163,11 +2177,11 @@ function desenharCapaPDF(pdf, logoDataUrl, totalEventos, top5) {
       const barW = maxQtd>0 ? Math.max((r.qtd/maxQtd)*barMaxW, 2) : 2;
       pdf.setFillColor(...ACCENT);
       pdf.roundedRect(chartX+labelW, by, barW, barH, 1, 1, 'F');
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...NAVY_DEEP);
+      pdf.setFont(FONTE,'bold'); pdf.setFontSize(9); pdf.setTextColor(...NAVY_DEEP);
       pdf.text(String(r.qtd), chartX+labelW+barW+3, by+barH-1.8);
     });
   } else {
-    pdf.setFont('helvetica','normal'); pdf.setFontSize(10); pdf.setTextColor(...INK_SOFT);
+    pdf.setFont(FONTE,'normal'); pdf.setFontSize(10); pdf.setTextColor(...INK_SOFT);
     pdf.text('Nenhum evento publicado ainda.', pageW/2, y, {align:'center'});
   }
 
@@ -2176,48 +2190,52 @@ function desenharCapaPDF(pdf, logoDataUrl, totalEventos, top5) {
   pdf.line(30, 262, pageW-30, 262);
   const agora = new Date();
   const dataHora = `Exportado em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
-  pdf.setFont('helvetica','normal'); pdf.setFontSize(8.5); pdf.setTextColor(...INK_SOFT);
+  pdf.setFont(FONTE,'normal'); pdf.setFontSize(8.5); pdf.setTextColor(...INK_SOFT);
   pdf.text(dataHora, pageW/2, 269, {align:'center'});
-  pdf.setFont('helvetica','bold'); pdf.setFontSize(10); pdf.setTextColor(...NAVY_DEEP);
+  pdf.setFont(FONTE,'bold'); pdf.setFontSize(10); pdf.setTextColor(...NAVY_DEEP);
   pdf.text('Secretaria de Comunicação — SECOM', pageW/2, 276, {align:'center'});
-  pdf.setFont('helvetica','normal'); pdf.setFontSize(9); pdf.setTextColor(...INK_SOFT);
+  pdf.setFont(FONTE,'normal'); pdf.setFontSize(9); pdf.setTextColor(...INK_SOFT);
   pdf.text('Assessoria de Comunicação — ASCOM', pageW/2, 281.5, {align:'center'});
   pdf.text('Prefeitura Municipal de Presidente Prudente', pageW/2, 286.5, {align:'center'});
 }
 
 async function exportarPDF() {
-  const el=$('dashboard')||$('inicio');
-  if(!el){alert('❌ Abra o Dashboard antes de exportar.');return;}
   try {
     alert('📄 Gerando PDF... Aguarde.');
-    const [canvas, logoDataUrl] = await Promise.all([
-      html2canvas(el,{scale:1.5,useCORS:true,logging:false}),
-      carregarImagemComoDataURL('Logo plataforma de Agenda.png', 400)
+    const [logoDataUrl, interRegularB64, interBoldB64] = await Promise.all([
+      carregarImagemComoDataURL('Logo plataforma de Agenda.png', 400),
+      carregarFonteBase64('Inter-Regular.ttf'),
+      carregarFonteBase64('Inter-Bold.ttf')
     ]);
-    const imgData=canvas.toDataURL('image/png');
     const {jsPDF}=window.jspdf;
     const pdf=new jsPDF('p','mm','a4');
-    const imgW=210,imgH=(canvas.height*imgW)/canvas.width;
-    const pageH=297;
+
+    // Mesma fonte do app (Inter) do início ao fim do PDF — cai pra Helvetica só se o
+    // carregamento das fontes falhar (ex: sem rede pro fetch dos .ttf).
+    let FONTE = 'helvetica';
+    if (interRegularB64 && interBoldB64) {
+      try {
+        pdf.addFileToVFS('Inter-Regular.ttf', interRegularB64);
+        pdf.addFont('Inter-Regular.ttf', 'Inter', 'normal');
+        pdf.addFileToVFS('Inter-Bold.ttf', interBoldB64);
+        pdf.addFont('Inter-Bold.ttf', 'Inter', 'bold');
+        FONTE = 'Inter';
+      } catch (e) {}
+    }
 
     const usuariosPorOrgao = await buscarContagemUsuariosParaExport();
     const d = calcularDadosExportacao(usuariosPorOrgao);
     const fmtD = x => x.toLocaleDateString('pt-BR');
     const totalRanking = d.ranking.reduce((a,r)=>a+r.qtd,0);
-    const estiloTabela = { styles:{fontSize:9}, headStyles:{fillColor:[0,51,102]} };
+    const NAVY = [0,51,102], CINZA = [90,90,90];
+    const estiloTabela = { styles:{fontSize:9, font:FONTE}, headStyles:{fillColor:NAVY, font:FONTE} };
+    const tituloSecao = (texto) => { pdf.setFont(FONTE,'bold'); pdf.setFontSize(16); pdf.setTextColor(...NAVY); pdf.text(texto, 14, 18); };
+    const subtituloSecao = (texto, yy) => { pdf.setFont(FONTE,'normal'); pdf.setFontSize(10); pdf.setTextColor(...CINZA); pdf.text(texto, 14, yy); };
 
-    desenharCapaPDF(pdf, logoDataUrl, eventos.length, d.ranking.slice(0,5));
-
-    pdf.addPage();
-    let y=0;
-    while(y<imgH){
-      if(y>0) pdf.addPage();
-      pdf.addImage(imgData,'PNG',0,-y,imgW,imgH);
-      y+=pageH;
-    }
+    desenharCapaPDF(pdf, logoDataUrl, eventos.length, d.ranking.slice(0,5), FONTE);
 
     pdf.addPage();
-    pdf.setFontSize(16); pdf.text('Usuários Cadastrados por Órgão', 14, 18);
+    tituloSecao('Usuários Cadastrados por Órgão');
     pdf.autoTable(Object.assign({}, estiloTabela, {
       startY: 24,
       head: [['Órgão','Sigla','Usuários']],
@@ -2225,8 +2243,8 @@ async function exportarPDF() {
     }));
 
     pdf.addPage();
-    pdf.setFontSize(16); pdf.text('Ranking Completo — Uso por Órgão', 14, 18);
-    pdf.setFontSize(10); pdf.text(`${d.ranking.length} órgão(s) com lançamentos · ${totalRanking} lançamento(s) no total`, 14, 25);
+    tituloSecao('Ranking Completo — Uso por Órgão');
+    subtituloSecao(`${d.ranking.length} órgão(s) com lançamentos · ${totalRanking} lançamento(s) no total`, 25);
     pdf.autoTable(Object.assign({}, estiloTabela, {
       startY: 30,
       head: [['#','Órgão','Sigla','Lançamentos','% do total']],
@@ -2234,8 +2252,8 @@ async function exportarPDF() {
     }));
 
     pdf.addPage();
-    pdf.setFontSize(16); pdf.text('Lançamentos Semanais por Órgão', 14, 18);
-    pdf.setFontSize(10); pdf.text(`Semana de ${fmtD(d.inicioSemana)} a ${fmtD(d.fimSemana)} · conta 1 por lançamento, não por ocorrência recorrente`, 14, 25);
+    tituloSecao('Lançamentos Semanais por Órgão');
+    subtituloSecao(`Semana de ${fmtD(d.inicioSemana)} a ${fmtD(d.fimSemana)} · conta 1 por lançamento, não por ocorrência recorrente`, 25);
     pdf.autoTable(Object.assign({}, estiloTabela, {
       startY: 30,
       head: [['Órgão','Sigla','Lançamentos na semana']],
@@ -2243,16 +2261,17 @@ async function exportarPDF() {
     }));
 
     pdf.addPage();
-    pdf.setFontSize(16); pdf.text('Órgãos Sem Publicação', 14, 18);
+    tituloSecao('Órgãos Sem Publicação');
     if (d.semPublicacao.length) {
-      pdf.setFontSize(10); pdf.text(`${d.semPublicacao.length} órgão(s) ainda não publicaram nenhum evento`, 14, 25);
+      subtituloSecao(`${d.semPublicacao.length} órgão(s) ainda não publicaram nenhum evento`, 25);
       pdf.autoTable(Object.assign({}, estiloTabela, {
         startY: 30,
         head: [['Órgão','Sigla']],
         body: d.semPublicacao.map(o=>[o.orgao, o.sigla])
       }));
     } else {
-      pdf.setFontSize(11); pdf.text('Todos os órgãos já publicaram pelo menos um evento.', 14, 30);
+      pdf.setFont(FONTE,'normal'); pdf.setFontSize(11); pdf.setTextColor(...CINZA);
+      pdf.text('Todos os órgãos já publicaram pelo menos um evento.', 14, 30);
     }
 
     pdf.save(`dashboard_${new Date().toISOString().split('T')[0]}.pdf`);
