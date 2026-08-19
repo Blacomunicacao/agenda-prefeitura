@@ -10,6 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -981,6 +982,12 @@ function htmlSecom() {
   </aside>
   <main class="main">
     <div id="inicio" class="view active">
+      <div class="secao-header"><h2>📊 Painel Geral</h2>
+        <div class="btns-row">
+          <button class="btn btn-verde" onclick="exportarExcel()">📊 Excel</button>
+          <button class="btn btn-pdf" onclick="exportarPDF()">📄 PDF</button>
+        </div>
+      </div>
       <div class="stats-grid">
         <div class="stat-card" onclick="mostrarView('listaEventos')">
           <div class="stat-icon">📅</div><div class="stat-info"><h3>${total}</h3><p>Total de Eventos</p></div>
@@ -1338,18 +1345,78 @@ function atualizarCampoOrgao() {
 }
 
 // ════════════════ MÉTRICA DE USABILIDADE ════════════════
+// Uma serie recorrente gera uma linha por ocorrencia (mesmo recorrencia_grupo) — conta
+// como 1 lançamento só, não 1 por data gerada no calendário.
+function contarLancamentosPorOrgao(lista) {
+  const vistos = new Set();
+  const contagem = {};
+  lista.forEach(function(e) {
+    if (!e.orgao) return;
+    const chave = e.orgao + '|' + (e.recorrencia_grupo || ('__id_' + e.id));
+    if (vistos.has(chave)) return;
+    vistos.add(chave);
+    contagem[e.orgao] = (contagem[e.orgao] || 0) + 1;
+  });
+  return contagem;
+}
+
+function todosOsOrgaos() {
+  return Object.values(ORGAOS_LIST).reduce(function(acc, lista){ return acc.concat(lista); }, []);
+}
+
 function calcularMetricaUsabilidade() {
   const totalOrgaos = Object.values(ORGAOS_LIST).reduce(function(acc, lista){ return acc + lista.length; }, 0);
-  const contagem = {};
-  eventos.forEach(function(e) { if (e.orgao) contagem[e.orgao] = (contagem[e.orgao] || 0) + 1; });
+  const contagem = contarLancamentosPorOrgao(eventos);
   const orgaosAtivos = Object.keys(contagem).length;
-  const totalEventos = eventos.length;
+  const totalEventos = Object.values(contagem).reduce(function(a,b){ return a+b; }, 0);
   const media = orgaosAtivos > 0 ? (totalEventos / orgaosAtivos).toFixed(1) : '0';
   const taxaEngajamento = totalOrgaos > 0 ? Math.round((orgaosAtivos / totalOrgaos) * 100) : 0;
   const ranking = Object.entries(contagem)
     .sort(function(a,b){ return b[1]-a[1]; })
     .map(function(item){ return { orgao: item[0], qtd: item[1], siglaOrgao: sigla(item[0]) }; });
   return { media: media, taxaEngajamento: taxaEngajamento, ranking: ranking, orgaosAtivos: orgaosAtivos, totalOrgaos: totalOrgaos, totalEventos: totalEventos };
+}
+
+// ════════════════ DADOS PARA EXPORTAÇÃO (PDF/Excel) ════════════════
+// usuariosPorOrgao vem do backend (getContagemUsuarios) — só contagem, sem dado pessoal.
+function calcularDadosExportacao(usuariosPorOrgao) {
+  const todos = todosOsOrgaos();
+
+  const hoje = new Date();
+  const inicioSemana = new Date(hoje); inicioSemana.setDate(hoje.getDate() - hoje.getDay()); inicioSemana.setHours(0,0,0,0);
+  const fimSemana = new Date(inicioSemana); fimSemana.setDate(inicioSemana.getDate() + 6); fimSemana.setHours(23,59,59,999);
+
+  const totalPorOrgao = contarLancamentosPorOrgao(eventos);
+  const eventosSemana = eventos.filter(function(e) {
+    const d = new Date(e.data_evento);
+    return d >= inicioSemana && d <= fimSemana;
+  });
+  const semanaPorOrgao = contarLancamentosPorOrgao(eventosSemana);
+
+  const ranking = todos
+    .map(function(o){ return { orgao: o, sigla: sigla(o) || o, qtd: totalPorOrgao[o] || 0 }; })
+    .filter(function(r){ return r.qtd > 0; })
+    .sort(function(a,b){ return b.qtd - a.qtd; });
+
+  const semanal = todos
+    .map(function(o){ return { orgao: o, sigla: sigla(o) || o, qtd: semanaPorOrgao[o] || 0 }; })
+    .sort(function(a,b){ return b.qtd - a.qtd; });
+
+  const semPublicacao = todos
+    .filter(function(o){ return !totalPorOrgao[o]; })
+    .map(function(o){ return { orgao: o, sigla: sigla(o) || o }; });
+
+  const usuarios = todos
+    .map(function(o){ return { orgao: o, sigla: sigla(o) || o, qtd: (usuariosPorOrgao && usuariosPorOrgao[o]) || 0 }; })
+    .sort(function(a,b){ return b.qtd - a.qtd; });
+
+  return { ranking: ranking, semanal: semanal, semPublicacao: semPublicacao, usuarios: usuarios,
+    inicioSemana: inicioSemana, fimSemana: fimSemana };
+}
+
+async function buscarContagemUsuariosParaExport() {
+  if (usuario?.tipo !== 'admin' && !isUsuarioSecom()) return {};
+  try { return await api('getContagemUsuarios'); } catch (e) { return {}; }
 }
 
 function renderizarMetrica() {
@@ -2015,7 +2082,7 @@ function abrirModalAnexos() {
 
 // ════════════════ EXPORTAR PDF ════════════════
 async function exportarPDF() {
-  const el=$('dashboard');
+  const el=$('dashboard')||$('inicio');
   if(!el){alert('❌ Abra o Dashboard antes de exportar.');return;}
   try {
     alert('📄 Gerando PDF... Aguarde.');
@@ -2031,6 +2098,52 @@ async function exportarPDF() {
       pdf.addImage(imgData,'PNG',0,-y,imgW,imgH);
       y+=pageH;
     }
+
+    const usuariosPorOrgao = await buscarContagemUsuariosParaExport();
+    const d = calcularDadosExportacao(usuariosPorOrgao);
+    const fmtD = x => x.toLocaleDateString('pt-BR');
+    const totalRanking = d.ranking.reduce((a,r)=>a+r.qtd,0);
+    const estiloTabela = { styles:{fontSize:9}, headStyles:{fillColor:[0,51,102]} };
+
+    pdf.addPage();
+    pdf.setFontSize(16); pdf.text('Usuários Cadastrados por Órgão', 14, 18);
+    pdf.autoTable(Object.assign({}, estiloTabela, {
+      startY: 24,
+      head: [['Órgão','Sigla','Usuários']],
+      body: d.usuarios.map(u=>[u.orgao, u.sigla, String(u.qtd)])
+    }));
+
+    pdf.addPage();
+    pdf.setFontSize(16); pdf.text('Ranking Completo — Uso por Órgão', 14, 18);
+    pdf.setFontSize(10); pdf.text(`${d.ranking.length} órgão(s) com lançamentos · ${totalRanking} lançamento(s) no total`, 14, 25);
+    pdf.autoTable(Object.assign({}, estiloTabela, {
+      startY: 30,
+      head: [['#','Órgão','Sigla','Lançamentos','% do total']],
+      body: d.ranking.map((r,i)=>[String(i+1), r.orgao, r.sigla, String(r.qtd), (totalRanking?Math.round(r.qtd/totalRanking*100):0)+'%'])
+    }));
+
+    pdf.addPage();
+    pdf.setFontSize(16); pdf.text('Lançamentos Semanais por Órgão', 14, 18);
+    pdf.setFontSize(10); pdf.text(`Semana de ${fmtD(d.inicioSemana)} a ${fmtD(d.fimSemana)} · conta 1 por lançamento, não por ocorrência recorrente`, 14, 25);
+    pdf.autoTable(Object.assign({}, estiloTabela, {
+      startY: 30,
+      head: [['Órgão','Sigla','Lançamentos na semana']],
+      body: d.semanal.map(s=>[s.orgao, s.sigla, String(s.qtd)])
+    }));
+
+    pdf.addPage();
+    pdf.setFontSize(16); pdf.text('Órgãos Sem Publicação', 14, 18);
+    if (d.semPublicacao.length) {
+      pdf.setFontSize(10); pdf.text(`${d.semPublicacao.length} órgão(s) ainda não publicaram nenhum evento`, 14, 25);
+      pdf.autoTable(Object.assign({}, estiloTabela, {
+        startY: 30,
+        head: [['Órgão','Sigla']],
+        body: d.semPublicacao.map(o=>[o.orgao, o.sigla])
+      }));
+    } else {
+      pdf.setFontSize(11); pdf.text('Todos os órgãos já publicaram pelo menos um evento.', 14, 30);
+    }
+
     pdf.save(`dashboard_${new Date().toISOString().split('T')[0]}.pdf`);
   } catch(e){alert('❌ Erro ao gerar PDF: '+e.message);}
 }
@@ -2224,11 +2337,33 @@ function bloquearEspacoSenha(input) {
   aviso._timeout = setTimeout(() => { aviso.style.display = 'none'; }, 3000);
 }
 
-function exportarExcel() {
+async function exportarExcel() {
   const dados=evtDoUsuario().map(e=>({'Título':e.titulo,'Data':fmtDH(e.data_evento,!isRecorrente(e)),'Local':e.local,
     'Órgão':(e.sigla_orgao||sigla(e.orgao)),'Responsável':e.responsavel,'Telefone':e.telefone,'Descrição':e.observacao,'Publicado por':e.publicado_por}));
-  const ws=XLSX.utils.json_to_sheet(dados),wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Eventos');
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dados), 'Eventos');
+
+  const usuariosPorOrgao = await buscarContagemUsuariosParaExport();
+  const d = calcularDadosExportacao(usuariosPorOrgao);
+  const totalRanking = d.ranking.reduce((a,r)=>a+r.qtd,0);
+
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+    d.usuarios.map(u=>({'Órgão':u.orgao,'Sigla':u.sigla,'Usuários Cadastrados':u.qtd}))
+  ), 'Usuários por Órgão');
+
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+    d.ranking.map((r,i)=>({'Posição':i+1,'Órgão':r.orgao,'Sigla':r.sigla,'Lançamentos':r.qtd,'% do Total':totalRanking?Math.round(r.qtd/totalRanking*100):0}))
+  ), 'Ranking de Uso');
+
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+    d.semanal.map(s=>({'Órgão':s.orgao,'Sigla':s.sigla,'Lançamentos na Semana':s.qtd}))
+  ), 'Lançamentos Semanais');
+
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+    d.semPublicacao.length ? d.semPublicacao.map(o=>({'Órgão':o.orgao,'Sigla':o.sigla}))
+      : [{'Órgão':'Todos os órgãos já publicaram pelo menos um evento','Sigla':''}]
+  ), 'Sem Publicação');
+
   XLSX.writeFile(wb,'agenda-prefeitura.xlsx');
 }
 

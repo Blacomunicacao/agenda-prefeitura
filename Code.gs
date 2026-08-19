@@ -35,6 +35,7 @@ function handleRequest(e) {
       case 'excluirEvento':       return responder(handleExcluirEvento(p), output);
       case 'excluirSerieRecorrente': return responder(handleExcluirSerieRecorrente(p), output);
       case 'getUsuarios':         return responder(handleGetUsuarios(p), output);
+      case 'getContagemUsuarios': return responder(handleGetContagemUsuarios(p), output);
       case 'criarUsuario':        return responder(handleCriarUsuario(p), output);
       case 'resetarSenha':        return responder(handleResetarSenha(p), output);
       case 'excluirUsuario':      return responder(handleExcluirUsuario(p), output);
@@ -652,6 +653,23 @@ function handleGetUsuarios(data) {
 
   const rows = lerAba('usuarios').rows;
   return rows.map(function(u) { const c = Object.assign({}, u); delete c.senha; return c; });
+}
+
+// So contagem agregada por orgao (sem nome/login/email) — liberado pra SECOM alem do
+// admin, pra alimentar o export do dashboard sem expor dado pessoal de outro orgao.
+function handleGetContagemUsuarios(data) {
+  const usuario = verificarToken(data.token);
+  if (!usuario) return { error: 'Não autorizado' };
+  const podeVer = usuario.tipo === 'admin' || getSiglaOrgao(usuario.orgao) === 'SECOM';
+  if (!podeVer) return { error: 'Acesso negado' };
+
+  const rows = lerAba('usuarios').rows;
+  const contagem = {};
+  rows.forEach(function(u) {
+    if (!u.orgao) return;
+    contagem[u.orgao] = (contagem[u.orgao] || 0) + 1;
+  });
+  return contagem;
 }
 
 function handleCriarUsuario(data) {
