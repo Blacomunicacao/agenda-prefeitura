@@ -2081,29 +2081,140 @@ function abrirModalAnexos() {
 }
 
 // ════════════════ EXPORTAR PDF ════════════════
+// Logo é sempre servido do mesmo domínio do app — sem crossOrigin (não é preciso
+// pra mesma origem, e só atrapalha em teste local via file://).
+function carregarImagemComoDataURL(src, ladoMaximoPx) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        // Redimensiona pro tamanho real de impressão (a logo sai a 30mm no PDF) —
+        // embutir o PNG original em resolução de ícone de app deixa o arquivo gigante à toa.
+        const escala = ladoMaximoPx ? Math.min(1, ladoMaximoPx / Math.max(img.naturalWidth, img.naturalHeight)) : 1;
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.naturalWidth * escala);
+        canvas.height = Math.round(img.naturalHeight * escala);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+// Capa institucional — página 1 do relatório. Mesmo azul/marinho da identidade visual
+// do app (não a paleta genérica) e assinatura SECOM/ASCOM.
+function desenharCapaPDF(pdf, logoDataUrl, totalEventos, top5) {
+  const pageW = 210;
+  const NAVY_DEEP = [0,35,71], ACCENT = [0,77,153];
+  const INK = [28,37,48], INK_SOFT = [91,102,114], LINE = [215,222,229], CHIP = [232,244,248];
+
+  pdf.setFillColor(...NAVY_DEEP); pdf.rect(0,0,pageW,4,'F');
+  pdf.setFillColor(...ACCENT); pdf.rect(0,4,pageW,1.2,'F');
+
+  let y = 34;
+  if (logoDataUrl) {
+    const s = 30;
+    pdf.addImage(logoDataUrl, 'PNG', (pageW-s)/2, y, s, s);
+    y += s + 12;
+  } else { y += 8; }
+
+  pdf.setFont('times','bold'); pdf.setFontSize(25); pdf.setTextColor(...NAVY_DEEP);
+  pdf.text('Plataforma de Agenda', pageW/2, y, {align:'center'});
+  y += 8;
+  pdf.setFont('helvetica','bold'); pdf.setFontSize(11); pdf.setTextColor(...ACCENT);
+  pdf.text('R E L A T Ó R I O   G E R E N C I A L   D E   U S O', pageW/2, y, {align:'center'});
+  y += 14;
+
+  pdf.setDrawColor(...LINE); pdf.setLineWidth(0.4);
+  pdf.line(pageW/2-24, y, pageW/2+24, y);
+  y += 12;
+
+  pdf.setFont('times','normal'); pdf.setFontSize(14); pdf.setTextColor(...NAVY_DEEP);
+  pdf.text('Prefeitura Municipal de Presidente Prudente', pageW/2, y, {align:'center'});
+  y += 18;
+
+  const cardW = 80, cardH = 26, cardX = (pageW-cardW)/2;
+  pdf.setFillColor(...CHIP);
+  pdf.roundedRect(cardX, y, cardW, cardH, 3, 3, 'F');
+  pdf.setFont('times','bold'); pdf.setFontSize(22); pdf.setTextColor(...NAVY_DEEP);
+  pdf.text(String(totalEventos), pageW/2, y+15, {align:'center'});
+  pdf.setFont('helvetica','bold'); pdf.setFontSize(8.5); pdf.setTextColor(...INK_SOFT);
+  pdf.text('TOTAL DE EVENTOS', pageW/2, y+21.5, {align:'center'});
+  y += cardH + 16;
+
+  pdf.setFont('times','bold'); pdf.setFontSize(13); pdf.setTextColor(...NAVY_DEEP);
+  pdf.text('Top 5 — Órgãos Mais Ativos', pageW/2, y, {align:'center'});
+  y += 10;
+
+  const chartX = 40, chartW = pageW - chartX*2;
+  if (top5.length) {
+    const maxQtd = Math.max.apply(null, top5.map(r=>r.qtd));
+    const barH = 7, gap = 5.5;
+    top5.forEach((r,i) => {
+      const by = y + i*(barH+gap);
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...INK_SOFT);
+      pdf.text(String(i+1), chartX, by+barH-1.8);
+      pdf.setTextColor(...INK);
+      pdf.text(r.siglaOrgao || r.sigla, chartX+6, by+barH-1.8);
+      const labelW = 28;
+      const barMaxW = chartW - labelW - 12;
+      const barW = maxQtd>0 ? Math.max((r.qtd/maxQtd)*barMaxW, 2) : 2;
+      pdf.setFillColor(...ACCENT);
+      pdf.roundedRect(chartX+labelW, by, barW, barH, 1, 1, 'F');
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...NAVY_DEEP);
+      pdf.text(String(r.qtd), chartX+labelW+barW+3, by+barH-1.8);
+    });
+  } else {
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(10); pdf.setTextColor(...INK_SOFT);
+    pdf.text('Nenhum evento publicado ainda.', pageW/2, y, {align:'center'});
+  }
+
+  // Rodapé institucional: data de exportação junto da assinatura, não separada
+  pdf.setDrawColor(...LINE); pdf.setLineWidth(0.3);
+  pdf.line(30, 262, pageW-30, 262);
+  const agora = new Date();
+  const dataHora = `Exportado em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
+  pdf.setFont('helvetica','normal'); pdf.setFontSize(8.5); pdf.setTextColor(...INK_SOFT);
+  pdf.text(dataHora, pageW/2, 269, {align:'center'});
+  pdf.setFont('helvetica','bold'); pdf.setFontSize(10); pdf.setTextColor(...NAVY_DEEP);
+  pdf.text('Secretaria de Comunicação — SECOM', pageW/2, 276, {align:'center'});
+  pdf.setFont('helvetica','normal'); pdf.setFontSize(9); pdf.setTextColor(...INK_SOFT);
+  pdf.text('Assessoria de Comunicação — ASCOM', pageW/2, 281.5, {align:'center'});
+  pdf.text('Prefeitura Municipal de Presidente Prudente', pageW/2, 286.5, {align:'center'});
+}
+
 async function exportarPDF() {
   const el=$('dashboard')||$('inicio');
   if(!el){alert('❌ Abra o Dashboard antes de exportar.');return;}
   try {
     alert('📄 Gerando PDF... Aguarde.');
-    const canvas=await html2canvas(el,{scale:1.5,useCORS:true,logging:false});
+    const [canvas, logoDataUrl] = await Promise.all([
+      html2canvas(el,{scale:1.5,useCORS:true,logging:false}),
+      carregarImagemComoDataURL('Logo plataforma de Agenda.png', 400)
+    ]);
     const imgData=canvas.toDataURL('image/png');
     const {jsPDF}=window.jspdf;
     const pdf=new jsPDF('p','mm','a4');
     const imgW=210,imgH=(canvas.height*imgW)/canvas.width;
-    let y=0;
     const pageH=297;
-    while(y<imgH){
-      if(y>0) pdf.addPage();
-      pdf.addImage(imgData,'PNG',0,-y,imgW,imgH);
-      y+=pageH;
-    }
 
     const usuariosPorOrgao = await buscarContagemUsuariosParaExport();
     const d = calcularDadosExportacao(usuariosPorOrgao);
     const fmtD = x => x.toLocaleDateString('pt-BR');
     const totalRanking = d.ranking.reduce((a,r)=>a+r.qtd,0);
     const estiloTabela = { styles:{fontSize:9}, headStyles:{fillColor:[0,51,102]} };
+
+    desenharCapaPDF(pdf, logoDataUrl, eventos.length, d.ranking.slice(0,5));
+
+    pdf.addPage();
+    let y=0;
+    while(y<imgH){
+      if(y>0) pdf.addPage();
+      pdf.addImage(imgData,'PNG',0,-y,imgW,imgH);
+      y+=pageH;
+    }
 
     pdf.addPage();
     pdf.setFontSize(16); pdf.text('Usuários Cadastrados por Órgão', 14, 18);
