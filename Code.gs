@@ -120,18 +120,84 @@ function lerAba(nome) {
   return { headers: headers, rows: rows, sheet: sheet };
 }
 
+// Le so a coluna 'id' (nao a aba inteira) pra achar o maior id — evita reconstruir
+// objeto por objeto de todas as colunas so pra descobrir um numero.
 function proximoId(nome) {
-  const data = lerAba(nome);
-  if (!data.rows.length) return 1;
-  return Math.max.apply(null, data.rows.map(function(r) { return Number(r.id) || 0; })) + 1;
+  const sheet = getSheet(nome);
+  if (!sheet) return 1;
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return 1;
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
+  const idCol = headers.indexOf('id') + 1;
+  if (idCol < 1) return 1;
+  const ids = sheet.getRange(2, idCol, lastRow - 1, 1).getValues();
+  var max = 0;
+  for (var i = 0; i < ids.length; i++) {
+    var v = Number(ids[i][0]) || 0;
+    if (v > max) max = v;
+  }
+  return max + 1;
 }
 
+// Log e so-escrita (nunca lido de volta pelo app) — usar o timestamp como id evita
+// escanear a aba de logs (que so cresce) a cada acao registrada, inclusive as que
+// nao tem nada a ver com log (login, criar evento, etc. chamam registrarLog).
 function registrarLog(usuario, acao, detalhes) {
   try {
     const sheet = getSheet('logs');
     if (!sheet) return;
-    sheet.appendRow([proximoId('logs'), new Date().toISOString(), usuario, acao, detalhes || '']);
+    sheet.appendRow([new Date().getTime(), new Date().toISOString(), usuario, acao, detalhes || '']);
   } catch (e) {}
+}
+
+// ── Cache de abas grandes (CacheService tem limite de ~100KB por chave — divide em pedaços) ──
+const CACHE_CHUNK = 60000;
+
+function cachePutGrande(chave, valor, ttlSegundos) {
+  try {
+    const cache = CacheService.getScriptCache();
+    const texto = JSON.stringify(valor);
+    const partes = Math.max(1, Math.ceil(texto.length / CACHE_CHUNK));
+    const obj = {};
+    for (var i = 0; i < partes; i++) {
+      obj[chave + '_' + i] = texto.substring(i * CACHE_CHUNK, (i + 1) * CACHE_CHUNK);
+    }
+    obj[chave + '_n'] = String(partes);
+    cache.putAll(obj, ttlSegundos);
+  } catch (e) {} // cache e so otimizacao — falha aqui nunca deve quebrar a resposta real
+}
+
+function cacheGetGrande(chave) {
+  try {
+    const cache = CacheService.getScriptCache();
+    const n = Number(cache.get(chave + '_n'));
+    if (!n) return null;
+    const chaves = [];
+    for (var i = 0; i < n; i++) chaves.push(chave + '_' + i);
+    const valores = cache.getAll(chaves);
+    var texto = '';
+    for (var j = 0; j < n; j++) {
+      var v = valores[chave + '_' + j];
+      if (v === undefined) return null; // pedaco expirou/faltando — trata como cache miss
+      texto += v;
+    }
+    return JSON.parse(texto);
+  } catch (e) { return null; }
+}
+
+function invalidarCacheAba(nome) {
+  try { CacheService.getScriptCache().remove('aba_' + nome + '_n'); } catch (e) {}
+}
+
+// Igual lerAba(), mas com cache curto — usar so em leituras (nunca em quem vai escrever
+// na planilha, pois o resultado nao inclui referencia ao Sheet quando vem do cache).
+function lerAbaCache(nome, ttlSegundos) {
+  const chave = 'aba_' + nome;
+  const cached = cacheGetGrande(chave);
+  if (cached) return cached;
+  const dados = lerAba(nome);
+  cachePutGrande(chave, { headers: dados.headers, rows: dados.rows }, ttlSegundos);
+  return { headers: dados.headers, rows: dados.rows };
 }
 
 // Token
@@ -205,7 +271,7 @@ function handleGetEventos(params) {
   const usuario = verificarToken(params.token);
   if (!usuario) return { error: 'Não autorizado' };
 
-  const eventosRows = lerAba('eventos').rows;
+  const eventosRows = lerAbaCache('eventos', 30).rows;
   const usuariosRows = lerAba('usuarios').rows;
   const tz = SpreadsheetApp.openById(SPREADSHEET_ID).getSpreadsheetTimeZone();
 
@@ -344,17 +410,26 @@ function handleCriarEvento(data) {
   const isPref = (usuario.tipo === 'prefeito' || usuario.is_prefeito) ? 'TRUE' : 'FALSE';
 
   garantirTextoDataEvento(sheet);
+  // Trava para gerar id + gravar como uma unica operacao: sem isso, duas secretarias
+  // salvando ao mesmo tempo podem ler o mesmo "maior id" e gerar linhas duplicadas.
   var idsGerados = [];
-  for (var i = 0; i < datasEvento.length; i++) {
-    const id = proximoId('eventos');
-    sheet.appendRow([
-      id, titulo, datasEvento[i], local || '', responsavel || '',
-      telefone || '', observacao, anexo_url, anexo_nome,
-      orgaoEvento, isPref, usuario.login, usuario.email, now, now, 'ativo',
-      recorrenciaTipo, recorrenciaGrupo
-    ]);
-    idsGerados.push(id);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    for (var i = 0; i < datasEvento.length; i++) {
+      const id = proximoId('eventos');
+      sheet.appendRow([
+        id, titulo, datasEvento[i], local || '', responsavel || '',
+        telefone || '', observacao, anexo_url, anexo_nome,
+        orgaoEvento, isPref, usuario.login, usuario.email, now, now, 'ativo',
+        recorrenciaTipo, recorrenciaGrupo
+      ]);
+      idsGerados.push(id);
+    }
+  } finally {
+    lock.releaseLock();
   }
+  invalidarCacheAba('eventos');
 
   registrarLog(usuario.email, 'criar_evento', titulo + (idsGerados.length > 1 ? (' (recorrência x' + idsGerados.length + ')') : ''));
   return {
@@ -391,6 +466,7 @@ function handleAtualizarEvento(data) {
   }
   const colAtu = headers.indexOf('data_atualizacao') + 1;
   if (colAtu > 0) sheet.getRange(rowNum, colAtu).setValue(new Date().toISOString());
+  invalidarCacheAba('eventos');
 
   registrarLog(usuario.email, 'atualizar_evento', 'ID: ' + data.id);
   return { success: true, message: 'Evento atualizado' };
@@ -469,16 +545,23 @@ function handleAtualizarRecorrencia(data) {
 
   garantirTextoDataEvento(sheet);
   var idsGerados = [];
-  for (var m = 0; m < datasEvento.length; m++) {
-    const id = proximoId('eventos');
-    sheet.appendRow([
-      id, titulo, datasEvento[m], local || '', responsavel || '',
-      telefone || '', observacao, anexo_url, anexo_nome,
-      orgaoEvento, isPref, publicadoPor, publicadoEmail, now, now, 'ativo',
-      recorrenciaTipo, recorrenciaGrupo
-    ]);
-    idsGerados.push(id);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    for (var m = 0; m < datasEvento.length; m++) {
+      const id = proximoId('eventos');
+      sheet.appendRow([
+        id, titulo, datasEvento[m], local || '', responsavel || '',
+        telefone || '', observacao, anexo_url, anexo_nome,
+        orgaoEvento, isPref, publicadoPor, publicadoEmail, now, now, 'ativo',
+        recorrenciaTipo, recorrenciaGrupo
+      ]);
+      idsGerados.push(id);
+    }
+  } finally {
+    lock.releaseLock();
   }
+  invalidarCacheAba('eventos');
 
   registrarLog(usuario.email, 'atualizar_recorrencia', titulo + ' (' + idsGerados.length + ' ocorrência(s) futura(s))');
   return { success: true, total: idsGerados.length, ids: idsGerados };
@@ -500,6 +583,7 @@ function handleExcluirEvento(data) {
   if (usuario.tipo !== 'admin' && rows[idx].orgao !== usuario.orgao) return { error: 'Acesso negado' };
 
   sheet.deleteRow(idx + 2);
+  invalidarCacheAba('eventos');
   registrarLog(usuario.email, 'excluir_evento', 'ID: ' + data.id);
   return { success: true, message: 'Evento excluído' };
 }
@@ -534,6 +618,7 @@ function handleExcluirSerieRecorrente(data) {
   if (!idxRemover.length) return { error: 'Não há ocorrências futuras nessa série para excluir.' };
   idxRemover.sort(function(a, b) { return b - a; });
   for (var k = 0; k < idxRemover.length; k++) sheet.deleteRow(idxRemover[k] + 2);
+  invalidarCacheAba('eventos');
 
   registrarLog(usuario.email, 'excluir_serie_recorrente', 'grupo ' + grupo + ' (' + idxRemover.length + ' ocorrência(s))');
   return { success: true, total: idxRemover.length };

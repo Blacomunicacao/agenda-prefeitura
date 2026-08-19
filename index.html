@@ -906,6 +906,10 @@ function iniciarAutoRefresh() {
   const tipo = usuario?.tipo;
   if (tipo !== 'admin' && tipo !== 'orgao') return;
   _autoRefreshId = setInterval(async function() {
+    // Aba em segundo plano (minimizada/outra janela em foco) não precisa de dado
+    // fresco — pular evita bater na API sem ninguém olhando (multiplicado por
+    // quantas abas as secretarias costumam deixar esquecidas abertas o dia todo).
+    if (document.hidden) return;
     // Com height:'auto' o FullCalendar encolhe ao remover eventos e cresce de novo ao
     // adicionar — nesse intervalo a página fica mais baixa que o scroll atual e o
     // navegador "clampa" a rolagem pro topo. Travar a altura mínima da página ANTES
