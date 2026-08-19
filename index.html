@@ -273,11 +273,23 @@ let calendar = null;
 let _autoRefreshId = null;
 let solicitacoesList = [];
 
+// O Apps Script às vezes responde com uma página HTML de erro (fora do ar,
+// sobrecarga) em vez do JSON esperado — parseJson troca o "Unexpected token
+// '<'" cru do navegador por uma mensagem clara e acionável em português.
+async function parseJson(res) {
+  const texto = await res.text();
+  try {
+    return JSON.parse(texto);
+  } catch (e) {
+    throw new Error('Não foi possível se comunicar com o servidor agora. Verifique sua conexão e tente novamente em instantes.');
+  }
+}
+
 async function api(action, data = {}) {
   try {
     const p = new URLSearchParams({ action, token: token || '', ...data });
     const res = await fetch(`${API_URL}?${p}`);
-    const json = await res.json();
+    const json = await parseJson(res);
     if (json && json.error) throw new Error(json.error);
     return json;
   } catch (e) {
@@ -294,7 +306,7 @@ async function apiPost(action, data = {}) {
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ ...data, token: token || '' })
     });
-    const json = await res.json();
+    const json = await parseJson(res);
     if (json && json.error) throw new Error(json.error);
     return json;
   } catch (e) {
