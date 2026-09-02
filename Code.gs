@@ -353,6 +353,23 @@ function validarRecorrencia(rec, tz) {
   return { datas: geradas.datas.map(function(d) { return d + 'T00:00'; }) };
 }
 
+// Faz upload de um anexo (base64) pra pasta compartilhada do Drive e devolve {anexo_url, anexo_nome} ou {error}.
+function salvarAnexoDrive(arquivo_base64, arquivo_nome, arquivo_tipo) {
+  try {
+    const bytes = Utilities.base64Decode(arquivo_base64);
+    const mimeType = arquivo_tipo || 'application/octet-stream';
+    const blob = Utilities.newBlob(bytes, mimeType, arquivo_nome);
+    const pastaNome = 'Agenda Prefeitura Anexos';
+    const pastas = DriveApp.getFoldersByName(pastaNome);
+    const pasta = pastas.hasNext() ? pastas.next() : DriveApp.createFolder(pastaNome);
+    const file = pasta.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return { anexo_url: 'https://drive.google.com/file/d/' + file.getId() + '/view', anexo_nome: arquivo_nome };
+  } catch (driveErr) {
+    return { error: 'Erro ao salvar anexo. Execute autorizarDrive() no editor para liberar permissões.' };
+  }
+}
+
 function handleCriarEvento(data) {
   const usuario = verificarToken(data.token);
   if (!usuario) return { error: 'Não autorizado' };
@@ -390,20 +407,9 @@ function handleCriarEvento(data) {
 
   var anexo_url = '', anexo_nome = '';
   if (data.arquivo_base64 && data.arquivo_nome) {
-    try {
-      const bytes = Utilities.base64Decode(data.arquivo_base64);
-      const mimeType = data.arquivo_tipo || 'application/octet-stream';
-      const blob = Utilities.newBlob(bytes, mimeType, data.arquivo_nome);
-      const pastaNome = 'Agenda Prefeitura Anexos';
-      const pastas = DriveApp.getFoldersByName(pastaNome);
-      const pasta = pastas.hasNext() ? pastas.next() : DriveApp.createFolder(pastaNome);
-      const file = pasta.createFile(blob);
-      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      anexo_url = 'https://drive.google.com/file/d/' + file.getId() + '/view';
-      anexo_nome = data.arquivo_nome;
-    } catch(driveErr) {
-      return { error: 'Erro ao salvar anexo. Execute autorizarDrive() no editor para liberar permissões.' };
-    }
+    const up = salvarAnexoDrive(data.arquivo_base64, data.arquivo_nome, data.arquivo_tipo);
+    if (up.error) return { error: up.error };
+    anexo_url = up.anexo_url; anexo_nome = up.anexo_nome;
   }
 
   const now = new Date().toISOString();
@@ -465,6 +471,14 @@ function handleAtualizarEvento(data) {
       if (col > 0) sheet.getRange(rowNum, col).setValue(data[campo]);
     }
   }
+  if (data.arquivo_base64 && data.arquivo_nome) {
+    const up = salvarAnexoDrive(data.arquivo_base64, data.arquivo_nome, data.arquivo_tipo);
+    if (up.error) return { error: up.error };
+    const colUrl = headers.indexOf('anexo_url') + 1;
+    const colNome = headers.indexOf('anexo_nome') + 1;
+    if (colUrl > 0) sheet.getRange(rowNum, colUrl).setValue(up.anexo_url);
+    if (colNome > 0) sheet.getRange(rowNum, colNome).setValue(up.anexo_nome);
+  }
   const colAtu = headers.indexOf('data_atualizacao') + 1;
   if (colAtu > 0) sheet.getRange(rowNum, colAtu).setValue(new Date().toISOString());
   invalidarCacheAba('eventos');
@@ -524,8 +538,13 @@ function handleAtualizarRecorrencia(data) {
     recorrenciaGrupo = '';
   }
 
-  const anexo_url = referencia.anexo_url || '';
-  const anexo_nome = referencia.anexo_nome || '';
+  var anexo_url = referencia.anexo_url || '';
+  var anexo_nome = referencia.anexo_nome || '';
+  if (data.arquivo_base64 && data.arquivo_nome) {
+    const up = salvarAnexoDrive(data.arquivo_base64, data.arquivo_nome, data.arquivo_tipo);
+    if (up.error) return { error: up.error };
+    anexo_url = up.anexo_url; anexo_nome = up.anexo_nome;
+  }
   const orgaoEvento = referencia.orgao;
   const isPref = referencia.is_prefeito;
   const publicadoPor = referencia.publicado_por;

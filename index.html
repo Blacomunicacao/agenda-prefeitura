@@ -1238,6 +1238,13 @@ function htmlModalForm() {
             <div class="form-group"><label>Telefone</label><input id="editTel" type="tel"></div>
           </div>
           <div class="form-group"><label>Descrição</label><textarea id="editObs"></textarea></div>
+          <div class="form-group">
+            <label>Anexo (vários formatos aceitos — máx. 10MB)</label>
+            <div id="editAnexoAtual" style="font-size:12px;color:#555;margin-bottom:4px"></div>
+            <input type="file" id="editAnexo" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.csv" onchange="mostrarNomeAnexo(this,'nomeAnexoEdit')" style="display:block;padding:6px 0;font-size:13px">
+            <div id="nomeAnexoEdit" style="font-size:12px;color:#28a745;margin-top:4px"></div>
+            <div class="progress-bar-container" id="progressUploadEdit"><div class="progress-bar-fill" id="progressFillEdit"></div></div>
+          </div>
           <input type="hidden" id="editId">
           <input type="hidden" id="editRecorrenciaGrupo">
           <div class="btns-row">
@@ -1630,8 +1637,8 @@ function toggleRepeticao() {
   }
 }
 
-function mostrarNomeAnexo(input) {
-  const div=$('nomeAnexo'); if(!div) return;
+function mostrarNomeAnexo(input,divId) {
+  const div=$(divId||'nomeAnexo'); if(!div) return;
   if(input.files&&input.files[0]){
     const f=input.files[0];
     const mb=(f.size/1024/1024).toFixed(2);
@@ -1699,6 +1706,11 @@ function abrirEdicao(id) {
   $('editHora').value=horaAtual==='00:00'?'':horaAtual;
   $('editLocal').value=e.local||''; $('editResp').value=e.responsavel||'';
   $('editTel').value=e.telefone||''; $('editObs').value=e.observacao||'';
+  $('editAnexoAtual').innerHTML=e.anexo_url
+    ?`📎 Anexo atual: <a href="${e.anexo_url}" target="_blank">${e.anexo_nome||'ver arquivo'}</a> — selecione um novo arquivo abaixo para substituí-lo`
+    :'';
+  if($('editAnexo')) $('editAnexo').value='';
+  if($('nomeAnexoEdit')) $('nomeAnexoEdit').textContent='';
 
   const painel=$('editPainelRepeticao');
   const recorrente=isRecorrente(e)&&e.recorrencia_grupo;
@@ -1731,6 +1743,24 @@ async function salvarEdicao(ev) {
   const repetindo=painel&&painel.style.display!=='none';
   const btnSalvar=ev.target.querySelector('button[type="submit"]');
 
+  const fileInput=$('editAnexo');
+  let arquivo_base64='',arquivo_nome='',arquivo_tipo='';
+  if(fileInput&&fileInput.files&&fileInput.files[0]){
+    const f=fileInput.files[0];
+    if(f.size>10*1024*1024){alert('❌ Arquivo muito grande. Máximo 10MB.');return;}
+    arquivo_nome=f.name; arquivo_tipo=f.type;
+    const prog=$('progressUploadEdit'),fill=$('progressFillEdit');
+    if(prog){prog.style.display='block';if(fill)fill.style.width='30%';}
+    arquivo_base64=await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=e=>{if(fill)fill.style.width='80%';res(e.target.result.split(',')[1]);};
+      r.onerror=rej; r.readAsDataURL(f);
+    });
+    if(fill)fill.style.width='100%';
+    setTimeout(()=>{if(prog)prog.style.display='none';if(fill)fill.style.width='0%';},500);
+  }
+  const anexoPayload=arquivo_base64?{arquivo_base64,arquivo_nome,arquivo_tipo}:{};
+
   if (repetindo) {
     const dias=Array.from(document.querySelectorAll('.editRepDia:checked')).map(el=>Number(el.value));
     const repInicio=$('editRepInicio').value, repFim=$('editRepFim').value;
@@ -1748,7 +1778,7 @@ async function salvarEdicao(ev) {
         id:$('editId').value, recorrencia_grupo:$('editRecorrenciaGrupo').value,
         titulo:$('editTitulo').value, local:$('editLocal').value,
         responsavel:$('editResp').value, telefone:$('editTel').value, observacao:$('editObs').value,
-        recorrencia
+        recorrencia, ...anexoPayload
       });
       fecharModal('modalForm'); await recarregarEventos();
       alert(`✅ Série atualizada! ${res.total} ocorrência(s) futura(s) gerada(s).`);
@@ -1767,12 +1797,14 @@ async function salvarEdicao(ev) {
         id:$('editId').value, recorrencia_grupo:$('editRecorrenciaGrupo').value,
         titulo:$('editTitulo').value, local:$('editLocal').value,
         responsavel:$('editResp').value, telefone:$('editTel').value, observacao:$('editObs').value,
-        data_evento
+        data_evento, ...anexoPayload
       });
     } else {
-      await api('atualizarEvento',{id:$('editId').value,titulo:$('editTitulo').value,
+      const payload={id:$('editId').value,titulo:$('editTitulo').value,
         data_evento,local:$('editLocal').value,
-        responsavel:$('editResp').value,telefone:$('editTel').value,observacao:$('editObs').value});
+        responsavel:$('editResp').value,telefone:$('editTel').value,observacao:$('editObs').value,
+        ...anexoPayload};
+      await (arquivo_base64?apiPost:api)('atualizarEvento',payload);
     }
     fecharModal('modalForm'); await recarregarEventos(); alert('✅ Evento atualizado!');
   } catch(e){ alert('❌ '+e.message); }
